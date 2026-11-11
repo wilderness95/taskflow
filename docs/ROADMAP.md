@@ -211,7 +211,7 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 - `App.jsx` szétbontása feature-komponensekre és hookokra:
   - `useBoardState` reducerrel (`useReducer`) a sok `setColumns` helyett;
   - külön komponensek: `Board`, `Column`, `TaskCard`, `CardModal`, `ChecklistEditor`, `RenameColumnModal`, `ConfirmModal`, `Topbar`, `BoardHeader`;
-  - az `App.css` szétosztása komponens-szintű CSS (Modules) fájlokba;
+  - az `App.css` szétosztása a komponensek melletti, sima CSS fájlokba (az osztálynevek megmaradtak; a CSS Modules-ra váltás későbbi, opcionális lépés);
 - tiszta függvények (`getDueDateState`, `getChecklistProgress`, `parseTags`) átköltöztetése `shared`-be, unit tesztekkel;
 - **i18n alapok:**
   - i18next beállítása;

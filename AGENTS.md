@@ -6,18 +6,18 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 ## Projekt és stack
 - **Nyelv: TypeScript** mindenhol (`strict: true`). Új kód `.ts` / `.tsx`; `any` csak indokolt esetben, kommenttel.
 - npm workspaces monorepo; csomagkezelő: npm (`package-lock.json`). Ne használj yarn/pnpm-et.
-  - `apps/web`: React 19 + Vite, TanStack Query, React Router, i18next.
-  - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer.
-  - `packages/shared`: Zod sémák, DTO-típusok, enumok, hibakódok, tiszta segédfüggvények.
+  - `apps/web`: React 19 + Vite, i18next (megvan); TanStack Query, React Router (tervezett).
+  - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer (tervezett, M1-től; még nem létezik).
+  - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k, hibakódok (tervezett).
 - Üzemeltetés: Docker Compose (`web` + `api` + `cloudflared`) a házi szerveren, Cloudflare Tunnelen, saját domainnel.
-- Átmeneti állapot: amíg az M0 refaktor el nem készül, a frontend a gyökérben él (`src/App.jsx`). Az átírás során TS-re migrálunk.
+- Aktuális állapot: az M0 refaktor kész (monorepo, TS, feature-komponensek, i18n, CI). Az adatok még csak a kliens memóriájában élnek (`boardSeed.ts` + reducer); az API és az adatbázis az M1-ben jön.
 
 ## Parancsok
 - Fejlesztés: `npm run dev`
 - Build: `npm run build`
 - Lint: `npm run lint` (oxlint, konfig: `.oxlintrc.json`)
-- Ha léteznek: `npm run typecheck`, `npm test`
-- Változtatás után mindig futtasd a lintet, a typechecket, a teszteket és a buildet, és javítsd a hibákat.
+- Typecheck: `npm run typecheck`; tesztek: `npm test` (Vitest); formázás: `npm run format` / `npm run format:check` (Prettier)
+- Változtatás után mindig futtasd a lintet, a format-ellenőrzést, a typechecket, a teszteket és a buildet, és javítsd a hibákat. A CI (`.github/workflows/ci.yml`) ugyanezt futtatja.
 
 ## Architektúra és rétegek
 - **Backend modulonként:** `*.routes.ts` → `*.service.ts` → `*.repository.ts`. A függés csak ebben az irányban mehet.
@@ -52,6 +52,7 @@ Egyelőre csak magyar UI van, de a kódnak fordításra késznek kell lennie:
 - Egy komponens = egy fájl, PascalCase fájlnév (`TaskCard.tsx`). Hookok: `useXxx.ts`.
 - A komponens maradjon kicsi (~150 sor felett bontsd szét); összetett állapothoz `useReducer` vagy egyedi hook.
 - 2 szóköz behúzás, ES modulok, Prettier-formázás; kövesd a meglévő stílust.
+- **Stílus:** a komponens CSS-e mellette él (`TaskCard.tsx` + `TaskCard.css`), a komponens importálja. A több helyen használt osztályok a `shared/styles/` alatt vannak. Az osztálynevek globálisak: új osztály legyen komponens-specifikus, és ne ütközzön meglévővel. A `*.css` fájlokat a Prettier nem formázza.
 - Tiszta függvényekhez (formázás, számítás) unit teszt.
 - Új függőség: a `docs/ROADMAP.md`-ben felsorolt stack jóváhagyott. Ami azon kívül esik, azt a felhasználóval egyeztetni kell.
 
