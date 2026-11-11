@@ -171,3 +171,96 @@ describe('checklists', () => {
     expect((await call('POST', `/cards/${card.id}/checklists`, {})).status).toBe(404)
   })
 })
+
+describe('move', () => {
+  const titles = (col: { cards: { title: string }[] }) => col.cards.map((c) => c.title)
+
+  it('reorders a card within a column and bumps its version', async () => {
+    const [todo] = (await getBoard()).columns
+    const [first, second] = todo.cards
+    const res = await call('POST', `/cards/${second.id}/move`, {
+      columnId: todo.id,
+      beforeCardId: first.id,
+    })
+    expect(res.status).toBe(200)
+    expect(res.body.version).toBe(2)
+    expect(titles((await getBoard()).columns[0])).toEqual([second.title, first.title])
+  })
+
+  it('moves a card across columns, to a given place or to the end', async () => {
+    const board = await getBoard()
+    const [todo, doing, done] = board.columns
+    const card = todo.cards[0]
+    await call('POST', `/cards/${card.id}/move`, {
+      columnId: doing.id,
+      beforeCardId: doing.cards[0].id,
+    })
+    let after = (await getBoard()).columns
+    expect(titles(after[1])).toEqual([card.title, 'Dashboard felület'])
+    expect(titles(after[0])).toHaveLength(1)
+
+    await call('POST', `/cards/${card.id}/move`, { columnId: done.id })
+    after = (await getBoard()).columns
+    expect(titles(after[2])).toEqual(['Brand guideline', card.title])
+    // csak a mozgatott kártya sora változott
+    expect(after[1].cards[0].position).toBe(doing.cards[0].position)
+  })
+
+  it('keeps order after many inserts at the same spot', async () => {
+    const [todo] = (await getBoard()).columns
+    const [first, second] = todo.cards
+    const ids: string[] = []
+    for (let i = 0; i < 20; i++) {
+      const c = await call('POST', `/columns/${todo.id}/cards`, { title: `n${i}` })
+      ids.push(c.body.id)
+      await call('POST', `/cards/${c.body.id}/move`, { columnId: todo.id, beforeCardId: second.id })
+    }
+    const result = titles((await getBoard()).columns[0])
+    expect(result).toEqual([
+      first.title,
+      ...Array.from({ length: 20 }, (_, i) => `n${i}`),
+      second.title,
+    ])
+  })
+
+  it('rejects invalid targets', async () => {
+    const board = await getBoard()
+    const [todo, doing] = board.columns
+    const card = todo.cards[0]
+    const wrongList = await call('POST', `/cards/${card.id}/move`, {
+      columnId: doing.id,
+      beforeCardId: todo.cards[1].id,
+    })
+    expect(wrongList.status).toBe(422)
+    expect(wrongList.body.error.code).toBe('invalid_position_target')
+    expect((await call('POST', `/cards/${card.id}/move`, { columnId: 'nope' })).status).toBe(404)
+    expect((await call('POST', '/cards/nope/move', { columnId: doing.id })).status).toBe(404)
+    expect((await call('POST', `/cards/${card.id}/move`, {})).status).toBe(400)
+
+    const other = await call('POST', '/boards', { title: 'Másik' })
+    const foreign = await call('POST', `/boards/${other.body.id}/columns`, { title: 'X' })
+    expect(
+      (await call('POST', `/cards/${card.id}/move`, { columnId: foreign.body.id })).status,
+    ).toBe(404)
+  })
+
+  it('moves columns', async () => {
+    const [todo, doing, done] = (await getBoard()).columns
+    await call('POST', `/columns/${done.id}/move`, { beforeColumnId: todo.id })
+    expect((await getBoard()).columns.map((c: { id: string }) => c.id)).toEqual([
+      done.id,
+      todo.id,
+      doing.id,
+    ])
+    await call('POST', `/columns/${done.id}/move`, {})
+    expect((await getBoard()).columns.map((c: { id: string }) => c.id)).toEqual([
+      todo.id,
+      doing.id,
+      done.id,
+    ])
+    expect(
+      (await call('POST', `/columns/${todo.id}/move`, { beforeColumnId: 'nope' })).status,
+    ).toBe(422)
+    expect((await call('POST', '/columns/nope/move', {})).status).toBe(404)
+  })
+})
