@@ -3,7 +3,7 @@ import { hu, type Messages } from './locales/hu.js'
 const locales: Record<string, Messages> = { hu }
 export const DEFAULT_LOCALE = 'hu'
 
-export type EmailTemplate = 'verifyEmail' | 'passwordReset' | 'invitation'
+export type EmailTemplate = 'verifyEmail' | 'passwordReset' | 'invitation' | 'workspaceInvitation'
 
 const interpolate = (template: string, params: Record<string, string | number>) =>
   template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => String(params[key] ?? ''))
