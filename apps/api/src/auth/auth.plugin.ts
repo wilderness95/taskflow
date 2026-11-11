@@ -27,7 +27,16 @@ const PUBLIC_PATHS = new Set([
   '/api/openapi.json',
 ])
 
-const isPublic = (path: string) => PUBLIC_PATHS.has(path) || path.startsWith('/api/docs')
+const PUBLIC_BOARD_READ = /^\/api\/v1\/boards\/[^/]+$/
+
+/**
+ * Névtelenül elérhető: a nyilvános végpontok, és egy tábla olvasása (`GET /boards/{id}`), mert a
+ * `public` láthatóságú tábla bárki számára olvasható; hogy egy konkrét tábla az-e, a policy dönti el.
+ */
+const isPublic = (method: string, path: string) =>
+  PUBLIC_PATHS.has(path) ||
+  path.startsWith('/api/docs') ||
+  (method === 'GET' && PUBLIC_BOARD_READ.test(path))
 
 /** Cloudflare mögött a kliens IP-je a `CF-Connecting-IP` fejlécből jön. */
 export const clientIp = (req: FastifyRequest): string => {
@@ -81,7 +90,7 @@ export function registerAuth(app: FastifyInstance, config: Config, auth: AuthSer
       req.sessionToken = req.actor ? unsigned.value : null
     }
 
-    if (!req.actor && !isPublic(path)) {
+    if (!req.actor && !isPublic(req.method, path)) {
       throw new AppError(401, 'unauthenticated', 'Authentication required')
     }
   })

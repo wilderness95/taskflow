@@ -8,6 +8,8 @@ import { createAuthService } from './modules/auth/auth.service.js'
 import type { Config } from './config.js'
 import type { Db } from './db/client.js'
 import { healthRoutes } from './health.routes.js'
+import { createAccessRepository } from './modules/access/access.repository.js'
+import { createAccessService } from './modules/access/access.service.js'
 import { boardsRoutes } from './modules/boards/boards.routes.js'
 import { createBoardsRepository } from './modules/boards/boards.repository.js'
 import { createBoardsService } from './modules/boards/boards.service.js'
@@ -72,15 +74,17 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
   const cardsRepo = createCardsRepository(db)
   const checklistsRepo = createChecklistsRepository(db)
 
+  const access = createAccessService(createAccessRepository(db))
   const cards = createCardsService({
     cards: cardsRepo,
     columns: columnsRepo,
     boards: boardsRepo,
     checklists: checklistsRepo,
+    access,
   })
-  const boards = createBoardsService(boardsRepo, cards)
-  const columns = createColumnsService(columnsRepo)
-  const checklists = createChecklistsService(checklistsRepo, cardsRepo)
+  const boards = createBoardsService(boardsRepo, cards, access)
+  const columns = createColumnsService(columnsRepo, access)
+  const checklists = createChecklistsService(checklistsRepo, cardsRepo, access)
 
   // Az összes route-ot gyűjti, hogy a teszt ellenőrizhesse az OpenAPI-lefedettséget.
   const routes: string[] = []

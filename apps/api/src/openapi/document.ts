@@ -12,6 +12,8 @@ const jsonSchema = (schema: z.ZodType, io: 'input' | 'output'): Json => {
   return rest
 }
 
+const WRITE_TAGS = new Set(['Boards', 'Columns', 'Cards', 'Checklists'])
+
 const ERROR_DESCRIPTIONS: Record<number, string> = {
   400: 'Validation error or invalid token',
   401: 'Not authenticated',
@@ -49,6 +51,8 @@ const operationObject = (op: Operation): Json => {
     ...(hasId ? [404] : []),
     ...(op.body || op.query || hasId ? [400] : []),
     ...(op.public ? [] : [401]),
+    // A tartalom módosítása jogosultsághoz kötött (a nem olvasható erőforrás 404).
+    ...(op.method !== 'get' && WRITE_TAGS.has(op.tag) ? [403] : []),
     ...(op.errors ?? []),
   ])
   const responses: Json = {

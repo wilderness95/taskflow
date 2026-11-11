@@ -9,6 +9,8 @@ import type {
 } from '@taskflow/shared'
 import { newId } from '../../db/ids.js'
 import { notFound, orNotFound } from '../../errors.js'
+import type { Actor } from '../../auth/actor.js'
+import type { AccessService } from '../access/access.service.js'
 import type { CardsRepository } from '../cards/cards.repository.js'
 import type {
   ChecklistItemRow,
@@ -25,12 +27,17 @@ export const toChecklistDto = (r: ChecklistRow & { items: ChecklistItemRow[] }):
   items: r.items.map(toItemDto),
 })
 
-export function createChecklistsService(repo: ChecklistsRepository, cards: CardsRepository) {
+export function createChecklistsService(
+  repo: ChecklistsRepository,
+  cards: CardsRepository,
+  access: AccessService,
+) {
   const requireChecklist = (id: string) => orNotFound(repo.findById(id), 'Checklist')
   const requireItem = (id: string) => orNotFound(repo.findItem(id), 'Checklist item')
 
   return {
-    create(cardId: string, input: CreateChecklistInput): ChecklistDto {
+    create(actor: Actor, cardId: string, input: CreateChecklistInput): ChecklistDto {
+      access.requireCard(actor, cardId, 'board:write')
       if (!cards.findById(cardId)) throw notFound('Card')
       const row = repo.insert({
         id: newId(),
@@ -40,18 +47,25 @@ export function createChecklistsService(repo: ChecklistsRepository, cards: Cards
       })
       return toChecklistDto({ ...row, items: [] })
     },
-    update(id: string, input: UpdateChecklistInput): ChecklistDto {
+    update(actor: Actor, id: string, input: UpdateChecklistInput): ChecklistDto {
+      access.requireChecklist(actor, id, 'board:write')
       requireChecklist(id)
       repo.update(id, { title: input.title })
       return toChecklistDto(
         repo.listByCardIds([requireChecklist(id).cardId]).find((c) => c.id === id)!,
       )
     },
-    remove(id: string): void {
+    remove(actor: Actor, id: string): void {
+      access.requireChecklist(actor, id, 'board:write')
       requireChecklist(id)
       repo.delete(id)
     },
-    createItem(checklistId: string, input: CreateChecklistItemInput): ChecklistItemDto {
+    createItem(
+      actor: Actor,
+      checklistId: string,
+      input: CreateChecklistItemInput,
+    ): ChecklistItemDto {
+      access.requireChecklist(actor, checklistId, 'board:write')
       requireChecklist(checklistId)
       return toItemDto(
         repo.insertItem({
@@ -62,11 +76,13 @@ export function createChecklistsService(repo: ChecklistsRepository, cards: Cards
         }),
       )
     },
-    updateItem(id: string, input: UpdateChecklistItemInput): ChecklistItemDto {
+    updateItem(actor: Actor, id: string, input: UpdateChecklistItemInput): ChecklistItemDto {
+      access.requireChecklistItem(actor, id, 'board:write')
       requireItem(id)
       return toItemDto(repo.updateItem(id, input)!)
     },
-    removeItem(id: string): void {
+    removeItem(actor: Actor, id: string): void {
+      access.requireChecklistItem(actor, id, 'board:write')
       requireItem(id)
       repo.deleteItem(id)
     },

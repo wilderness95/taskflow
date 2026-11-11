@@ -1,0 +1,73 @@
+import {
+  can,
+  effectiveBoardRole,
+  type BoardAction,
+  type BoardResource,
+  type BoardRole,
+  type PolicyActor,
+  type WorkspaceAction,
+  type WorkspaceRole,
+} from '@taskflow/shared'
+import { AppError, notFound } from '../../errors.js'
+import type { AccessRepository, BoardRow } from './access.repository.js'
+
+export type BoardAccess = { board: BoardRow; role: BoardRole; resource: BoardResource }
+
+const forbidden = () => new AppError(403, 'forbidden', 'You are not allowed to do this')
+
+/**
+ * Az egyetlen hely, ahol a service-ek a központi `can()` policy-t hívják: feloldja az erőforrás
+ * munkaterületét és a szereplő szerepköreit, és a policy-val dönt. Ha a szereplő nem is olvashatja
+ * az erőforrást, az nem létezik számára (404); ha olvashatja, de a művelet tiltott: 403.
+ */
+export function createAccessService(repo: AccessRepository) {
+  const requireBoard = (actor: PolicyActor, boardId: string, action: BoardAction): BoardAccess => {
+    const board = repo.findActiveBoard(boardId)
+    if (!board?.workspaceId) throw notFound('Board')
+    const resource: BoardResource = {
+      type: 'board',
+      visibility: board.visibility,
+      workspaceRole: actor ? repo.workspaceRole(board.workspaceId, actor.id) : null,
+      boardRole: actor ? repo.boardRole(board.id, actor.id) : null,
+    }
+    const role = effectiveBoardRole(actor, resource)
+    if (!role) throw notFound('Board')
+    if (!can(actor, action, resource)) throw forbidden()
+    return { board, role, resource }
+  }
+
+  const viaBoardId = (
+    actor: PolicyActor,
+    boardId: string | undefined,
+    action: BoardAction,
+    what: string,
+  ) => {
+    if (!boardId) throw notFound(what)
+    return requireBoard(actor, boardId, action)
+  }
+
+  return {
+    requireBoard,
+    requireColumn: (actor: PolicyActor, columnId: string, action: BoardAction) =>
+      viaBoardId(actor, repo.boardIdOfColumn(columnId), action, 'Column'),
+    requireCard: (actor: PolicyActor, cardId: string, action: BoardAction) =>
+      viaBoardId(actor, repo.boardIdOfCard(cardId), action, 'Card'),
+    requireChecklist: (actor: PolicyActor, checklistId: string, action: BoardAction) =>
+      viaBoardId(actor, repo.boardIdOfChecklist(checklistId), action, 'Checklist'),
+    requireChecklistItem: (actor: PolicyActor, itemId: string, action: BoardAction) =>
+      viaBoardId(actor, repo.boardIdOfChecklistItem(itemId), action, 'Checklist item'),
+
+    /** Munkaterületi művelet (pl. tábla létrehozása): nem tagnak 404, tiltott műveletre 403. */
+    requireWorkspace(
+      actor: { id: string },
+      workspaceId: string,
+      action: WorkspaceAction,
+    ): WorkspaceRole {
+      const role = repo.workspaceRole(workspaceId, actor.id)
+      if (!role) throw notFound('Workspace')
+      if (!can(actor, action, { type: 'workspace', role })) throw forbidden()
+      return role
+    },
+  }
+}
+export type AccessService = ReturnType<typeof createAccessService>
