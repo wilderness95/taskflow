@@ -1,0 +1,8 @@
+node_modules
+dist
+package-lock.json
+*.css
+*.md
+
+# Átmeneti: az M0 refaktor során szétbontjuk, utána innen törlendő
+apps/web/src/App.jsx
