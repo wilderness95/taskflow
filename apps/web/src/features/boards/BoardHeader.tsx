@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
 import { BoardTitle } from './BoardTitle'
-import type { BoardMeta } from './useBoardMeta'
+import type { BoardMeta } from './useBoardData'
 import { ViewSwitcher } from './ViewSwitcher'
 import { VisibilityMenu } from './VisibilityMenu'
 import '../../shared/styles/base.css'

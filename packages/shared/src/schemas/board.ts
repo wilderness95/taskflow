@@ -151,3 +151,8 @@ export const moveColumnSchema = z.object({ beforeColumnId: idSchema.nullish() })
 export type MoveColumnInput = z.infer<typeof moveColumnSchema>
 
 export const boardListSchema = z.object({ data: z.array(boardSummarySchema) })
+
+/** A kérés törzse, ahogy a kliens küldi (az alapértelmezések még kitöltetlenek). */
+export type CreateColumnRequest = z.input<typeof createColumnSchema>
+export type CreateCardRequest = z.input<typeof createCardSchema>
+export type CreateChecklistRequest = z.input<typeof createChecklistSchema>
