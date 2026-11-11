@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal } from '../../shared/ui/Modal'
+import '../../shared/styles/buttons.css'
+import './InviteModal.css'
 
 type InviteModalProps = {
   onClose: () => void

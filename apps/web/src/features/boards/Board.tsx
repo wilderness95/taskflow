@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { ColumnView } from '../columns/ColumnView'
 import type { BoardDrag } from './useBoardDrag'
 import type { Columns, Task } from './types'
+import './Board.css'
 
 type BoardProps = {
   columns: Columns

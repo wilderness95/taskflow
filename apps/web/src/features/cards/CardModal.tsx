@@ -5,6 +5,9 @@ import { Modal } from '../../shared/ui/Modal'
 import type { Columns } from '../boards/types'
 import { ChecklistEditor } from './ChecklistEditor'
 import type { TaskDraft } from './taskDraft'
+import '../../shared/styles/buttons.css'
+import '../../shared/styles/form.css'
+import '../../shared/styles/tags.css'
 
 type CardModalProps = {
   mode: 'create' | 'edit'

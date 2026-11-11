@@ -1,0 +1,52 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal-card {
+  width: min(100%, 560px);
+  max-height: calc(100vh - 40px);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.7);
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(15, 23, 42, 0.96);
+  padding-bottom: 8px;
+}
+
+.modal-header h2 {
+  margin: 10px 0 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.confirm-copy {
+  margin: 0 0 18px;
+  color: #dbeafe;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}

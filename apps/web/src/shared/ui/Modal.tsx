@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import '../styles/base.css'
+import '../styles/buttons.css'
+import './Modal.css'
 
 type ModalProps = {
   eyebrow: string

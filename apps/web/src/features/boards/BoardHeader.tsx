@@ -4,6 +4,9 @@ import { BoardTitle } from './BoardTitle'
 import type { BoardMeta } from './useBoardMeta'
 import { ViewSwitcher } from './ViewSwitcher'
 import { VisibilityMenu } from './VisibilityMenu'
+import '../../shared/styles/base.css'
+import '../../shared/styles/buttons.css'
+import './BoardHeader.css'
 
 type BoardHeaderProps = {
   meta: BoardMeta

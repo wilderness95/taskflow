@@ -3,6 +3,7 @@ import { classNames } from '../../shared/lib/classNames'
 import type { BoardDrag } from '../boards/useBoardDrag'
 import type { Column, Task } from '../boards/types'
 import { TaskCard } from '../cards/TaskCard'
+import './ColumnView.css'
 
 type ColumnViewProps = {
   columnId: string

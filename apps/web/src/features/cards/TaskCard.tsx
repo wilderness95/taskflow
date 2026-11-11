@@ -4,6 +4,9 @@ import { formatShortDate } from '../../i18n/format'
 import { classNames } from '../../shared/lib/classNames'
 import type { DragProps } from '../boards/useBoardDrag'
 import type { Task } from '../boards/types'
+import '../../shared/styles/buttons.css'
+import '../../shared/styles/tags.css'
+import './TaskCard.css'
 
 type TaskCardProps = {
   task: Task

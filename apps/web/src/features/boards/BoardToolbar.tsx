@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { BoardMeta } from './useBoardMeta'
+import '../../shared/styles/base.css'
+import './BoardToolbar.css'
 
 type BoardToolbarProps = {
   meta: BoardMeta

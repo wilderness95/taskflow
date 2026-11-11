@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
+import '../../shared/styles/base.css'
+import './Topbar.css'
 
 type TopbarProps = {
   searchQuery: string

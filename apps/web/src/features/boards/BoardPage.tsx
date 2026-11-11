@@ -10,6 +10,7 @@ import { COLUMN_ACCENTS, type Dialog } from './types'
 import { useBoardDrag } from './useBoardDrag'
 import { useBoardMeta } from './useBoardMeta'
 import { useBoardState } from './useBoardState'
+import './BoardPage.css'
 
 export function BoardPage() {
   const { t } = useTranslation(['card', 'column'])

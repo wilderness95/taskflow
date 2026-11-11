@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
 import { VIEWS } from './boardOptions'
 import type { BoardView } from './types'
+import './ViewSwitcher.css'
 
 type ViewSwitcherProps = {
   activeView: BoardView

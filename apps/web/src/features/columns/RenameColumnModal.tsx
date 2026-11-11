@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
 import { Modal } from '../../shared/ui/Modal'
 import { COLUMN_ACCENTS, type Column, type ColumnAccent } from '../boards/types'
+import '../../shared/styles/buttons.css'
+import '../../shared/styles/form.css'
+import './RenameColumnModal.css'
 
 const ACCENT_COLORS: Record<ColumnAccent, string> = {
   blue: '#60a5fa',

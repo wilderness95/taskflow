@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { useDismiss } from '../../shared/hooks/useDismiss'
 import { classNames } from '../../shared/lib/classNames'
+import '../../shared/styles/menu.css'
+import './WorkspaceSwitcher.css'
 
 // Átmeneti, beégetett lista: az M3 mérföldkőben a szerverről jön.
 const WORKSPACE_OPTIONS = ['Web App Fejlesztés', 'Marketing', 'CRM']

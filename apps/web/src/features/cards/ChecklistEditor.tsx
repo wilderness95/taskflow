@@ -2,6 +2,7 @@ import { getChecklistProgress, type ChecklistItem } from '@taskflow/shared'
 import { useTranslation } from 'react-i18next'
 import { createId } from '../../shared/lib/ids'
 import { classNames } from '../../shared/lib/classNames'
+import './ChecklistEditor.css'
 
 type ChecklistEditorProps = {
   title: string

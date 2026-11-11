@@ -4,6 +4,8 @@ import { useDismiss } from '../../shared/hooks/useDismiss'
 import { classNames } from '../../shared/lib/classNames'
 import { VISIBILITIES, VISIBILITY_ICONS } from './boardOptions'
 import type { Visibility } from './types'
+import '../../shared/styles/menu.css'
+import './VisibilityMenu.css'
 
 type VisibilityMenuProps = {
   visibility: Visibility
