@@ -1,5 +1,9 @@
 import Fastify, { type FastifyInstance } from 'fastify'
-import { registerActor } from './auth/actor.js'
+import { registerAuth } from './auth/auth.plugin.js'
+import { createMailer, type Mailer } from './mail/mailer.js'
+import { authRoutes } from './modules/auth/auth.routes.js'
+import { createAuthRepository } from './modules/auth/auth.repository.js'
+import { createAuthService } from './modules/auth/auth.service.js'
 import type { Config } from './config.js'
 import type { Db } from './db/client.js'
 import { healthRoutes } from './health.routes.js'
@@ -24,7 +28,7 @@ declare module 'fastify' {
   }
 }
 
-export function buildApp(config: Config, db: Db): FastifyInstance {
+export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {}): FastifyInstance {
   const app = Fastify({
     logger:
       config.NODE_ENV === 'test'
@@ -38,7 +42,13 @@ export function buildApp(config: Config, db: Db): FastifyInstance {
     requestIdHeader: 'x-request-id',
   })
   registerErrorHandler(app)
-  registerActor(app)
+  const auth = createAuthService({
+    repo: createAuthRepository(db),
+    mailer: deps.mailer ?? createMailer(config),
+    config,
+    logger: app.log,
+  })
+  registerAuth(app, config, auth)
 
   const boardsRepo = createBoardsRepository(db)
   const columnsRepo = createColumnsRepository(db)
@@ -64,6 +74,7 @@ export function buildApp(config: Config, db: Db): FastifyInstance {
 
   app.register(openApiPlugin)
   app.register(healthRoutes)
+  app.register(authRoutes(auth, config))
   app.register(boardsRoutes(boards))
   app.register(columnsRoutes(columns, cards))
   app.register(cardsRoutes(cards, checklists))

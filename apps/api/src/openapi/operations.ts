@@ -23,6 +23,15 @@ import {
   updateChecklistItemSchema,
   updateChecklistSchema,
   updateColumnSchema,
+  createInvitationSchema,
+  forgotPasswordSchema,
+  invitationSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  updateProfileSchema,
+  userSchema,
+  verifyEmailSchema,
 } from '@taskflow/shared'
 
 export type Operation = {
@@ -34,7 +43,9 @@ export type Operation = {
   query?: z.ZodObject
   body?: z.ZodType
   /** Sikeres státusz és válasz; séma nélkül nincs törzs (204). */
-  success: { status: 200 | 201 | 204; schema?: z.ZodType }
+  success: { status: 200 | 201 | 202 | 204; schema?: z.ZodType }
+  /** Nyilvános végpont: nem kell hozzá bejelentkezés. */
+  public?: boolean
   /** A műveletre jellemző hibakódok a 400/404 mellett. */
   errors?: number[]
 }
@@ -43,8 +54,89 @@ const board = { tag: 'Boards' }
 const column = { tag: 'Columns' }
 const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
+const auth = { tag: 'Auth' }
 
 export const operations: Operation[] = [
+  {
+    ...auth,
+    public: true,
+    method: 'post',
+    path: '/auth/register',
+    summary: 'Register (first user becomes admin, later ones need an invitation)',
+    body: registerSchema,
+    success: { status: 201, schema: userSchema },
+    errors: [403, 409],
+  },
+  {
+    ...auth,
+    public: true,
+    method: 'post',
+    path: '/auth/login',
+    summary: 'Log in; sets the session cookie',
+    body: loginSchema,
+    success: { status: 200, schema: userSchema },
+    errors: [401],
+  },
+  { ...auth, method: 'post', path: '/auth/logout', summary: 'Log out', success: { status: 204 } },
+  {
+    ...auth,
+    method: 'get',
+    path: '/auth/me',
+    summary: 'Current user',
+    success: { status: 200, schema: userSchema },
+  },
+  {
+    ...auth,
+    method: 'patch',
+    path: '/auth/me',
+    summary: 'Update the profile (name, avatar, locale)',
+    body: updateProfileSchema,
+    success: { status: 200, schema: userSchema },
+  },
+  {
+    ...auth,
+    public: true,
+    method: 'post',
+    path: '/auth/forgot-password',
+    summary: 'Request a password reset email (always 202)',
+    body: forgotPasswordSchema,
+    success: { status: 202 },
+  },
+  {
+    ...auth,
+    public: true,
+    method: 'post',
+    path: '/auth/reset-password',
+    summary: 'Set a new password with the emailed token',
+    body: resetPasswordSchema,
+    success: { status: 204 },
+  },
+  {
+    ...auth,
+    public: true,
+    method: 'post',
+    path: '/auth/verify-email',
+    summary: 'Confirm the email address with the emailed token',
+    body: verifyEmailSchema,
+    success: { status: 204 },
+  },
+  {
+    ...auth,
+    method: 'post',
+    path: '/auth/resend-verification',
+    summary: 'Resend the verification email',
+    success: { status: 204 },
+  },
+  {
+    ...auth,
+    method: 'post',
+    path: '/invitations',
+    summary: 'Invite someone to register (admin only)',
+    body: createInvitationSchema,
+    success: { status: 201, schema: invitationSchema },
+    errors: [403, 409],
+  },
+
   {
     ...board,
     method: 'get',

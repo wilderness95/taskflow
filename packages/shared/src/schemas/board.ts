@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
   dateSchema,
+  httpUrlSchema,
   idSchema,
   prioritySchema,
   tagColorSchema,
@@ -110,7 +111,7 @@ export const createCardSchema = z.object({
   description: z.string().max(10000).default(''),
   priority: prioritySchema.default('medium'),
   dueDate: dateSchema.nullish(),
-  coverImage: z.string().url().nullish(),
+  coverImage: httpUrlSchema.nullish(),
   labelIds: z.array(idSchema).default([]),
 })
 export type CreateCardInput = z.infer<typeof createCardSchema>
@@ -120,7 +121,7 @@ export const updateCardSchema = z
     description: z.string().max(10000),
     priority: prioritySchema,
     dueDate: dateSchema.nullable(),
-    coverImage: z.string().url().nullable(),
+    coverImage: httpUrlSchema.nullable(),
     labelIds: z.array(idSchema),
   })
   .partial()
