@@ -24,17 +24,43 @@
     "notStarred": "Normál"
   },
   "visibility": {
-    "private": { "label": "Privát", "description": "Csak meghívottak látják" },
-    "workspace": { "label": "Munkaterületi", "description": "A munkaterület tagjai látják" },
-    "public": { "label": "Nyilvános", "description": "Bárki megtekintheti" }
+    "private": {
+      "label": "Privát",
+      "description": "Csak meghívottak látják"
+    },
+    "workspace": {
+      "label": "Munkaterületi",
+      "description": "A munkaterület tagjai látják"
+    },
+    "public": {
+      "label": "Nyilvános",
+      "description": "Bárki megtekintheti"
+    }
   },
   "views": {
     "aria": "Nézet választó",
-    "kanban": { "label": "Kanban Tábla", "short": "Táblás" },
-    "list": { "label": "Lista", "short": "Lista" },
-    "calendar": { "label": "Naptár", "short": "Naptár" },
-    "timeline": { "label": "Idővonal", "short": "Idővonal" }
+    "kanban": {
+      "label": "Kanban Tábla",
+      "short": "Táblás"
+    },
+    "list": {
+      "label": "Lista",
+      "short": "Lista"
+    },
+    "calendar": {
+      "label": "Naptár",
+      "short": "Naptár"
+    },
+    "timeline": {
+      "label": "Idővonal",
+      "short": "Idővonal"
+    }
   },
   "invite": "+ Meghívás",
-  "addColumn": "+ Új oszlop"
+  "addColumn": "+ Új oszlop",
+  "loading": "Tábla betöltése...",
+  "loadError": "A tábla betöltése nem sikerült.",
+  "retry": "Újrapróbálás",
+  "empty": "Még nincs tábla.",
+  "saveError": "A mentés nem sikerült, a tábla frissült a szerver állapotával."
 }
