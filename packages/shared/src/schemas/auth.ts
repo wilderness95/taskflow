@@ -4,7 +4,8 @@ import { httpUrlSchema, idSchema } from './common'
 export const LOCALES = ['hu'] as const
 
 export const emailSchema = z.string().trim().toLowerCase().pipe(z.email().max(254))
-export const passwordSchema = z.string().min(10).max(128)
+export const PASSWORD_MIN_LENGTH = 10
+export const passwordSchema = z.string().min(PASSWORD_MIN_LENGTH).max(128)
 const nameSchema = z.string().trim().min(1).max(100)
 
 export const userSchema = z.object({
