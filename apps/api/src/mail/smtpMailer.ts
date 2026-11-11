@@ -12,6 +12,9 @@ export class SmtpMailer implements Mailer {
       port: config.SMTP_PORT,
       secure: config.SMTP_PORT === 465,
       auth: { user: config.SMTP_USER, pass: config.SMTP_PASS },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     })
   }
 
