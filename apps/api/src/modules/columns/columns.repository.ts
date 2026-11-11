@@ -13,6 +13,13 @@ export function createColumnsRepository(db: Db) {
     delete: (id: string): void => {
       db.delete(columns).where(eq(columns.id, id)).run()
     },
+    listPositions: (boardId: string): { id: string; position: string }[] =>
+      db
+        .select({ id: columns.id, position: columns.position })
+        .from(columns)
+        .where(eq(columns.boardId, boardId))
+        .orderBy(asc(columns.position))
+        .all(),
     countCards: (id: string): number =>
       db.select({ n: count() }).from(cards).where(eq(cards.columnId, id)).get()?.n ?? 0,
     cardIdsInOrder: (id: string): string[] =>

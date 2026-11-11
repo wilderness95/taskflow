@@ -33,6 +33,13 @@ export function createCardsRepository(db: Db) {
       }
       return map
     },
+    listPositions: (columnId: string): { id: string; position: string }[] =>
+      db
+        .select({ id: cards.id, position: cards.position })
+        .from(cards)
+        .where(and(eq(cards.columnId, columnId), isNull(cards.archivedAt)))
+        .orderBy(asc(cards.position))
+        .all(),
     lastPosition: (columnId: string): string | null =>
       db
         .select({ position: cards.position })

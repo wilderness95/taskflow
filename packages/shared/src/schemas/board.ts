@@ -138,3 +138,14 @@ export const updateChecklistItemSchema = z
   .partial()
   .refine((v) => Object.keys(v).length > 0, 'empty_update')
 export type UpdateChecklistItemInput = z.infer<typeof updateChecklistItemSchema>
+
+/** Kártya áthelyezése: a `beforeCardId` elé kerül a cél oszlopban, ennek hiányában a végére. */
+export const moveCardSchema = z.object({
+  columnId: idSchema,
+  beforeCardId: idSchema.nullish(),
+})
+export type MoveCardInput = z.infer<typeof moveCardSchema>
+
+/** Oszlop áthelyezése: a `beforeColumnId` elé kerül, ennek hiányában a végére. */
+export const moveColumnSchema = z.object({ beforeColumnId: idSchema.nullish() })
+export type MoveColumnInput = z.infer<typeof moveColumnSchema>

@@ -1,7 +1,8 @@
 import { generateKeyBetween } from 'fractional-indexing'
-import type { CardDto, CreateCardInput, UpdateCardInput } from '@taskflow/shared'
+import type { CardDto, CreateCardInput, MoveCardInput, UpdateCardInput } from '@taskflow/shared'
 import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
+import { positionBefore } from '../../lib/position.js'
 import { AppError, notFound, orNotFound } from '../../errors.js'
 import type { BoardsRepository } from '../boards/boards.repository.js'
 import type { ChecklistsRepository } from '../checklists/checklists.repository.js'
@@ -84,6 +85,22 @@ export function createCardsService(deps: {
           cards.setLabels(id, assertLabels(column.boardId, labelIds))
         }
         cards.update(id, { ...fields, updatedAt: new Date(), version: card.version + 1 })
+      })
+      return hydrate([require(id)])[0]!
+    },
+
+    /** Egyetlen sor frissítése: az új `position` a szomszédok közé esik. */
+    move(id: string, input: MoveCardInput): CardDto {
+      const card = require(id)
+      const target = columns.findById(input.columnId)
+      const source = columns.findById(card.columnId)!
+      if (!target || target.boardId !== source.boardId) throw notFound('Column')
+      const position = positionBefore(cards.listPositions(target.id), id, input.beforeCardId)
+      cards.update(id, {
+        columnId: target.id,
+        position,
+        updatedAt: new Date(),
+        version: card.version + 1,
       })
       return hydrate([require(id)])[0]!
     },
