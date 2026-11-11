@@ -54,17 +54,18 @@ export function createAuthService(deps: {
   const link = (path: string, token: string) =>
     `${config.APP_URL.replace(/\/$/, '')}${path}?token=${encodeURIComponent(token)}`
 
-  /** A levélküldés hibája nem akaszthatja meg a műveletet (pl. regisztráció); naplózzuk. */
-  const sendMail = async (
+  /**
+   * A levelet nem várjuk be: a lassú vagy elérhetetlen SMTP-szerver nem akaszthatja meg a kérést,
+   * és a válaszidő nem árulja el, hogy létezik-e a fiók. A hibát naplózzuk.
+   */
+  const sendMail = (
     user: { email: string; locale: string },
     template: EmailTemplate,
     params: Record<string, string | number>,
-  ) => {
-    try {
-      await mailer.send({ to: user.email, ...renderEmail(user.locale, template, params) })
-    } catch (error) {
-      logger.error({ err: error, template }, 'failed to send email')
-    }
+  ): void => {
+    mailer
+      .send({ to: user.email, ...renderEmail(user.locale, template, params) })
+      .catch((error: unknown) => logger.error({ err: error, template }, 'failed to send email'))
   }
 
   const createSession = (userId: string, ctx: RequestContext): NewSession => {
@@ -99,9 +100,9 @@ export function createAuthService(deps: {
     return token
   }
 
-  const sendVerification = async (user: UserRow) => {
+  const sendVerification = (user: UserRow) => {
     const token = issueEmailToken(user.id, 'verify_email', VERIFY_TTL)
-    await sendMail(user, 'verifyEmail', {
+    sendMail(user, 'verifyEmail', {
       name: user.name,
       link: link('/verify-email', token),
       hours: VERIFY_TTL / HOUR,
@@ -160,7 +161,7 @@ export function createAuthService(deps: {
         return created
       })
 
-      if (!invitation) await sendVerification(user)
+      if (!invitation) sendVerification(user)
       return { user: toUserDto(user), session: createSession(user.id, ctx) }
     },
 
@@ -215,7 +216,7 @@ export function createAuthService(deps: {
 
     async resendVerification(actor: Actor): Promise<void> {
       const user = repo.findUserById(actor.id)
-      if (user && !user.emailVerifiedAt) await sendVerification(user)
+      if (user && !user.emailVerifiedAt) sendVerification(user)
     },
 
     /** Mindig ugyanúgy válaszol, hogy ne derüljön ki, melyik e-mail-cím regisztrált. */
@@ -224,7 +225,7 @@ export function createAuthService(deps: {
       const user = repo.findUserByEmail(normalized)
       if (!user?.passwordHash) return
       const token = issueEmailToken(user.id, 'password_reset', RESET_TTL)
-      await sendMail(user, 'passwordReset', {
+      sendMail(user, 'passwordReset', {
         name: user.name,
         link: link('/reset-password', token),
         hours: RESET_TTL / HOUR,
@@ -257,7 +258,7 @@ export function createAuthService(deps: {
         invitedBy: actor.id,
         expiresAt: new Date(Date.now() + INVITE_TTL),
       })
-      await sendMail({ email: input.email, locale: inviter.locale }, 'invitation', {
+      sendMail({ email: input.email, locale: inviter.locale }, 'invitation', {
         inviter: inviter.name,
         link: `${config.APP_URL.replace(/\/$/, '')}/register?invite=${encodeURIComponent(token)}&email=${encodeURIComponent(input.email)}`,
         days: INVITE_TTL / (24 * HOUR),
