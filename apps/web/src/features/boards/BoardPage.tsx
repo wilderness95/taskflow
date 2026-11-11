@@ -29,6 +29,7 @@ export function BoardPage() {
   const drag = useBoardDrag({
     onMoveTask: actions.moveTask,
     onReorderColumns: actions.reorderColumns,
+    enabled: meta.permissions.write,
   })
 
   const visibleColumns = useMemo(
@@ -88,9 +89,14 @@ export function BoardPage() {
           <main className="board-page">
             <BoardHeader
               meta={meta}
-              onInvite={() => setDialog({ type: 'invite' })}
+              onMembers={() => setDialog({ type: 'members' })}
               onAddColumn={handleAddColumn}
             />
+            {!meta.permissions.write && (
+              <p className="board-readonly-note" role="note">
+                {t('board:readOnly')}
+              </p>
+            )}
             <BoardToolbar meta={meta} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
             <Board
               columns={visibleColumns}
@@ -100,6 +106,7 @@ export function BoardPage() {
               onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
               onEditTask={(columnId, task) => setDialog({ type: 'card-edit', columnId, task })}
               onDeleteTask={actions.deleteTask}
+              readOnly={!meta.permissions.write}
             />
           </main>
         </div>
@@ -112,6 +119,9 @@ export function BoardPage() {
         onSaveTask={actions.saveTask}
         onUpdateColumn={actions.updateColumn}
         onDeleteColumn={actions.deleteColumn}
+        boardId={boardId}
+        workspaceId={workspaceId ?? ''}
+        canManageMembers={meta.permissions.manageMembers}
       />
     </div>
   )

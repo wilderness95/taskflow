@@ -43,4 +43,4 @@ export type Dialog =
   | { type: 'card-edit'; columnId: string; task: Task }
   | { type: 'column-rename'; columnId: string }
   | { type: 'column-delete'; columnId: string }
-  | { type: 'invite' }
+  | { type: 'members' }

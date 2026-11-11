@@ -14,6 +14,7 @@ type ColumnViewProps = {
   onAddTask: () => void
   onEditTask: (task: Task) => void
   onDeleteTask: (taskId: string) => void
+  readOnly?: boolean
 }
 
 export function ColumnView({
@@ -25,6 +26,7 @@ export function ColumnView({
   onAddTask,
   onEditTask,
   onDeleteTask,
+  readOnly = false,
 }: ColumnViewProps) {
   const { t } = useTranslation('column')
   const { taskDrag, columnDrag } = drag
@@ -49,36 +51,42 @@ export function ColumnView({
           <h2>{column.title}</h2>
         </div>
 
-        <div className="column-tools">
-          <button
-            type="button"
-            className="column-action"
-            aria-label={t('renameAria', { title: column.title })}
-            onClick={onRename}
-          >
-            ✎
-          </button>
-          <button
-            type="button"
-            className="column-action danger"
-            aria-label={t('deleteAria', { title: column.title })}
-            onClick={onDelete}
-          >
-            🗑
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="column-tools">
+            <button
+              type="button"
+              className="column-action"
+              aria-label={t('renameAria', { title: column.title })}
+              onClick={onRename}
+            >
+              ✎
+            </button>
+            <button
+              type="button"
+              className="column-action danger"
+              aria-label={t('deleteAria', { title: column.title })}
+              onClick={onDelete}
+            >
+              🗑
+            </button>
+          </div>
+        )}
       </header>
 
       <div className="task-list">
         {column.tasks.length === 0 ? (
-          <button
-            type="button"
-            className={classNames('empty-state', isTaskTarget && 'is-drop-target')}
-            onClick={onAddTask}
-            {...drag.getEmptyColumnProps(columnId)}
-          >
-            {t('addCard')}
-          </button>
+          readOnly ? (
+            <p className="empty-state">{t('emptyReadOnly')}</p>
+          ) : (
+            <button
+              type="button"
+              className={classNames('empty-state', isTaskTarget && 'is-drop-target')}
+              onClick={onAddTask}
+              {...drag.getEmptyColumnProps(columnId)}
+            >
+              {t('addCard')}
+            </button>
+          )
         ) : (
           <>
             {column.tasks.map((task) => (
@@ -90,12 +98,15 @@ export function ColumnView({
                 isDropTarget={taskDrag.targetTaskId === task.id}
                 onEdit={() => onEditTask(task)}
                 onDelete={() => onDeleteTask(task.id)}
+                readOnly={readOnly}
               />
             ))}
 
-            <button type="button" className="add-card" onClick={onAddTask}>
-              {t('addCard')}
-            </button>
+            {!readOnly && (
+              <button type="button" className="add-card" onClick={onAddTask}>
+                {t('addCard')}
+              </button>
+            )}
           </>
         )}
       </div>

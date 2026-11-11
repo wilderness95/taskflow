@@ -12,6 +12,7 @@ type BoardProps = {
   onAddTask: (columnId: string) => void
   onEditTask: (columnId: string, task: Task) => void
   onDeleteTask: (columnId: string, taskId: string) => void
+  readOnly?: boolean
 }
 
 export function Board({
@@ -22,6 +23,7 @@ export function Board({
   onAddTask,
   onEditTask,
   onDeleteTask,
+  readOnly = false,
 }: BoardProps) {
   const { t } = useTranslation('board')
 
@@ -38,6 +40,7 @@ export function Board({
           onAddTask={() => onAddTask(columnId)}
           onEditTask={(task) => onEditTask(columnId, task)}
           onDeleteTask={(taskId) => onDeleteTask(columnId, taskId)}
+          readOnly={readOnly}
         />
       ))}
     </section>

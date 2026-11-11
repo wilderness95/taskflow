@@ -10,14 +10,26 @@ import './VisibilityMenu.css'
 type VisibilityMenuProps = {
   visibility: Visibility
   onChange: (visibility: Visibility) => void
+  readOnly?: boolean
 }
 
-export function VisibilityMenu({ visibility, onChange }: VisibilityMenuProps) {
+export function VisibilityMenu({ visibility, onChange, readOnly = false }: VisibilityMenuProps) {
   const { t } = useTranslation('board')
   const [isOpen, setIsOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useDismiss(ref, isOpen, () => setIsOpen(false))
+
+  if (readOnly) {
+    return (
+      <div className="visibility-badge-wrap">
+        <span className="visibility-badge">
+          <span className="visibility-icon">{VISIBILITY_ICONS[visibility]}</span>
+          <span>{t(`visibility.${visibility}.label`)}</span>
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="visibility-badge-wrap" ref={ref}>
