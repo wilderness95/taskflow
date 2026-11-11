@@ -12,3 +12,8 @@ export class AppError extends Error {
 
 export const notFound = (resource: string) =>
   new AppError(404, 'not_found', `${resource} not found`)
+
+export function orNotFound<T>(value: T | undefined | null, resource: string): T {
+  if (value === undefined || value === null) throw notFound(resource)
+  return value
+}

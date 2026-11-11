@@ -1,27 +1,33 @@
 import { describe, expect, it } from 'vitest'
 import { buildApp } from './app.js'
 import { loadConfig } from './config.js'
+import { createDb, runMigrations } from './db/client.js'
 import { AppError } from './errors.js'
 
 const config = loadConfig({ NODE_ENV: 'test' })
+const makeApp = () => {
+  const { db } = createDb(':memory:')
+  runMigrations(db)
+  return buildApp(config, db)
+}
 
 describe('app', () => {
   it('health check returns ok', async () => {
-    const app = buildApp(config)
+    const app = makeApp()
     const res = await app.inject('/api/v1/health')
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ status: 'ok' })
   })
 
   it('unknown route uses the unified error format', async () => {
-    const app = buildApp(config)
+    const app = makeApp()
     const res = await app.inject('/api/v1/nope')
     expect(res.statusCode).toBe(404)
     expect(res.json().error.code).toBe('not_found')
   })
 
   it('maps AppError and hides internal errors', async () => {
-    const app = buildApp(config)
+    const app = makeApp()
     app.get('/t/app', async () => {
       throw new AppError(409, 'conflict', 'x', { a: 1 })
     })
