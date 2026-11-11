@@ -8,13 +8,15 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @taskflow/web",
+    "dev": "npm run dev:api & npm run dev:web; wait",
     "build": "npm run build --workspaces --if-present",
     "lint": "oxlint",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "dev:web": "npm run dev -w @taskflow/web",
+    "dev:api": "npm run dev -w @taskflow/api"
   },
   "devDependencies": {
     "oxlint": "^1.90.0",
