@@ -149,3 +149,5 @@ export type MoveCardInput = z.infer<typeof moveCardSchema>
 /** Oszlop áthelyezése: a `beforeColumnId` elé kerül, ennek hiányában a végére. */
 export const moveColumnSchema = z.object({ beforeColumnId: idSchema.nullish() })
 export type MoveColumnInput = z.infer<typeof moveColumnSchema>
+
+export const boardListSchema = z.object({ data: z.array(boardSummarySchema) })

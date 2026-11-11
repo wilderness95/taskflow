@@ -15,7 +15,14 @@ import { createChecklistsService } from './modules/checklists/checklists.service
 import { columnsRoutes } from './modules/columns/columns.routes.js'
 import { createColumnsRepository } from './modules/columns/columns.repository.js'
 import { createColumnsService } from './modules/columns/columns.service.js'
+import { openApiPlugin } from './openapi/openapi.plugin.js'
 import { registerErrorHandler } from './plugins/errorHandler.js'
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    routeList: string[]
+  }
+}
 
 export function buildApp(config: Config, db: Db): FastifyInstance {
   const app = Fastify({
@@ -48,6 +55,14 @@ export function buildApp(config: Config, db: Db): FastifyInstance {
   const columns = createColumnsService(columnsRepo)
   const checklists = createChecklistsService(checklistsRepo, cardsRepo)
 
+  // Az összes route-ot gyűjti, hogy a teszt ellenőrizhesse az OpenAPI-lefedettséget.
+  const routes: string[] = []
+  app.addHook('onRoute', (r) => {
+    for (const m of [r.method].flat()) routes.push(`${m} ${r.url}`)
+  })
+  app.decorate('routeList', routes)
+
+  app.register(openApiPlugin)
   app.register(healthRoutes)
   app.register(boardsRoutes(boards))
   app.register(columnsRoutes(columns, cards))
