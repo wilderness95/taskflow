@@ -1,0 +1,40 @@
+{
+  "eyebrow": "Board",
+  "boardAria": "Kanban board",
+  "search": {
+    "placeholder": "Keresés kártyákra, címkékre, határidőre...",
+    "aria": "Keresés"
+  },
+  "filter": {
+    "placeholder": "Szűrés...",
+    "aria": "Szűrés"
+  },
+  "taskCount_one": "{{count, number}} feladat",
+  "taskCount_other": "{{count, number}} feladat",
+  "notifications": "Értesítések",
+  "settings": "Beállítások",
+  "editTitleAria": "Táblacím szerkesztése",
+  "star": {
+    "add": "Kedvenc hozzáadása",
+    "remove": "Kedvenc eltávolítása"
+  },
+  "meta": {
+    "visibility": "Láthatóság: {{label}}",
+    "starred": "Kedvenc",
+    "notStarred": "Normál"
+  },
+  "visibility": {
+    "private": { "label": "Privát", "description": "Csak meghívottak látják" },
+    "workspace": { "label": "Munkaterületi", "description": "A munkaterület tagjai látják" },
+    "public": { "label": "Nyilvános", "description": "Bárki megtekintheti" }
+  },
+  "views": {
+    "aria": "Nézet választó",
+    "kanban": { "label": "Kanban Tábla", "short": "Táblás" },
+    "list": { "label": "Lista", "short": "Lista" },
+    "calendar": { "label": "Naptár", "short": "Naptár" },
+    "timeline": { "label": "Idővonal", "short": "Idővonal" }
+  },
+  "invite": "+ Meghívás",
+  "addColumn": "+ Új oszlop"
+}

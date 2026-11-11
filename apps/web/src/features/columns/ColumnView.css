@@ -1,0 +1,149 @@
+.column {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 18px;
+  min-height: 420px;
+  padding: 12px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.column.is-drop-target {
+  border-color: rgba(96, 165, 250, 0.9);
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.35), 0 0 0 4px rgba(59, 130, 246, 0.12);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.column.is-column-dragging {
+  opacity: 0.5;
+  transform: rotate(1.5deg) scale(0.98);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.4);
+}
+
+.column.is-column-drop-target {
+  border-color: rgba(96, 165, 250, 0.8);
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.4), 0 0 0 4px rgba(59, 130, 246, 0.12);
+  background: rgba(59, 130, 246, 0.09);
+}
+
+.column.blue .column-dot {
+  background: #60a5fa;
+}
+
+.column.amber .column-dot {
+  background: #fbbf24;
+}
+
+.column.green .column-dot {
+  background: #34d399;
+}
+
+.column.purple .column-dot {
+  background: #a78bfa;
+}
+
+.column.rose .column-dot {
+  background: #fb7185;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 4px 2px;
+}
+
+.column-title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.column-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.column-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #f3f8ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.column-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.column-action {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 0.08);
+  color: #edf4ff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
+}
+
+.column-action:hover {
+  transform: translateY(-1px);
+}
+
+.column-action.danger {
+  color: #fecaca;
+  border-color: rgba(251, 113, 133, 0.3);
+  background: rgba(251, 113, 133, 0.08);
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 180px;
+}
+
+.add-card {
+  border: 1px dashed rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.18);
+  color: rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  cursor: pointer;
+}
+
+.empty-state {
+  border: 1px dashed rgba(148, 163, 184, 0.24);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.18);
+  color: rgba(226, 232, 240, 0.9);
+  min-height: 110px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.empty-state.is-drop-target {
+  border-color: rgba(96, 165, 250, 0.9);
+  background: rgba(37, 99, 235, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.4);
+}

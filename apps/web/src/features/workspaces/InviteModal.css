@@ -1,0 +1,30 @@
+.invite-modal-card {
+  width: min(100%, 420px);
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 40px 80px rgba(2, 6, 23, 0.52);
+}
+
+.invite-form {
+  display: grid;
+  gap: 16px;
+}
+
+.invite-form input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  color: #eff6ff;
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.invite-form input:focus {
+  outline: none;
+  border-color: rgba(96, 165, 250, 0.9);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}

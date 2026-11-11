@@ -1,0 +1,9 @@
+{
+  "invite": {
+    "eyebrow": "Meghívás",
+    "title": "Tag hozzáadása",
+    "emailPlaceholder": "email@pelda.hu",
+    "emailAria": "Email cím",
+    "submit": "Meghívás"
+  }
+}

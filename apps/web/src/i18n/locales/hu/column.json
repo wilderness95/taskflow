@@ -1,0 +1,28 @@
+{
+  "defaultTitle": "Új oszlop {{number}}",
+  "minOneColumn": "Legalább egy oszlopnak maradnia kell.",
+  "renameAria": "Oszlop átnevezése: {{title}}",
+  "deleteAria": "Oszlop törlése: {{title}}",
+  "addCard": "+ Kártya hozzáadása",
+  "rename": {
+    "eyebrow": "Oszlop neve",
+    "title": "Átnevezés",
+    "name": "Név",
+    "namePlaceholder": "Írd be az új oszlop nevét",
+    "accent": "Pötty szín",
+    "accentAria": "Szín: {{color}}"
+  },
+  "delete": {
+    "eyebrow": "Oszlop törlése",
+    "title": "Biztos vagy benne?",
+    "message": "A törölt oszlopban lévő feladatok a szomszédos oszlopba kerülnek.",
+    "confirm": "Törlés"
+  },
+  "accent": {
+    "blue": "kék",
+    "amber": "borostyán",
+    "green": "zöld",
+    "purple": "lila",
+    "rose": "rózsaszín"
+  }
+}

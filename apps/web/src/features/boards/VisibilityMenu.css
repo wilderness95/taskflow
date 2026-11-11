@@ -1,0 +1,32 @@
+.visibility-badge-wrap {
+  position: relative;
+}
+
+.visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 0.08);
+  color: #edf4ff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.visibility-badge:hover {
+  transform: translateY(-1px);
+}
+
+.visibility-icon {
+  font-size: 0.88rem;
+}
+
+/* Magasabb specificitás: a menu.css sorrendjétől függetlenül felülírja a .menu-panel-t. */
+.menu-panel.visibility-panel {
+  right: auto;
+  left: 0;
+  min-width: 260px;
+}
