@@ -1,5 +1,6 @@
 import { generateKeyBetween } from 'fractional-indexing'
-import type { ColumnDto, UpdateColumnInput } from '@taskflow/shared'
+import type { ColumnDto, MoveColumnInput, UpdateColumnInput } from '@taskflow/shared'
+import { positionBefore } from '../../lib/position.js'
 import { AppError, orNotFound } from '../../errors.js'
 import type { ColumnRow, ColumnsRepository } from './columns.repository.js'
 
@@ -19,6 +20,12 @@ export function createColumnsService(repo: ColumnsRepository) {
     update(id: string, input: UpdateColumnInput): ColumnDto {
       require(id)
       return toColumnDto(repo.update(id, input)!)
+    },
+
+    move(id: string, input: MoveColumnInput): ColumnDto {
+      const column = require(id)
+      const position = positionBefore(repo.listPositions(column.boardId), id, input.beforeColumnId)
+      return toColumnDto(repo.update(id, { position })!)
     },
 
     /** Ha az oszlopban vannak kártyák, `moveCardsTo` kötelező: a kártyák a cél oszlop végére kerülnek. */

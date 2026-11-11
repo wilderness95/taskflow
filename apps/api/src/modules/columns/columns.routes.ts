@@ -3,6 +3,7 @@ import {
   createCardSchema,
   deleteColumnQuerySchema,
   idParamsSchema,
+  moveColumnSchema,
   updateColumnSchema,
 } from '@taskflow/shared'
 import type { CardsService } from '../cards/cards.service.js'
@@ -12,6 +13,10 @@ export function columnsRoutes(service: ColumnsService, cards: CardsService) {
   return async (app: FastifyInstance): Promise<void> => {
     app.patch('/api/v1/columns/:id', async (req) =>
       service.update(idParamsSchema.parse(req.params).id, updateColumnSchema.parse(req.body)),
+    )
+
+    app.post('/api/v1/columns/:id/move', async (req) =>
+      service.move(idParamsSchema.parse(req.params).id, moveColumnSchema.parse(req.body)),
     )
 
     app.delete('/api/v1/columns/:id', async (req, reply) => {
