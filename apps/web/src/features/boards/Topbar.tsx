@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { UserMenu } from '../auth/UserMenu'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
 import '../../shared/styles/base.css'
 import './Topbar.css'
@@ -40,7 +41,7 @@ export function Topbar({ searchQuery, onSearchChange, totalTasks }: TopbarProps)
         <button type="button" className="icon-button" aria-label={t('board:settings')}>
           ⚙
         </button>
-        <div className="avatar">A</div>
+        <UserMenu />
       </div>
     </header>
   )

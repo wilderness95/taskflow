@@ -1,0 +1,28 @@
+.user-menu {
+  position: relative;
+}
+
+.user-menu-trigger {
+  display: grid;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.avatar-image {
+  object-fit: cover;
+}
+
+.user-menu-identity {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.user-menu-identity small {
+  color: rgba(226, 232, 240, 0.7);
+}
