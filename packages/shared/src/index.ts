@@ -2,5 +2,6 @@
 export * from './checklist'
 export * from './dueDate'
 export * from './priority'
+export * from './roles'
 export * from './tags'
 export * from './schemas'
