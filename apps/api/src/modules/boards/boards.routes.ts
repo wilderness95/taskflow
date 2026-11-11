@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify'
+import { requireActor } from '../../auth/auth.plugin.js'
 import {
   createBoardSchema,
   createColumnSchema,
@@ -13,7 +14,7 @@ export function boardsRoutes(service: BoardsService) {
     app.get('/api/v1/boards', async () => ({ data: service.list() }))
 
     app.post('/api/v1/boards', async (req, reply) => {
-      const board = service.create(req.actor, createBoardSchema.parse(req.body))
+      const board = service.create(requireActor(req), createBoardSchema.parse(req.body))
       return reply.status(201).send(board)
     })
 

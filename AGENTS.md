@@ -6,11 +6,11 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 ## Projekt és stack
 - **Nyelv: TypeScript** mindenhol (`strict: true`). Új kód `.ts` / `.tsx`; `any` csak indokolt esetben, kommenttel.
 - npm workspaces monorepo; csomagkezelő: npm (`package-lock.json`). Ne használj yarn/pnpm-et.
-  - `apps/web`: React 19 + Vite, i18next (megvan); TanStack Query, React Router (tervezett).
-  - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer (tervezett, M1-től; még nem létezik).
-  - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k, hibakódok (tervezett).
+  - `apps/web`: React 19 + Vite, i18next (megvan); TanStack Query, React Router (megvan).
+  - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer, argon2 (megvan).
+  - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k (megvan); hibakódok (tervezett).
 - Üzemeltetés: Docker Compose (`web` + `api` + `cloudflared`) a házi szerveren, Cloudflare Tunnelen, saját domainnel.
-- Aktuális állapot: az M0 refaktor kész (monorepo, TS, feature-komponensek, i18n, CI). Az adatok még csak a kliens memóriájában élnek (`boardSeed.ts` + reducer); az API és az adatbázis az M1-ben jön.
+- Aktuális állapot: az M0 (refaktor) és az M1 (backend, perzisztencia, API, Docker Compose) kész; az M2 (felhasználókezelés és authentikáció) készül az `m2-auth` branchen. Az API-hoz bejelentkezés kell (session cookie); a hozzáférés még nem munkaterület-/szerepkör-alapú (M3).
 
 ## Parancsok
 - Fejlesztés: `npm run dev`

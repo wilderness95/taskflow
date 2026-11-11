@@ -21,7 +21,7 @@ describe('app', () => {
 
   it('unknown route uses the unified error format', async () => {
     const app = makeApp()
-    const res = await app.inject('/api/v1/nope')
+    const res = await app.inject('/nope')
     expect(res.statusCode).toBe(404)
     expect(res.json().error.code).toBe('not_found')
   })
