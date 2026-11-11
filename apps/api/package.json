@@ -1,0 +1,22 @@
+{
+  "name": "@taskflow/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "build": "tsc --noEmit",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15"
+  },
+  "dependencies": {
+    "@taskflow/shared": "*",
+    "fastify": "^5.12.8",
+    "zod": "^4.6.7"
+  }
+}
