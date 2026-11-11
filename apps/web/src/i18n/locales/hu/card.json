@@ -1,0 +1,39 @@
+{
+  "priority": {
+    "high": "Magas",
+    "medium": "Közepes",
+    "low": "Alacsony"
+  },
+  "noDescription": "Nincs hozzácsatolt leírás.",
+  "deleteAria": "Töröld a {{title}} feladatot",
+  "dueLabel": "Határidő",
+  "modal": {
+    "createEyebrow": "Új feladat",
+    "editEyebrow": "Feladat szerkesztése",
+    "createTitle": "Kártya hozzáadása",
+    "editTitle": "Kártya módosítása",
+    "create": "Hozzáadás",
+    "save": "Mentés"
+  },
+  "fields": {
+    "title": "Cím",
+    "titlePlaceholder": "Pl. Jira ticket frissítése",
+    "description": "Leírás",
+    "descriptionPlaceholder": "Mit kell megcsinálni?",
+    "priority": "Prioritás",
+    "column": "Oszlop",
+    "tags": "Címkék",
+    "tagsPlaceholder": "UI, UX, Marketing",
+    "dueDate": "Határidő"
+  },
+  "checklist": {
+    "defaultTitle": "Content Checklist",
+    "toggleAria": "Checklist bejelölése",
+    "delete": "Delete",
+    "empty": "Nincs elem a listában.",
+    "itemPlaceholder": "Add an item",
+    "addItem": "Add an item",
+    "check": "Kijelölés",
+    "uncheck": "Kijelölés megszüntetése"
+  }
+}
