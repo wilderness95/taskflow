@@ -1,0 +1,140 @@
+import { z } from 'zod'
+import {
+  dateSchema,
+  idSchema,
+  prioritySchema,
+  tagColorSchema,
+  titleSchema,
+  visibilitySchema,
+} from './common'
+
+export const labelSchema = z.object({
+  id: idSchema,
+  boardId: idSchema,
+  name: z.string(),
+  color: tagColorSchema,
+})
+export type LabelDto = z.infer<typeof labelSchema>
+export const createLabelSchema = z.object({
+  name: z.string().trim().min(1).max(50),
+  color: tagColorSchema,
+})
+export type CreateLabelInput = z.infer<typeof createLabelSchema>
+
+export const checklistItemSchema = z.object({
+  id: idSchema,
+  checklistId: idSchema,
+  text: z.string(),
+  done: z.boolean(),
+  position: z.string(),
+})
+export type ChecklistItemDto = z.infer<typeof checklistItemSchema>
+
+export const checklistSchema = z.object({
+  id: idSchema,
+  cardId: idSchema,
+  title: z.string(),
+  position: z.string(),
+  items: z.array(checklistItemSchema),
+})
+export type ChecklistDto = z.infer<typeof checklistSchema>
+
+export const cardSchema = z.object({
+  id: idSchema,
+  columnId: idSchema,
+  title: z.string(),
+  description: z.string(),
+  priority: prioritySchema,
+  dueDate: dateSchema.nullable(),
+  coverImage: z.string().nullable(),
+  position: z.string(),
+  labelIds: z.array(idSchema),
+  checklists: z.array(checklistSchema),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  version: z.number().int(),
+})
+export type CardDto = z.infer<typeof cardSchema>
+
+export const columnSchema = z.object({
+  id: idSchema,
+  boardId: idSchema,
+  title: z.string(),
+  accent: tagColorSchema,
+  isDone: z.boolean(),
+  position: z.string(),
+})
+export type ColumnDto = z.infer<typeof columnSchema>
+
+export const boardSummarySchema = z.object({
+  id: idSchema,
+  title: z.string(),
+  visibility: visibilitySchema,
+  createdAt: z.string(),
+})
+export type BoardSummaryDto = z.infer<typeof boardSummarySchema>
+
+export const boardSchema = boardSummarySchema.extend({
+  labels: z.array(labelSchema),
+  columns: z.array(columnSchema.extend({ cards: z.array(cardSchema) })),
+})
+export type BoardDto = z.infer<typeof boardSchema>
+
+export const createBoardSchema = z.object({
+  title: titleSchema,
+  visibility: visibilitySchema.default('private'),
+})
+export type CreateBoardInput = z.infer<typeof createBoardSchema>
+export const updateBoardSchema = z
+  .object({ title: titleSchema, visibility: visibilitySchema })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, 'empty_update')
+export type UpdateBoardInput = z.infer<typeof updateBoardSchema>
+
+export const createColumnSchema = z.object({
+  title: titleSchema,
+  accent: tagColorSchema.default('blue'),
+  isDone: z.boolean().default(false),
+})
+export type CreateColumnInput = z.infer<typeof createColumnSchema>
+export const updateColumnSchema = z
+  .object({ title: titleSchema, accent: tagColorSchema, isDone: z.boolean() })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, 'empty_update')
+export type UpdateColumnInput = z.infer<typeof updateColumnSchema>
+/** Oszlop törlésekor a kártyák ebbe az oszlopba kerülnek át. */
+export const deleteColumnQuerySchema = z.object({ moveCardsTo: idSchema.optional() })
+
+export const createCardSchema = z.object({
+  title: titleSchema,
+  description: z.string().max(10000).default(''),
+  priority: prioritySchema.default('medium'),
+  dueDate: dateSchema.nullish(),
+  coverImage: z.string().url().nullish(),
+  labelIds: z.array(idSchema).default([]),
+})
+export type CreateCardInput = z.infer<typeof createCardSchema>
+export const updateCardSchema = z
+  .object({
+    title: titleSchema,
+    description: z.string().max(10000),
+    priority: prioritySchema,
+    dueDate: dateSchema.nullable(),
+    coverImage: z.string().url().nullable(),
+    labelIds: z.array(idSchema),
+  })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, 'empty_update')
+export type UpdateCardInput = z.infer<typeof updateCardSchema>
+
+export const createChecklistSchema = z.object({ title: titleSchema.default('Checklist') })
+export type CreateChecklistInput = z.infer<typeof createChecklistSchema>
+export const updateChecklistSchema = z.object({ title: titleSchema })
+export type UpdateChecklistInput = z.infer<typeof updateChecklistSchema>
+export const createChecklistItemSchema = z.object({ text: z.string().trim().min(1).max(500) })
+export type CreateChecklistItemInput = z.infer<typeof createChecklistItemSchema>
+export const updateChecklistItemSchema = z
+  .object({ text: z.string().trim().min(1).max(500), done: z.boolean() })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, 'empty_update')
+export type UpdateChecklistItemInput = z.infer<typeof updateChecklistItemSchema>

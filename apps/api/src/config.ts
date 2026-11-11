@@ -7,6 +7,8 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   APP_URL: z.url().default('http://localhost:5173'),
   DATABASE_URL: z.string().default('./data/taskflow.db'),
+  // M1: nincs auth, a seed felhasználó kell a működéshez; az M2 után csak dev.
+  SEED: z.stringbool().default(true),
 })
 
 export type Config = z.infer<typeof envSchema>
