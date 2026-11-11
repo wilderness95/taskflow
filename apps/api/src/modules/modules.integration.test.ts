@@ -1,21 +1,21 @@
 import type { FastifyInstance } from 'fastify'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { buildApp } from '../app.js'
-import { loadConfig } from '../config.js'
-import { createDb, runMigrations } from '../db/client.js'
 import { SEED_BOARD_ID, seed } from '../db/seed.js'
+import { createTestApp, register } from '../testing/helpers.js'
 
 let app: FastifyInstance
+let cookie: string
 
-beforeEach(() => {
-  const { db } = createDb(':memory:')
-  runMigrations(db)
-  seed(db)
-  app = buildApp(loadConfig({ NODE_ENV: 'test' }), db)
+beforeEach(async () => {
+  const test = createTestApp()
+  seed(test.db)
+  app = test.app
+  // Az első regisztrált felhasználó átveszi a seed táblát.
+  cookie = (await register(app, { email: 'admin@example.com' })).cookie
 })
 
 const call = async (method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: object) => {
-  const res = await app.inject({ method, url: `/api/v1${url}`, payload })
+  const res = await app.inject({ method, url: `/api/v1${url}`, payload, headers: { cookie } })
   return { status: res.statusCode, body: res.body ? res.json() : null }
 }
 
@@ -262,5 +262,21 @@ describe('move', () => {
       (await call('POST', `/columns/${todo.id}/move`, { beforeColumnId: 'nope' })).status,
     ).toBe(422)
     expect((await call('POST', '/columns/nope/move', {})).status).toBe(404)
+  })
+})
+
+describe('url fields', () => {
+  it('only accepts http(s) cover images', async () => {
+    const col = (await getBoard()).columns[0].id
+    const bad = await call('POST', `/columns/${col}/cards`, {
+      title: 'x',
+      coverImage: 'javascript:alert(1)',
+    })
+    expect(bad.status).toBe(400)
+    const ok = await call('POST', `/columns/${col}/cards`, {
+      title: 'x',
+      coverImage: 'https://example.com/a.png',
+    })
+    expect(ok.status).toBe(201)
   })
 })

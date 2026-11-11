@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify'
+import { requireActor } from '../../auth/auth.plugin.js'
 import {
   createCardSchema,
   deleteColumnQuerySchema,
@@ -27,7 +28,7 @@ export function columnsRoutes(service: ColumnsService, cards: CardsService) {
 
     app.post('/api/v1/columns/:id/cards', async (req, reply) => {
       const card = cards.create(
-        req.actor,
+        requireActor(req),
         idParamsSchema.parse(req.params).id,
         createCardSchema.parse(req.body),
       )
