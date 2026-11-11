@@ -3,10 +3,9 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 import { rememberWorkspace } from '../../shared/lib/lastWorkspace'
-import { UserMenu } from '../auth/UserMenu'
 import { CreateBoardModal } from './CreateBoardModal'
 import { WorkspaceBoardCard } from './WorkspaceBoardCard'
-import { WorkspaceSwitcher } from './WorkspaceSwitcher'
+import { WorkspaceTopbar } from './WorkspaceTopbar'
 import { useToggleStar, useWorkspace, useWorkspaceBoards } from './useWorkspaces'
 import '../../shared/styles/base.css'
 import '../../shared/styles/buttons.css'
@@ -33,16 +32,7 @@ export function WorkspacePage() {
   return (
     <div className="app-shell">
       <div className="trello-surface">
-        <header className="topbar workspace-topbar">
-          <Link to="/" className="brand-wrap">
-            <div className="brand-badge">T</div>
-            <span className="brand-name">{t('common:appName')}</span>
-          </Link>
-          <WorkspaceSwitcher currentWorkspaceId={workspaceId} />
-          <div className="topbar-actions">
-            <UserMenu />
-          </div>
-        </header>
+        <WorkspaceTopbar workspaceId={workspaceId} />
 
         <main className="workspace-page">
           {boards.isError || (!workspace && !boards.isPending) ? (

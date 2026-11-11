@@ -7,6 +7,8 @@ import { ResetPasswordPage } from '../features/auth/ResetPasswordPage'
 import { VerifyEmailPage } from '../features/auth/VerifyEmailPage'
 import { GuestOnly, RequireAuth } from '../features/auth/RequireAuth'
 import { BoardPage } from '../features/boards/BoardPage'
+import { AcceptInvitationPage } from '../features/auth/AcceptInvitationPage'
+import { WorkspaceMembersPage } from '../features/workspaces/WorkspaceMembersPage'
 import { WorkspacePage } from '../features/workspaces/WorkspacePage'
 import { RootRedirect } from './RootRedirect'
 import { queryClient } from './queryClient'
@@ -24,9 +26,11 @@ export default function App() {
           {/* A levélben kapott hivatkozások bejelentkezett állapotban is működnek. */}
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/invitations/accept" element={<AcceptInvitationPage />} />
           <Route element={<RequireAuth />}>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/w/:workspaceId" element={<WorkspacePage />} />
+            <Route path="/w/:workspaceId/members" element={<WorkspaceMembersPage />} />
             <Route path="/b/:boardId" element={<BoardPage />} />
           </Route>
         </Routes>
