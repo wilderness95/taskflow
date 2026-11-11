@@ -16,6 +16,7 @@ import { AppError } from '../../errors.js'
 import { renderEmail, type EmailTemplate } from '../../i18n/index.js'
 import type { Mailer } from '../../mail/mailer.js'
 import type { AuthRepository, UserRow } from './auth.repository.js'
+import { LoginThrottle } from './loginThrottle.js'
 import { hashPassword, verifyDummyPassword, verifyPassword } from './passwords.js'
 import { randomToken, sha256 } from './tokens.js'
 
@@ -45,8 +46,10 @@ export function createAuthService(deps: {
   mailer: Mailer
   config: Config
   logger: Logger
+  throttle?: LoginThrottle
 }) {
   const { repo, mailer, config, logger } = deps
+  const throttle = deps.throttle ?? new LoginThrottle(config.LOGIN_MAX_FAILURES)
 
   const link = (path: string, token: string) =>
     `${config.APP_URL.replace(/\/$/, '')}${path}?token=${encodeURIComponent(token)}`
@@ -162,14 +165,16 @@ export function createAuthService(deps: {
     },
 
     async login(input: LoginInput, ctx: RequestContext): Promise<AuthResult> {
+      throttle.check(input.email)
       const user = repo.findUserByEmail(input.email)
       if (!user?.passwordHash) {
         await verifyDummyPassword(input.password)
+      }
+      if (!user?.passwordHash || !(await verifyPassword(user.passwordHash, input.password))) {
+        throttle.fail(input.email)
         throw new AppError(401, 'invalid_credentials', 'Invalid email or password')
       }
-      if (!(await verifyPassword(user.passwordHash, input.password))) {
-        throw new AppError(401, 'invalid_credentials', 'Invalid email or password')
-      }
+      throttle.reset(input.email)
       return { user: toUserDto(user), session: createSession(user.id, ctx) }
     },
 

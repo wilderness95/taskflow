@@ -341,3 +341,54 @@ describe('cookie attributes', () => {
     expect(res.headers['set-cookie']).toMatch(/Secure/i)
   })
 })
+
+describe('rate limiting and brute-force protection', () => {
+  it('locks an account after repeated failed logins, even for the right password', async () => {
+    const lock = createTestApp({ LOGIN_MAX_FAILURES: '3' })
+    await register(lock.app, { email: 'a@example.com' })
+    for (let i = 0; i < 3; i++) {
+      expect((await login(lock.app, 'a@example.com', 'wrong-password-1')).res.statusCode).toBe(401)
+    }
+    const locked = await login(lock.app, 'a@example.com')
+    expect(locked.res.statusCode).toBe(429)
+    expect(locked.res.json().error.code).toBe('too_many_attempts')
+    // ismeretlen fiók ugyanúgy viselkedik
+    for (let i = 0; i < 3; i++) await login(lock.app, 'ghost@example.com', 'wrong-password-1')
+    expect((await login(lock.app, 'ghost@example.com')).res.statusCode).toBe(429)
+  })
+
+  it('a successful login resets the failure counter', async () => {
+    const lock = createTestApp({ LOGIN_MAX_FAILURES: '3' })
+    await register(lock.app, { email: 'a@example.com' })
+    for (let round = 0; round < 3; round++) {
+      await login(lock.app, 'a@example.com', 'wrong-password-1')
+      await login(lock.app, 'a@example.com', 'wrong-password-1')
+      expect((await login(lock.app, 'a@example.com')).res.statusCode).toBe(200)
+    }
+  })
+
+  it('limits auth endpoints per client IP (CF-Connecting-IP), not per proxy', async () => {
+    const limited = createTestApp({ AUTH_RATE_LIMIT_MAX: '3' })
+    const attempt = (ip: string) =>
+      limited.app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/forgot-password',
+        headers: { 'cf-connecting-ip': ip },
+        payload: { email: 'a@example.com' },
+      })
+    for (let i = 0; i < 3; i++) expect((await attempt('203.0.113.1')).statusCode).toBe(202)
+    const blocked = await attempt('203.0.113.1')
+    expect(blocked.statusCode).toBe(429)
+    expect(blocked.json().error.code).toBe('rate_limited')
+    expect(blocked.headers['retry-after']).toBeDefined()
+    expect((await attempt('203.0.113.2')).statusCode).toBe(202)
+  })
+
+  it('has a global per-IP limit', async () => {
+    const limited = createTestApp({ RATE_LIMIT_MAX: '5' })
+    const codes: number[] = []
+    for (let i = 0; i < 7; i++) codes.push((await limited.app.inject('/api/v1/health')).statusCode)
+    expect(codes.slice(0, 5)).toEqual([200, 200, 200, 200, 200])
+    expect(codes.slice(5)).toEqual([429, 429])
+  })
+})
