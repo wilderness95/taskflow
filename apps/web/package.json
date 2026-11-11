@@ -11,6 +11,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.107.1",
     "@taskflow/shared": "*",
     "i18next": "^27.1.1",
     "react": "^19.3.1",

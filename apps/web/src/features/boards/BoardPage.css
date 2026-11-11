@@ -41,3 +41,9 @@
     padding-inline: 10px;
   }
 }
+
+.board-status {
+  align-self: center;
+  margin: 0 16px 0 0;
+  font-size: 1.05rem;
+}
