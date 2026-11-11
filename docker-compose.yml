@@ -16,6 +16,17 @@ services:
       APP_URL: ${APP_URL:?Állítsd be az APP_URL-t a .env fájlban}
       DATABASE_URL: /data/taskflow.db
       SEED: ${SEED:-true}
+      SESSION_SECRET: ${SESSION_SECRET:?Állíts be egy legalább 32 karakteres SESSION_SECRET-et a .env fájlban}
+      REGISTRATION_MODE: ${REGISTRATION_MODE:-invite}
+      MAIL_TRANSPORT: smtp
+      MAIL_FROM: ${MAIL_FROM:?Állítsd be a MAIL_FROM-ot a .env fájlban}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:?Állítsd be az SMTP_USER-t a .env fájlban}
+      SMTP_PASS: ${SMTP_PASS:?Állítsd be az SMTP_PASS-t a .env fájlban}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-300}
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-20}
+      LOGIN_MAX_FAILURES: ${LOGIN_MAX_FAILURES:-10}
     volumes:
       - ./data:/data
     healthcheck:

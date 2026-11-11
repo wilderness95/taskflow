@@ -13,10 +13,13 @@ const jsonSchema = (schema: z.ZodType, io: 'input' | 'output'): Json => {
 }
 
 const ERROR_DESCRIPTIONS: Record<number, string> = {
-  400: 'Validation error',
+  400: 'Validation error or invalid token',
+  401: 'Not authenticated',
+  403: 'Forbidden',
   404: 'Not found',
   409: 'Conflict',
   422: 'Unprocessable',
+  429: 'Too many requests',
 }
 
 const parameters = (schema: z.ZodObject, location: 'path' | 'query'): Json[] => {
@@ -40,9 +43,11 @@ const operationObject = (op: Operation): Json => {
   const errorRef = {
     content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
   }
+  const hasId = op.path.includes('{id}')
   const errorStatuses = new Set([
-    404,
-    ...(op.body || op.query || op.path.includes('{id}') ? [400] : []),
+    ...(hasId ? [404] : []),
+    ...(op.body || op.query || hasId ? [400] : []),
+    ...(op.public ? [] : [401]),
     ...(op.errors ?? []),
   ])
   const responses: Json = {
@@ -58,6 +63,7 @@ const operationObject = (op: Operation): Json => {
   }
   return {
     tags: [op.tag],
+    ...(op.public ? { security: [] } : {}),
     summary: op.summary,
     operationId: `${op.method}_${op.path.replace(/[{}]/g, '').replace(/\W+/g, '_').replace(/^_|_$/g, '')}`,
     ...(params.length > 0 && { parameters: params }),
@@ -85,6 +91,10 @@ export function buildOpenApiDocument(): Json {
     },
     servers: [{ url: '/api/v1' }],
     paths,
-    components: { schemas: { ErrorResponse: jsonSchema(errorResponseSchema, 'output') } },
+    security: [{ cookieAuth: [] }],
+    components: {
+      securitySchemes: { cookieAuth: { type: 'apiKey', in: 'cookie', name: 'tf_session' } },
+      schemas: { ErrorResponse: jsonSchema(errorResponseSchema, 'output') },
+    },
   }
 }
