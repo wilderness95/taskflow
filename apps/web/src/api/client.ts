@@ -17,7 +17,7 @@ type Body = Record<string, unknown> | undefined
 
 /** Az egyetlen hely, ahol a frontend `fetch`-et hív; a komponensek az `api/` függvényeken át érik el. */
 export async function apiFetch<T = void>(
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   body?: Body,
 ): Promise<T> {

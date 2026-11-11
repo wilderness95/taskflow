@@ -189,7 +189,7 @@ export function createWorkspacesService(deps: {
         !invitation?.workspaceId ||
         !invitation.role ||
         invitation.acceptedAt ||
-        invitation.expiresAt.getTime() < Date.now()
+        invitation.expiresAt.getTime() <= Date.now()
       ) {
         throw new AppError(400, 'invalid_token', 'The invitation is invalid or expired')
       }

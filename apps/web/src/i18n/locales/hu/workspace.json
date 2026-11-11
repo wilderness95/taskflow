@@ -6,5 +6,41 @@
     "emailAria": "Email cím",
     "submit": "Meghívás",
     "sent": "A meghívót elküldtük."
+  },
+  "fields": {
+    "name": "Név"
+  },
+  "roles": {
+    "owner": "Tulajdonos",
+    "admin": "Adminisztrátor",
+    "member": "Tag",
+    "viewer": "Megtekintő"
+  },
+  "switcher": {
+    "aria": "Munkaterület váltása",
+    "choose": "Munkaterület",
+    "create": "+ Új munkaterület"
+  },
+  "createWorkspace": {
+    "eyebrow": "Munkaterület",
+    "title": "Új munkaterület",
+    "submit": "Létrehozás"
+  },
+  "createBoard": {
+    "eyebrow": "Tábla",
+    "title": "Új tábla",
+    "titleLabel": "A tábla címe",
+    "visibility": "Láthatóság",
+    "submit": "Létrehozás"
+  },
+  "boards": {
+    "eyebrow": "Munkaterület",
+    "create": "+ Új tábla",
+    "members": "Tagok",
+    "manageMembers": "Tagok és meghívók",
+    "starred": "Kedvenc táblák",
+    "all": "Táblák",
+    "empty": "Még nincs tábla ezen a munkaterületen.",
+    "loadError": "A munkaterület nem érhető el."
   }
 }

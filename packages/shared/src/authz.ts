@@ -91,6 +91,14 @@ export function effectiveBoardRole(
   return strongest([fromWorkspace, boardRole, visibility === 'public' ? 'viewer' : null])
 }
 
+/** Egy már ismert tábla-szerepkör (pl. a `myRole` az API válaszából) engedélyezi-e a műveletet. */
+export const boardRoleCan = (role: BoardRole | null, action: BoardAction): boolean =>
+  role !== null && BOARD_PERMISSIONS[role].includes(action)
+
+/** Egy már ismert munkaterületi szerepkör engedélyezi-e a műveletet. */
+export const workspaceRoleCan = (role: WorkspaceRole | null, action: WorkspaceAction): boolean =>
+  role !== null && WORKSPACE_PERMISSIONS[role].includes(action)
+
 export function can(actor: PolicyActor, action: Action, resource: Resource): boolean {
   if (resource.type === 'workspace') {
     if (!actor || !resource.role) return false

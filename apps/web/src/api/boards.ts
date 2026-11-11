@@ -1,5 +1,7 @@
 import {
   boardListSchema,
+  boardSummarySchema,
+  type CreateBoardRequest,
   boardSchema,
   type BoardDto,
   type BoardSummaryDto,
@@ -22,8 +24,19 @@ import {
 } from '@taskflow/shared'
 import { apiFetch } from './client'
 
-export const listBoards = async (): Promise<BoardSummaryDto[]> =>
-  boardListSchema.parse(await apiFetch('GET', '/boards')).data
+export const listBoards = async (workspaceId?: string): Promise<BoardSummaryDto[]> =>
+  boardListSchema.parse(
+    await apiFetch('GET', workspaceId ? `/workspaces/${workspaceId}/boards` : '/boards'),
+  ).data
+
+export const createBoard = async (
+  workspaceId: string,
+  input: CreateBoardRequest,
+): Promise<BoardSummaryDto> =>
+  boardSummarySchema.parse(await apiFetch('POST', `/workspaces/${workspaceId}/boards`, input))
+
+export const starBoard = (boardId: string) => apiFetch('PUT', `/boards/${boardId}/star`)
+export const unstarBoard = (boardId: string) => apiFetch('DELETE', `/boards/${boardId}/star`)
 
 export const getBoard = async (boardId: string): Promise<BoardDto> =>
   boardSchema.parse(await apiFetch('GET', `/boards/${boardId}`))

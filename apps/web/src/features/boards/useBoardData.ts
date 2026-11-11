@@ -2,29 +2,27 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { BoardDto } from '@taskflow/shared'
 import { useMemo, useState } from 'react'
 import * as api from '../../api/boards'
+import { ApiError } from '../../api/client'
 import { saveCard, type SaveCardInput } from '../cards/saveCard'
 import { moveCardInBoard, moveColumnInBoard } from './boardCache'
 import { toColumns } from './boardMapper'
 import type { BoardView, ColumnAccent, Visibility } from './types'
 
-const boardsKey = ['boards'] as const
 const boardKey = (boardId: string) => ['board', boardId] as const
 
-/** M1: még nincs táblalista oldal, a felhasználó első táblája nyílik meg. */
-export function useBoardData() {
+/** Egy tábla adatai és műveletei; a tábla azonosítóját az útvonal adja. */
+export function useBoardData(boardId: string) {
   const queryClient = useQueryClient()
 
-  const boards = useQuery({ queryKey: boardsKey, queryFn: api.listBoards })
-  const boardId = boards.data?.[0]?.id
-
   const boardQuery = useQuery({
-    queryKey: boardKey(boardId ?? ''),
-    queryFn: () => api.getBoard(boardId ?? ''),
-    enabled: Boolean(boardId),
+    queryKey: boardKey(boardId),
+    queryFn: () => api.getBoard(boardId),
+    // Hiányzó vagy nem olvasható tábla (404) esetén felesleges az újrapróbálkozás.
+    retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 1,
   })
   const board = boardQuery.data
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: boardKey(boardId ?? '') })
+  const refresh = () => queryClient.invalidateQueries({ queryKey: boardKey(boardId) })
   // Minden írás után a szerver állapota az igazság.
   const useWrite = <TVars>(fn: (vars: TVars) => Promise<unknown>) =>
     useMutation({ mutationFn: fn, onSettled: refresh })
@@ -37,7 +35,7 @@ export function useBoardData() {
     useMutation({
       mutationFn: fn,
       onMutate: async (vars: TVars) => {
-        const key = boardKey(boardId ?? '')
+        const key = boardKey(boardId)
         await queryClient.cancelQueries({ queryKey: key })
         const previous = queryClient.getQueryData<BoardDto>(key)
         if (previous) {
@@ -47,14 +45,14 @@ export function useBoardData() {
       },
       onError: (_error, _vars, context) => {
         if (context?.previous) {
-          queryClient.setQueryData(boardKey(boardId ?? ''), context.previous)
+          queryClient.setQueryData(boardKey(boardId), context.previous)
         }
       },
       onSettled: refresh,
     })
 
   const addColumn = useWrite(({ title, accent }: { title: string; accent: ColumnAccent }) =>
-    api.createColumn(boardId ?? '', { title, accent }),
+    api.createColumn(boardId, { title, accent }),
   )
   const updateColumn = useWrite(
     ({ columnId, title, accent }: { columnId: string; title: string; accent: ColumnAccent }) =>
@@ -89,7 +87,7 @@ export function useBoardData() {
       moveCardInBoard(current, taskId, toColumnId, targetTaskId),
   )
   const updateBoard = useWrite((input: { title?: string; visibility?: Visibility }) =>
-    api.updateBoard(boardId ?? '', input),
+    api.updateBoard(boardId, input),
   )
 
   const columns = useMemo(() => (board ? toColumns(board) : {}), [board])
@@ -98,18 +96,18 @@ export function useBoardData() {
   const [isStarred, setIsStarred] = useState(false)
   const [activeView, setActiveView] = useState<BoardView>('kanban')
 
-  const status =
-    boards.isError || boardQuery.isError
-      ? 'error'
-      : boards.isSuccess && !boardId
-        ? 'empty'
-        : board
-          ? 'ready'
-          : 'loading'
+  const status: 'loading' | 'error' | 'notFound' | 'ready' = boardQuery.isError
+    ? boardQuery.error instanceof ApiError && boardQuery.error.status === 404
+      ? 'notFound'
+      : 'error'
+    : board
+      ? 'ready'
+      : 'loading'
 
   return {
     status,
-    retry: () => void (boards.isError ? boards.refetch() : boardQuery.refetch()),
+    retry: () => void boardQuery.refetch(),
+    workspaceId: board?.workspaceId,
     columns,
     meta: {
       title: board?.title ?? '',

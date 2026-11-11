@@ -112,7 +112,7 @@ export function createAuthService(deps: {
       const invitation =
         found &&
         !found.acceptedAt &&
-        found.expiresAt.getTime() >= Date.now() &&
+        found.expiresAt.getTime() > Date.now() &&
         found.email === input.email
           ? found
           : undefined
