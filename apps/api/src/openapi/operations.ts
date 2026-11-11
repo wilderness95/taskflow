@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import {
   boardListSchema,
+  boardMemberListSchema,
+  boardMemberSchema,
+  setBoardMemberSchema,
   boardSchema,
   boardSummarySchema,
   cardSchema,
@@ -45,7 +48,7 @@ import {
 } from '@taskflow/shared'
 
 export type Operation = {
-  method: 'get' | 'post' | 'patch' | 'delete'
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete'
   /** OpenAPI-formátumú útvonal (`/boards/{id}`), a `/api/v1` előtag nélkül. */
   path: string
   tag: string
@@ -250,23 +253,68 @@ export const operations: Operation[] = [
     ...board,
     method: 'get',
     path: '/boards',
-    summary: 'List boards',
+    summary: 'List the boards I can read, across my workspaces',
+    success: { status: 200, schema: boardListSchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/workspaces/{id}/boards',
+    summary: 'List the boards I can read in a workspace',
     success: { status: 200, schema: boardListSchema },
   },
   {
     ...board,
     method: 'post',
-    path: '/boards',
-    summary: 'Create a board',
+    path: '/workspaces/{id}/boards',
+    summary: 'Create a board in a workspace (owner, admin, member)',
     body: createBoardSchema,
     success: { status: 201, schema: boardSummarySchema },
   },
   {
     ...board,
+    public: true,
     method: 'get',
     path: '/boards/{id}',
-    summary: 'Get a board with columns, cards and labels',
+    summary: 'Get a board with columns, cards and labels (public boards need no login)',
     success: { status: 200, schema: boardSchema },
+  },
+  {
+    ...board,
+    method: 'put',
+    path: '/boards/{id}/star',
+    summary: 'Star a board',
+    success: { status: 204 },
+  },
+  {
+    ...board,
+    method: 'delete',
+    path: '/boards/{id}/star',
+    summary: 'Unstar a board',
+    success: { status: 204 },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/members',
+    summary: 'List explicit board members',
+    success: { status: 200, schema: boardMemberListSchema },
+  },
+  {
+    ...board,
+    method: 'put',
+    path: '/boards/{id}/members/{userId}',
+    summary: 'Give a workspace member an explicit board role (board admin)',
+    body: setBoardMemberSchema,
+    success: { status: 200, schema: boardMemberSchema },
+    errors: [422],
+  },
+  {
+    ...board,
+    method: 'delete',
+    path: '/boards/{id}/members/{userId}',
+    summary: 'Remove an explicit board role (board admin)',
+    success: { status: 204 },
   },
   {
     ...board,

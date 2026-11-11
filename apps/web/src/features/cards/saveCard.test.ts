@@ -27,6 +27,9 @@ const board = (cards: CardDto[] = []): BoardDto => ({
   id: 'b',
   title: 'T',
   visibility: 'private',
+  workspaceId: 'w',
+  myRole: 'admin',
+  starred: false,
   createdAt: '',
   labels: [{ id: 'l1', boardId: 'b', name: 'UI', color: 'blue' }],
   columns: [

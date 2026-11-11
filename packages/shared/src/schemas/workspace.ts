@@ -40,6 +40,7 @@ export const updateMemberSchema = z.object({ role: workspaceRoleSchema })
 export type UpdateMemberInput = z.infer<typeof updateMemberSchema>
 
 export const memberParamsSchema = z.object({ id: idSchema, userId: idSchema })
+export const boardMemberParamsSchema = z.object({ id: idSchema, userId: idSchema })
 export const invitationParamsSchema = z.object({ id: idSchema, invitationId: idSchema })
 
 export const workspaceInvitationSchema = z.object({

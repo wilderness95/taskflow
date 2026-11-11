@@ -174,7 +174,7 @@ describe('protected API', () => {
   it('requires a session for everything except the public endpoints', async () => {
     expect((await get('/boards')).statusCode).toBe(401)
     expect((await get('/boards')).json().error.code).toBe('unauthenticated')
-    expect((await post('/boards', { title: 'x' })).statusCode).toBe(401)
+    expect((await post('/workspaces', { name: 'x' })).statusCode).toBe(401)
     expect((await get('/auth/me')).statusCode).toBe(401)
     expect((await get('/health')).statusCode).toBe(200)
     expect((await t.app.inject('/api/openapi.json')).statusCode).toBe(200)
@@ -190,14 +190,14 @@ describe('CSRF / origin check', () => {
     expect(foreign.statusCode).toBe(403)
     expect(foreign.json().error.code).toBe('invalid_origin')
     expect(
-      (await post('/boards', { title: 'x' }, cookie, { referer: 'https://evil.example/x' }))
+      (await post('/workspaces', { name: 'x' }, cookie, { referer: 'https://evil.example/x' }))
         .statusCode,
     ).toBe(403)
     expect(
-      (await post('/boards', { title: 'x' }, cookie, { origin: 'http://localhost:5173' }))
+      (await post('/workspaces', { name: 'x' }, cookie, { origin: 'http://localhost:5173' }))
         .statusCode,
     ).toBe(201)
-    expect((await post('/boards', { title: 'y' }, cookie)).statusCode).toBe(201)
+    expect((await post('/workspaces', { name: 'y' }, cookie)).statusCode).toBe(201)
   })
 
   it('does not restrict safe requests', async () => {

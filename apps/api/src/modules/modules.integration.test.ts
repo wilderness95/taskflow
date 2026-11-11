@@ -5,6 +5,7 @@ import { createTestApp, register } from '../testing/helpers.js'
 
 let app: FastifyInstance
 let cookie: string
+let workspaceId: string
 
 beforeEach(async () => {
   const test = createTestApp()
@@ -12,6 +13,7 @@ beforeEach(async () => {
   app = test.app
   // Az első regisztrált felhasználó átveszi a seed táblát.
   cookie = (await register(app, { email: 'admin@example.com' })).cookie
+  workspaceId = (await call('GET', '/workspaces')).body.data[0].id
 })
 
 const call = async (method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: object) => {
@@ -37,7 +39,7 @@ describe('boards', () => {
   })
 
   it('creates, updates and archives a board', async () => {
-    const created = await call('POST', '/boards', { title: 'Új' })
+    const created = await call('POST', `/workspaces/${workspaceId}/boards`, { title: 'Új' })
     expect(created.status).toBe(201)
     expect(created.body.visibility).toBe('private')
     const id = created.body.id
@@ -50,7 +52,7 @@ describe('boards', () => {
   })
 
   it('validates input with the unified error format', async () => {
-    const res = await call('POST', '/boards', { title: '' })
+    const res = await call('POST', `/workspaces/${workspaceId}/boards`, { title: '' })
     expect(res.status).toBe(400)
     expect(res.body.error.code).toBe('validation_error')
     expect((await call('PATCH', `/boards/${SEED_BOARD_ID}`, {})).status).toBe(400)
@@ -125,7 +127,7 @@ describe('cards', () => {
     expect(
       (await call('POST', `/columns/${col}/cards`, { title: 'x', dueDate: 'holnap' })).status,
     ).toBe(400)
-    const other = await call('POST', '/boards', { title: 'Másik' })
+    const other = await call('POST', `/workspaces/${workspaceId}/boards`, { title: 'Másik' })
     const foreign = await call('POST', `/boards/${other.body.id}/labels`, {
       name: 'X',
       color: 'blue',
@@ -237,7 +239,7 @@ describe('move', () => {
     expect((await call('POST', '/cards/nope/move', { columnId: doing.id })).status).toBe(404)
     expect((await call('POST', `/cards/${card.id}/move`, {})).status).toBe(400)
 
-    const other = await call('POST', '/boards', { title: 'Másik' })
+    const other = await call('POST', `/workspaces/${workspaceId}/boards`, { title: 'Másik' })
     const foreign = await call('POST', `/boards/${other.body.id}/columns`, { title: 'X' })
     expect(
       (await call('POST', `/cards/${card.id}/move`, { columnId: foreign.body.id })).status,
