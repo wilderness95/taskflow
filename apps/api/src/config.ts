@@ -34,7 +34,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const data = result.data
   if (data.NODE_ENV === 'production') {
     if (!data.SESSION_SECRET) throw new Error('SESSION_SECRET is required in production')
-    if (data.MAIL_TRANSPORT === 'smtp' && !(data.SMTP_USER && data.SMTP_PASS)) {
+    // A ConsoleMailer a tokenes hivatkozásokat a logba írná.
+    if (data.MAIL_TRANSPORT !== 'smtp')
+      throw new Error('MAIL_TRANSPORT=smtp is required in production')
+    if (!(data.SMTP_USER && data.SMTP_PASS)) {
       throw new Error('SMTP_USER and SMTP_PASS are required when MAIL_TRANSPORT=smtp')
     }
   }
