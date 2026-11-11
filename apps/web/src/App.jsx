@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { getChecklistProgress, getDueDateState, parseTags, PRIORITIES } from '@taskflow/shared'
 import './App.css'
 
 const defaultColumnPalette = ['blue', 'amber', 'green', 'purple', 'rose']
@@ -15,7 +16,7 @@ const initialColumns = {
         id: 'task-1',
         title: 'Landing page vázlat',
         description: 'Készítsünk néhány főbb szekciót a közönség számára.',
-        priority: 'Magas',
+        priority: 'high',
         tags: [
           { label: 'UI', color: 'blue' },
           { label: 'Vezetői', color: 'purple' },
@@ -27,7 +28,7 @@ const initialColumns = {
         id: 'task-2',
         title: 'Felhasználói visszajelzés',
         description: 'Összegyűjtjük a legfontosabb UX észrevételeket.',
-        priority: 'Közepes',
+        priority: 'medium',
         tags: [{ label: 'UX', color: 'green' }],
         dueDate: '2026-11-11',
         checklist: { done: 1, total: 3 },
@@ -43,7 +44,7 @@ const initialColumns = {
         id: 'task-3',
         title: 'Dashboard felület',
         description: 'A fő adatok és grafikonok elkészítése a képernyőn.',
-        priority: 'Magas',
+        priority: 'high',
         coverImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80',
         tags: [{ label: 'Analytics', color: 'amber' }],
         dueDate: '2026-11-10',
@@ -60,7 +61,7 @@ const initialColumns = {
         id: 'task-4',
         title: 'Brand guideline',
         description: 'A színpaletta és a tipográfia jóváhagyása elkészült.',
-        priority: 'Alacsony',
+        priority: 'low',
         tags: [{ label: 'Brand', color: 'rose' }],
         dueDate: '2026-11-08',
         checklist: { done: 4, total: 4 },
@@ -69,49 +70,18 @@ const initialColumns = {
   },
 }
 
+// Átmeneti: az i18n lépésben t('card:priority.<érték>') váltja fel.
+const priorityLabels = { high: 'Magas', medium: 'Közepes', low: 'Alacsony' }
+
 const emptyDraft = {
   title: '',
   description: '',
-  priority: 'Közepes',
+  priority: 'medium',
   column: 'todo',
   dueDate: '',
   tags: '',
   checklistTitle: 'Content Checklist',
   checklistItems: [],
-}
-
-const parseTags = (raw) => {
-  const palette = ['blue', 'amber', 'green', 'purple', 'rose']
-
-  return (raw || '')
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-    .map((label, index) => ({
-      label,
-      color: palette[index % palette.length],
-    }))
-}
-
-const getDueDateState = (dueDate) => {
-  if (!dueDate) {
-    return 'none'
-  }
-
-  const today = new Date()
-  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-  const due = new Date(`${dueDate}T23:59:59`)
-  const diffInDays = Math.ceil((due.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24))
-
-  if (diffInDays < 0) {
-    return 'overdue'
-  }
-
-  if (diffInDays <= 3) {
-    return 'soon'
-  }
-
-  return 'normal'
 }
 
 const formatDueDate = (dueDate) => {
@@ -124,35 +94,6 @@ const formatDueDate = (dueDate) => {
     month: 'short',
     day: 'numeric',
   }).format(date)
-}
-
-const getChecklistProgress = (checklist) => {
-  if (!checklist) {
-    return { percent: 0, done: 0, total: 0 }
-  }
-
-  const items = Array.isArray(checklist.items) ? checklist.items : []
-  if (items.length > 0) {
-    const done = items.filter((item) => item.done).length
-    return {
-      percent: Math.round((done / items.length) * 100),
-      done,
-      total: items.length,
-    }
-  }
-
-  if (!Number.isFinite(checklist.total) || checklist.total <= 0) {
-    return { percent: 0, done: 0, total: 0 }
-  }
-
-  const total = Math.max(0, Number(checklist.total) || 0)
-  const done = Math.min(total, Math.max(0, Number(checklist.done) || 0))
-
-  return {
-    percent: total > 0 ? Math.round((done / total) * 100) : 0,
-    done,
-    total,
-  }
 }
 
 function App() {
@@ -226,7 +167,7 @@ function App() {
           const searchTarget = [
             task.title,
             task.description,
-            task.priority,
+            priorityLabels[task.priority],
             task.dueDate,
             ...(task.tags ?? []).map((tag) => tag.label),
           ]
@@ -1045,8 +986,8 @@ function App() {
                                 )}
 
                                 <div className="task-card-top">
-                                  <span className={`priority-pill priority-${task.priority.toLowerCase()}`}>
-                                    {task.priority}
+                                  <span className={`priority-pill priority-${task.priority}`}>
+                                    {priorityLabels[task.priority]}
                                   </span>
                                   <button
                                     type="button"
@@ -1288,9 +1229,11 @@ function App() {
                 <label>
                   Prioritás
                   <select name="priority" value={modalState.draft.priority} onChange={handleFieldChange}>
-                    <option value="Magas">Magas</option>
-                    <option value="Közepes">Közepes</option>
-                    <option value="Alacsony">Alacsony</option>
+                    {PRIORITIES.map((priority) => (
+                      <option key={priority} value={priority}>
+                        {priorityLabels[priority]}
+                      </option>
+                    ))}
                   </select>
                 </label>
 

@@ -844,17 +844,17 @@
   padding: 6px 10px;
 }
 
-.priority-magas {
+.priority-high {
   background: rgba(239, 68, 68, 0.12);
   color: #b91c1c;
 }
 
-.priority-közepes {
+.priority-medium {
   background: rgba(251, 191, 36, 0.12);
   color: #a16207;
 }
 
-.priority-alacsony {
+.priority-low {
   background: rgba(52, 211, 153, 0.12);
   color: #047857;
 }
