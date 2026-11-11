@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets and local data
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# TypeScript
+*.tsbuildinfo
