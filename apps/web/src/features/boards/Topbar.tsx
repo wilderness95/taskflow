@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { UserMenu } from '../auth/UserMenu'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
 import '../../shared/styles/base.css'
@@ -8,19 +9,20 @@ type TopbarProps = {
   searchQuery: string
   onSearchChange: (query: string) => void
   totalTasks: number
+  workspaceId?: string
 }
 
-export function Topbar({ searchQuery, onSearchChange, totalTasks }: TopbarProps) {
+export function Topbar({ searchQuery, onSearchChange, totalTasks, workspaceId }: TopbarProps) {
   const { t } = useTranslation(['board', 'common'])
 
   return (
     <header className="topbar">
-      <div className="brand-wrap">
+      <Link to="/" className="brand-wrap">
         <div className="brand-badge">T</div>
         <span className="brand-name">{t('common:appName')}</span>
-      </div>
+      </Link>
 
-      <WorkspaceSwitcher />
+      <WorkspaceSwitcher currentWorkspaceId={workspaceId} />
 
       <div className="search-box">
         <span className="search-icon">⌕</span>

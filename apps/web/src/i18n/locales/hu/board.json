@@ -61,6 +61,7 @@
   "loading": "Tábla betöltése...",
   "loadError": "A tábla betöltése nem sikerült.",
   "retry": "Újrapróbálás",
-  "empty": "Még nincs tábla.",
-  "saveError": "A mentés nem sikerült, a tábla frissült a szerver állapotával."
+  "saveError": "A mentés nem sikerült, a tábla frissült a szerver állapotával.",
+  "notFound": "Ez a tábla nem létezik, vagy nincs hozzáférésed.",
+  "backToWorkspace": "Vissza a munkaterülethez"
 }

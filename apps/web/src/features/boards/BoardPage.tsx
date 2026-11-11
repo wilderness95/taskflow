@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
@@ -12,9 +13,16 @@ import { useBoardDrag } from './useBoardDrag'
 import { useBoardData } from './useBoardData'
 import './BoardPage.css'
 
+const STATUS_KEYS = {
+  loading: 'board:loading',
+  error: 'board:loadError',
+  notFound: 'board:notFound',
+} as const
+
 export function BoardPage() {
   const { t } = useTranslation(['card', 'column', 'board'])
-  const { status, retry, columns, meta, actions } = useBoardData()
+  const { boardId = '' } = useParams()
+  const { status, retry, columns, meta, actions, workspaceId } = useBoardData(boardId)
   const [searchQuery, setSearchQuery] = useState('')
   const [dialog, setDialog] = useState<Dialog | null>(null)
 
@@ -49,14 +57,17 @@ export function BoardPage() {
     return (
       <div className="app-shell">
         <p className="board-status" role={status === 'error' ? 'alert' : 'status'}>
-          {t(
-            `board:${status === 'loading' ? 'loading' : status === 'empty' ? 'empty' : 'loadError'}`,
-          )}
+          {t(STATUS_KEYS[status])}
         </p>
         {status === 'error' && (
           <button type="button" className="secondary-button" onClick={retry}>
             {t('board:retry')}
           </button>
+        )}
+        {status === 'notFound' && (
+          <Link to="/" className="secondary-button">
+            {t('board:backToWorkspace')}
+          </Link>
         )}
       </div>
     )
@@ -66,7 +77,12 @@ export function BoardPage() {
     <div className="app-shell">
       <div className="trello-surface">
         <VerifyEmailBanner />
-        <Topbar searchQuery={searchQuery} onSearchChange={setSearchQuery} totalTasks={totalTasks} />
+        <Topbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          totalTasks={totalTasks}
+          workspaceId={workspaceId}
+        />
 
         <div className="workspace-layout">
           <main className="board-page">

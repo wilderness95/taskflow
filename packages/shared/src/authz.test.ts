@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   can,
+  boardRoleCan,
   canManageMember,
+  workspaceRoleCan,
   effectiveBoardRole,
   type BoardAction,
   type BoardResource,
@@ -172,5 +174,17 @@ describe('canManageMember', () => {
     expect(canManageMember('admin', 'owner', 'member')).toBe(false)
     expect(canManageMember('admin', 'owner', null)).toBe(false)
     expect(canManageMember('admin', 'member', 'owner')).toBe(false)
+  })
+})
+
+describe('role helpers used by the UI', () => {
+  it('agree with can() for known roles', () => {
+    expect(boardRoleCan('viewer', 'board:write')).toBe(false)
+    expect(boardRoleCan('editor', 'board:write')).toBe(true)
+    expect(boardRoleCan('admin', 'board:update')).toBe(true)
+    expect(boardRoleCan(null, 'board:read')).toBe(false)
+    expect(workspaceRoleCan('member', 'board:create')).toBe(true)
+    expect(workspaceRoleCan('viewer', 'board:create')).toBe(false)
+    expect(workspaceRoleCan(null, 'workspace:read')).toBe(false)
   })
 })
