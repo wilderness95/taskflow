@@ -9,7 +9,7 @@ import {
   type TaskDraft,
 } from '../cards/taskDraft'
 import { RenameColumnModal } from '../columns/RenameColumnModal'
-import { InviteModal } from '../workspaces/InviteModal'
+import { BoardMembersModal } from './BoardMembersModal'
 import type { ColumnAccent, Columns, Dialog, Task } from './types'
 
 type BoardDialogsProps = {
@@ -19,6 +19,9 @@ type BoardDialogsProps = {
   onSaveTask: (task: Task, columnId: string, originalColumnId?: string) => void
   onUpdateColumn: (columnId: string, title: string, accent: ColumnAccent) => void
   onDeleteColumn: (columnId: string) => void
+  boardId: string
+  workspaceId: string
+  canManageMembers: boolean
 }
 
 export function BoardDialogs({
@@ -28,6 +31,9 @@ export function BoardDialogs({
   onSaveTask,
   onUpdateColumn,
   onDeleteColumn,
+  boardId,
+  workspaceId,
+  canManageMembers,
 }: BoardDialogsProps) {
   const { t } = useTranslation(['card', 'column'])
 
@@ -100,7 +106,14 @@ export function BoardDialogs({
         />
       )
 
-    case 'invite':
-      return <InviteModal onClose={onClose} />
+    case 'members':
+      return (
+        <BoardMembersModal
+          boardId={boardId}
+          workspaceId={workspaceId}
+          canManage={canManageMembers}
+          onClose={onClose}
+        />
+      )
   }
 }

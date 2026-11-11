@@ -1,5 +1,8 @@
 import {
   boardListSchema,
+  boardMemberListSchema,
+  type BoardMemberDto,
+  type SetBoardMemberInput,
   boardSummarySchema,
   type CreateBoardRequest,
   boardSchema,
@@ -84,3 +87,12 @@ export const updateChecklistItem = (itemId: string, input: UpdateChecklistItemIn
 
 export const deleteChecklistItem = (itemId: string) =>
   apiFetch('DELETE', `/checklist-items/${itemId}`)
+
+export const listBoardMembers = async (boardId: string): Promise<BoardMemberDto[]> =>
+  boardMemberListSchema.parse(await apiFetch('GET', `/boards/${boardId}/members`)).data
+
+export const setBoardMember = (boardId: string, userId: string, input: SetBoardMemberInput) =>
+  apiFetch<BoardMemberDto>('PUT', `/boards/${boardId}/members/${userId}`, input)
+
+export const removeBoardMember = (boardId: string, userId: string) =>
+  apiFetch('DELETE', `/boards/${boardId}/members/${userId}`)

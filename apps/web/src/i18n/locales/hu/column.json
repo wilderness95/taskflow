@@ -24,5 +24,6 @@
     "green": "zöld",
     "purple": "lila",
     "rose": "rózsaszín"
-  }
+  },
+  "emptyReadOnly": "Nincs kártya."
 }

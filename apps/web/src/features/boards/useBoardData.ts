@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { BoardDto } from '@taskflow/shared'
+import { boardRoleCan, type BoardDto } from '@taskflow/shared'
 import { useMemo, useState } from 'react'
 import * as api from '../../api/boards'
 import { ApiError } from '../../api/client'
@@ -22,7 +22,10 @@ export function useBoardData(boardId: string) {
   })
   const board = boardQuery.data
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: boardKey(boardId) })
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['boards'] })
+    return queryClient.invalidateQueries({ queryKey: boardKey(boardId) })
+  }
   // Minden írás után a szerver állapota az igazság.
   const useWrite = <TVars>(fn: (vars: TVars) => Promise<unknown>) =>
     useMutation({ mutationFn: fn, onSettled: refresh })
@@ -92,9 +95,21 @@ export function useBoardData(boardId: string) {
 
   const columns = useMemo(() => (board ? toColumns(board) : {}), [board])
 
-  // A csillagozás és a nézetválasztó egyelőre kliensoldali állapot (board_stars: M3).
-  const [isStarred, setIsStarred] = useState(false)
+  // A nézetválasztó egyelőre kliensoldali állapot.
   const [activeView, setActiveView] = useState<BoardView>('kanban')
+
+  // A csillag személyes; optimistán frissül, hibánál visszaáll.
+  const toggleStar = useOptimisticWrite(
+    (starred: boolean) => (starred ? api.unstarBoard(boardId) : api.starBoard(boardId)),
+    (current, starred) => ({ ...current, starred: !starred }),
+  )
+
+  const myRole = board?.myRole ?? null
+  const permissions = {
+    write: boardRoleCan(myRole, 'board:write'),
+    update: boardRoleCan(myRole, 'board:update'),
+    manageMembers: boardRoleCan(myRole, 'board:manage_members'),
+  }
 
   const status: 'loading' | 'error' | 'notFound' | 'ready' = boardQuery.isError
     ? boardQuery.error instanceof ApiError && boardQuery.error.status === 404
@@ -112,8 +127,9 @@ export function useBoardData(boardId: string) {
     meta: {
       title: board?.title ?? '',
       setTitle: (title: string) => updateBoard.mutate({ title }),
-      isStarred,
-      toggleStar: () => setIsStarred((current) => !current),
+      isStarred: board?.starred ?? false,
+      toggleStar: () => toggleStar.mutate(board?.starred ?? false),
+      permissions,
       visibility: (board?.visibility ?? 'private') as Visibility,
       setVisibility: (visibility: Visibility) => updateBoard.mutate({ visibility }),
       activeView,

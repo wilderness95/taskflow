@@ -1,0 +1,59 @@
+.board-members-card {
+  width: min(100%, 560px);
+}
+
+.board-members-hint {
+  margin: 0 0 12px;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 0.9rem;
+}
+
+.board-members-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.board-members-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.board-members-identity {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.board-members-identity small {
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.board-members-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.board-members-add select,
+.board-members-list select {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #eff6ff;
+  font: inherit;
+}
+
+.board-readonly-note {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.12);
+  color: rgba(226, 232, 240, 0.85);
+  font-size: 0.9rem;
+}

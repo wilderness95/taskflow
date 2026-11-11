@@ -5,9 +5,10 @@ import './BoardTitle.css'
 type BoardTitleProps = {
   title: string
   onChange: (title: string) => void
+  readOnly?: boolean
 }
 
-export function BoardTitle({ title, onChange }: BoardTitleProps) {
+export function BoardTitle({ title, onChange, readOnly = false }: BoardTitleProps) {
   const { t } = useTranslation('board')
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState(title)
@@ -23,6 +24,14 @@ export function BoardTitle({ title, onChange }: BoardTitleProps) {
       onChange(trimmed)
     }
     setIsEditing(false)
+  }
+
+  if (readOnly) {
+    return (
+      <div className="board-title-row">
+        <h1>{title}</h1>
+      </div>
+    )
   }
 
   if (isEditing) {
