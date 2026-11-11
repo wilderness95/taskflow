@@ -4,6 +4,7 @@ import type { Priority, TagColor } from '@taskflow/shared'
 import type { Db } from './client.js'
 import { newId } from './ids.js'
 import * as s from './schema.js'
+import { createWorkspace } from './workspaceFactory.js'
 
 export const SEED_USER_ID = '01J00000000000000000000000'
 export const SEED_BOARD_ID = '01J00000000000000000000001'
@@ -89,8 +90,20 @@ export function seed(db: Db): boolean {
     tx.insert(s.users)
       .values({ id: SEED_USER_ID, name: 'Demo felhasználó', email: 'demo@taskflow.local' })
       .run()
+    const workspace = createWorkspace(tx as unknown as Db, {
+      name: 'Demo felhasználó',
+      ownerId: SEED_USER_ID,
+    })
     tx.insert(s.boards)
-      .values({ id: SEED_BOARD_ID, title: 'Termékfejlesztés', createdBy: SEED_USER_ID })
+      .values({
+        id: SEED_BOARD_ID,
+        workspaceId: workspace.id,
+        title: 'Termékfejlesztés',
+        createdBy: SEED_USER_ID,
+      })
+      .run()
+    tx.insert(s.boardMembers)
+      .values({ boardId: SEED_BOARD_ID, userId: SEED_USER_ID, role: 'admin' })
       .run()
 
     const labelIds = new Map<string, string>()
