@@ -10,7 +10,17 @@ export function createTestApp(env: Record<string, string> = {}) {
   const { db } = createDb(':memory:')
   runMigrations(db)
   const mailer = new MemoryMailer()
-  const app = buildApp(loadConfig({ NODE_ENV: 'test', ...env }), db, { mailer })
+  const app = buildApp(
+    loadConfig({
+      NODE_ENV: 'test',
+      // A tesztek sok kérést küldenek ugyanarról az IP-ről; a limitet külön tesztek szűkítik.
+      RATE_LIMIT_MAX: '100000',
+      AUTH_RATE_LIMIT_MAX: '100000',
+      ...env,
+    }),
+    db,
+    { mailer },
+  )
   return { app, db, mailer }
 }
 

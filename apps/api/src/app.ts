@@ -1,5 +1,6 @@
+import rateLimit from '@fastify/rate-limit'
 import Fastify, { type FastifyInstance } from 'fastify'
-import { registerAuth } from './auth/auth.plugin.js'
+import { clientIp, registerAuth } from './auth/auth.plugin.js'
 import { createMailer, type Mailer } from './mail/mailer.js'
 import { authRoutes } from './modules/auth/auth.routes.js'
 import { createAuthRepository } from './modules/auth/auth.repository.js'
@@ -19,6 +20,7 @@ import { createChecklistsService } from './modules/checklists/checklists.service
 import { columnsRoutes } from './modules/columns/columns.routes.js'
 import { createColumnsRepository } from './modules/columns/columns.repository.js'
 import { createColumnsService } from './modules/columns/columns.service.js'
+import { AppError } from './errors.js'
 import { openApiPlugin } from './openapi/openapi.plugin.js'
 import { registerErrorHandler } from './plugins/errorHandler.js'
 
@@ -42,6 +44,17 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     requestIdHeader: 'x-request-id',
   })
   registerErrorHandler(app)
+  // Kliens IP szerint korlátoz (Cloudflare mögött a CF-Connecting-IP fejléc); az érzékeny
+  // auth végpontokra szigorúbb, route-szintű limit van (lásd auth.routes.ts).
+  app.register(rateLimit, {
+    max: config.RATE_LIMIT_MAX,
+    timeWindow: '1 minute',
+    keyGenerator: clientIp,
+    errorResponseBuilder: (_req, context) =>
+      new AppError(429, 'rate_limited', 'Too many requests', {
+        retryAfterSeconds: Math.ceil(context.ttl / 1000),
+      }),
+  })
   const auth = createAuthService({
     repo: createAuthRepository(db),
     mailer: deps.mailer ?? createMailer(config),

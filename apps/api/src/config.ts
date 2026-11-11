@@ -14,6 +14,12 @@ const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
   /** `invite`: az első felhasználó (admin) szabadon regisztrálhat, utána csak meghívóval; `open`: bárki. */
   REGISTRATION_MODE: z.enum(['invite', 'open']).default('invite'),
+  /** Kérés/perc IP-nként (a kliens IP-je a `CF-Connecting-IP` fejlécből jön). */
+  RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(300),
+  /** Kérés/perc IP-nként a érzékeny auth végpontokra (login, regisztráció, jelszó-visszaállítás...). */
+  AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(20),
+  /** Ennyi sikertelen belépés után a fiók 15 percre zárolódik. */
+  LOGIN_MAX_FAILURES: z.coerce.number().int().min(1).default(10),
   MAIL_TRANSPORT: z.enum(['console', 'smtp']).default('console'),
   MAIL_FROM: z.string().default('TaskFlow <no-reply@localhost>'),
   SMTP_HOST: z.string().default('smtp.gmail.com'),
