@@ -27,9 +27,11 @@ A meglévő UI/UX megtartandó, de komponensekre bontva, és az adatok az API-b�
 | Valós idő | **SSE** (Server-Sent Events) tábla szinten | Egyszerűbb, mint a WebSocket, és a kollaborációhoz elég. |
 | Tesztelés | **Vitest** (unit/integráció), **Playwright** (E2E) | Gyors és Vite-kompatibilis. |
 | Lint / formázás | oxlint (marad) + Prettier | |
-| Futtatás | Docker Compose (api + web), SQLite volume | Egyparancsos indítás. |
+| E-mail | **Nodemailer** + **Gmail SMTP** (app password) | Ingyenes, kis felhasználói bázishoz elég (napi ~500 levél limit). Interfész mögött, később cserélhető. |
+| i18n | **i18next + react-i18next** (web), saját kis `t()` a backendben (e-mailek) | Egyelőre csak magyar, de új nyelv = új fordítási fájl. Lásd 2.6. |
+| Futtatás | Docker Compose (web + api + cloudflared) a házi szerveren, SQLite volume | Egyparancsos indítás, nyitott port nélkül. Lásd 2.7. |
 
-> Az `AGENTS.md` jelenleg „sima JavaScript, TypeScript nélkül” szabályt tartalmaz. Ha a terv elfogadásra kerül, azt az M0-ban frissíteni kell. Az új függőségeket a terv elfogadásával tekintjük egyeztetettnek.
+> **Elfogadott döntések:** TypeScript a nyelv (az `AGENTS.md` frissítve); a fenti stack függőségei jóváhagyottak; e-mail: Gmail app passworddel; üzemeltetés: Docker Compose a házi szerveren, Cloudflare Tunnelen, saját domainnel; egyelőre csak magyar UI, de i18n-re felkészítve.
 
 ### 2.2 Repó-struktúra
 
@@ -47,6 +49,7 @@ taskflow/
 │  │     │  ├─ workspaces/
 │  │     │  └─ settings/      # profil, API kulcsok
 │  │     ├─ shared/           # ui-kit (Modal, Button), hookok, utilok
+│  │     ├─ i18n/             # i18next init + locales/hu/*.json
 │  │     └─ api/              # típusos API kliens (fetch wrapper)
 │  └─ api/                    # Fastify backend
 │     └─ src/
@@ -57,11 +60,15 @@ taskflow/
 │        │     ├─ cards.repository.ts  # DB hozzáférés (Drizzle)
 │        │     └─ cards.test.ts
 │        ├─ core/             # auth, authz (policy), hibakezelés, config, logger
+│        ├─ mail/             # Mailer interfész, SMTP + konzol implementáció, sablonok
+│        ├─ i18n/             # backend szövegek (e-mailek): locales/hu.ts
 │        ├─ db/               # schema.ts, migrációk, seed
 │        └─ server.ts
 ├─ packages/
-│  └─ shared/                 # Zod sémák, DTO típusok, enumok (role, priority)
+│  └─ shared/                 # Zod sémák, DTO típusok, enumok, hibakódok
+├─ deploy/                    # cloudflared config, backup script
 ├─ docs/
+├─ .env.example
 └─ docker-compose.yml
 ```
 
@@ -74,7 +81,7 @@ taskflow/
 ### 2.3 Adatmodell (első változat)
 
 ```
-users            (id, email UNIQUE, name, password_hash, avatar_url, created_at)
+users            (id, email UNIQUE, name, password_hash, avatar_url, locale DEFAULT 'hu', created_at)
 sessions         (id, user_id, expires_at, created_at, user_agent, ip)
 workspaces       (id, name, slug, created_by, created_at)
 workspace_members(workspace_id, user_id, role[owner|admin|member|viewer], joined_at)
@@ -100,7 +107,8 @@ api_keys         (id, owner_user_id, workspace_id, name, prefix, key_hash, scope
 - **ID-k:** ULID vagy UUIDv7 (rendezhető, nem kitalálható).
 - **Sorrend:** `position` mező fractional indexing (string) alapon, így egy áthelyezés egyetlen sor frissítése.
 - **Optimista zárolás:** a `version` mezővel 409-et kap az, aki elavult kártyát próbál menteni.
-- A prioritás tárolása nyelvfüggetlen enum, a magyar címkék a UI-ban vannak.
+- A DB-ben minden enum nyelvfüggetlen (`high`, `medium`, `low`); a megjelenített szöveg kizárólag a fordítási fájlokból jön.
+- A felhasználó által beírt tartalom (táblacím, kártyaszöveg, címke) nem fordítandó, és úgy is marad.
 
 ### 2.4 Authentikáció és authorizáció
 
@@ -147,6 +155,51 @@ GET    /boards/{id}/events   (SSE)
 GET/POST/DELETE /me/api-keys
 ```
 
+### 2.6 Többnyelvűségre felkészítés (i18n)
+
+Egyelőre csak magyar UI lesz, de **egy új nyelv bevezetése ideális esetben csak új fordítási fájlok hozzáadását és egy sor regisztrációt jelentsen**, a komponensekhez ne kelljen nyúlni.
+
+Szabályok:
+- **Nincs beégetett UI-szöveg.** Minden felirat, placeholder, `aria-label`, toast és confirm üzenet a `t('kulcs')` függvényen keresztül jön (`apps/web/src/i18n/locales/hu/<namespace>.json`).
+- **Névterek feature-önként** (`common`, `board`, `card`, `auth`, `settings`, `errors`), így a fordítási fájlok kicsik és áttekinthetők maradnak.
+- **Típusbiztos kulcsok:** a magyar fájl a forrás. A TypeScript-típusok ebből jönnek, így egy elírt vagy hiányzó kulcs fordítási hiba; egy új nyelvnél a hiányzó kulcs CI-hiba (kulcs-egyezés teszt).
+- **Formázás csak központi helperrel:** a dátum, a szám és a relatív idő a `shared/format.ts` függvényein megy át (`Intl`, az aktuális locale-lal); `toLocaleDateString` vagy beégetett `'hu-HU'` sehol máshol.
+- **Többes szám és interpoláció** az i18next beépített megoldásával (`{{count}} feladat`), nem string-összefűzéssel.
+- **A backend nem küld megjelenítendő szöveget.** A hibák `code` + `params` formátumúak (pl. `CARD_NOT_FOUND`); a fordítást a frontend végzi (`errors` namespace). A Zod-validációs hibák is kódként mennek át.
+- **E-mail sablonok** a backend `i18n/locales/<lang>.ts` fájljaiból, a címzett `users.locale` mezője alapján.
+- **Nyelvválasztás** egyetlen helyen (`i18n/index.ts`): most fixen `hu`; később a felhasználói profilból vagy a böngészőből.
+
+**Új nyelv hozzáadása (cél):** `locales/en/*.json` + backend `locales/en.ts` + egy sor a támogatott nyelvek listájában + egy nyelvválasztó a profilban (egyszeri feladat).
+
+### 2.7 Üzemeltetés: házi szerver + Docker Compose + Cloudflare Tunnel
+
+```
+Internet ──► Cloudflare (saját domain, TLS) ──► cloudflared konténer (kimenő tunnel)
+                                                   │
+                         ┌─────────────────────────┴───────────┐
+                    /api/* ─► api (Fastify, :3000)        /* ─► web (nginx, statikus SPA, :80)
+                                  │
+                         volume: ./data/taskflow.db (+ uploads, backup)
+```
+
+- **Három szolgáltatás** a `docker-compose.yml`-ben: `web`, `api`, `cloudflared`. Nincs host-portkiengedés és routeren nyitott port: a tunnel kifelé kapcsolódik.
+- **Egy domain, path-alapú routing** a tunnel ingress-ben (`/api/*` → api, minden más → web). Így nincs CORS, és a cookie first-party marad.
+- **Konfiguráció `.env`-ből** (nincs commitolva), a `.env.example` dokumentálja:
+  - `APP_URL`, `SESSION_SECRET`, `DATABASE_PATH`;
+  - `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER`, `SMTP_PASS` (Gmail app password), `MAIL_FROM`;
+  - `CLOUDFLARE_TUNNEL_TOKEN`.
+- **Cloudflare mögötti teendők a backendben:**
+  - `trustProxy` bekapcsolva, a kliens IP-je a `CF-Connecting-IP` fejlécből (rate limit, audit, session);
+  - cookie: `Secure`, `HttpOnly`, `SameSite=Lax`;
+  - Origin-ellenőrzés az `APP_URL` alapján;
+  - SSE: ~25 mp-es heartbeat és `X-Accel-Buffering: no`, hogy a proxy ne zárja le és ne pufferelje a kapcsolatot.
+- **Opcionális:** Cloudflare Access (Zero Trust) a `/api/docs` elé, illetve igény esetén a teljes app elé.
+- **Mentés:** napi `sqlite3 .backup` cron/sidecar konténerrel, rotációval; opcionálisan Litestream külső tárolóra.
+- **Frissítés:** `git pull && docker compose up -d --build`; a migrációk az api indulásakor automatikusan lefutnak.
+- **E-mail (Gmail):**
+  - Nodemailer SMTP-n keresztül, `Mailer` interfész mögött: fejlesztéskor `ConsoleMailer`, élesben `SmtpMailer`;
+  - Gmail limit: kb. 500 levél/nap. Kis felhasználói bázisnál elég; ha kinőjük, csak az implementáció cserélődik.
+
 ## 3. Mérföldkövek és sprintek
 
 Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Minden mérföldkő végén működő, demózható állapot.
@@ -160,10 +213,16 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
   - külön komponensek: `Board`, `Column`, `TaskCard`, `CardModal`, `ChecklistEditor`, `RenameColumnModal`, `ConfirmModal`, `Topbar`, `BoardHeader`;
   - az `App.css` szétosztása komponens-szintű CSS (Modules) fájlokba;
 - tiszta függvények (`getDueDateState`, `getChecklistProgress`, `parseTags`) átköltöztetése `shared`-be, unit tesztekkel;
+- **i18n alapok:**
+  - i18next beállítása;
+  - az összes jelenlegi magyar szöveg kiszervezése `locales/hu/*.json`-ba;
+  - típusos kulcsok;
+  - `format.ts` (dátum, szám);
+  - prioritás enum nyelvfüggetlenítése (`Magas` → `high`);
 - Prettier, Vitest, CI (GitHub Actions: lint + typecheck + test + build);
 - `AGENTS.md` frissítése az új struktúrához.
 
-**Kész, ha:** a UI pixelre ugyanaz, az `App.jsx` < 100 sor, és a CI zöld.
+**Kész, ha:** a UI pixelre ugyanaz, az `App.tsx` < 100 sor, a komponensekben nincs beégetett UI-szöveg, és a CI zöld.
 
 ### M1 – Backend váz és perzisztencia (Sprint 2–3)
 **Cél:** a tábla adatai SQLite-ban élnek; egyelőre még auth nélkül, egy seed felhasználóval.
@@ -177,14 +236,17 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 - fractional indexing a mozgatáshoz; `POST /cards/{id}/move`, `POST /columns/{id}/move`;
 - OpenAPI + Swagger UI;
 - frontend: TanStack Query, API kliens, optimista drag & drop rollbackkel;
-- Vite dev proxy `/api` → backend.
+- Vite dev proxy `/api` → backend;
+- **korai Docker Compose** (`web` + `api` + `cloudflared`), `.env.example`, Dockerfile-ok (multi-stage). Így az M1 végétől már a házi szerveren is fut, a saját domainen.
 
-**Kész, ha:** frissítés után minden adat megmarad, és a teljes CRUD + mozgatás API-n keresztül is működik.
+**Kész, ha:** frissítés után minden adat megmarad, a teljes CRUD + mozgatás API-n keresztül is működik, és a `docker compose up -d` után a domainen elérhető.
 
 ### M2 – Felhasználókezelés és authentikáció (Sprint 4)
 - regisztráció, login, logout, `GET /auth/me`; session tábla, argon2;
-- jelszó-visszaállítás e-mail tokennel (fejlesztői módban konzol-mailer, később SMTP);
-- rate limit, login-brute-force védelem, CSRF/Origin-ellenőrzés;
+- **Mailer modul:** `Mailer` interfész, `ConsoleMailer` (dev), `SmtpMailer` (Gmail, app password), sablonok i18n-ből;
+- jelszó-visszaállítás e-mail tokennel; e-mail-cím megerősítése;
+- rate limit (`CF-Connecting-IP` alapján), login-brute-force védelem, CSRF/Origin-ellenőrzés;
+- **Regisztrációs mód:** élesben az első regisztrált felhasználó lesz az admin, utána a regisztráció csak meghívással (zárt rendszer, kis felhasználói bázis); env-ben kapcsolható.
 - frontend: login/regisztráció oldalak, védett route-ok, felhasználói menü (az avatar működik);
 - profil szerkesztése (név, avatar).
 
@@ -232,7 +294,11 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 ### M7 – AI integráció és üzemeltetés (Sprint 12)
 - **MCP szerver** csomag (`apps/mcp`): eszközök: `list_boards`, `get_board`, `create_card`, `move_card`, `update_card`, `add_comment`;
 - webhookok HMAC-aláírással (opcionális);
-- Docker Compose produkciós profil, SQLite-mentés (pl. Litestream vagy cron + `sqlite3 .backup`);
+- Docker Compose véglegesítése:
+  - healthcheckek, `restart: unless-stopped`, log-rotáció;
+  - napi SQLite-mentés sidecarral, rotációval (opcionálisan Litestream);
+  - visszaállítási próba dokumentálva;
+- opcionálisan Cloudflare Access a `/api/docs` elé;
 - E2E tesztcsomag (Playwright) a kritikus folyamatokra;
 - teljesítmény: indexek, N+1 ellenőrzés;
 - döntési pont: maradhat-e SQLite, vagy Postgres-re kell váltani (Drizzle miatt olcsó váltás).
@@ -240,6 +306,7 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 
 - Minden új végpont: Zod séma a `shared`-ben, integrációs teszt, jogosultsági teszt és OpenAPI-leírás.
+- Minden új UI-szöveg fordítási kulccsal kerül be; a backend hibakódot ad vissza, nem szöveget.
 - „Definition of Done”: lint + typecheck + teszt + build zöld, és nincs logika a route/komponens rossz rétegében.
 - Migráció csak előre (a drizzle-kit generál), seed idempotens.
 - Titkok csak `.env`-ben (`.env.example` commitolva).
@@ -250,7 +317,8 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 | Téma | Megjegyzés |
 |---|---|
 | SQLite skálázhatóság | Egy szerverpéldány mellett jó; több példány vagy nagy írási terhelés esetén Postgres. Drizzle miatt alacsony váltási költség. |
-| TS-migráció | Az M0 nagyobb lépés; alternatíva: a backend TS, a frontend JS + JSDoc marad. |
-| E-mail küldés | Melyik szolgáltató? (fejlesztéshez konzol-mailer elég) |
-| Hosztolás | Saját VPS / Fly.io / Railway? Ez befolyásolja a fájltárat és a mentést. |
-| Nyelv | Csak magyar UI, vagy i18n (hu/en) már az M0-ban? |
+| Gmail SMTP | Napi ~500 levél limit; a Google bármikor szigoríthat. A `Mailer` interfész miatt a csere (pl. Brevo, Resend, SES) egy új implementáció + env-módosítás. Az app password kizárólag `.env`-ben lehet. |
+| Házi szerver | Áramszünet vagy hardverhiba esetén nincs redundancia: a mentést a szerveren kívülre is ki kell vinni (pl. másik gép vagy felhő). |
+| Cloudflare Tunnel | SSE-nél heartbeat kell; nagy fájlfeltöltésnél a Cloudflare free csomag 100 MB-os kéréslimitje érvényes. |
+
+**Lezárt döntések:** TypeScript; a stack függőségei jóváhagyva; Gmail app password; Docker Compose + cloudflared a házi szerveren, saját domainnel; egyelőre csak magyar, i18n-re felkészítve.
