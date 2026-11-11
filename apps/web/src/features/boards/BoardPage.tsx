@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
 import { BoardDialogs } from './BoardDialogs'
 import { BoardHeader } from './BoardHeader'
@@ -64,6 +65,7 @@ export function BoardPage() {
   return (
     <div className="app-shell">
       <div className="trello-surface">
+        <VerifyEmailBanner />
         <Topbar searchQuery={searchQuery} onSearchChange={setSearchQuery} totalTasks={totalTasks} />
 
         <div className="workspace-layout">

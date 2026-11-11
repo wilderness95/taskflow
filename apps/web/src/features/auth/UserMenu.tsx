@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { useDismiss } from '../../shared/hooks/useDismiss'
 import { Avatar } from './Avatar'
+import { ProfileModal } from './ProfileModal'
 import { useAuthActions, useCurrentUser } from './useSession'
 import '../../shared/styles/menu.css'
 import './UserMenu.css'
@@ -13,6 +14,7 @@ export function UserMenu() {
   const { logout } = useAuthActions()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useDismiss(ref, isOpen, () => setIsOpen(false))
@@ -43,6 +45,16 @@ export function UserMenu() {
             className="menu-item"
             onClick={() => {
               setIsOpen(false)
+              setIsProfileOpen(true)
+            }}
+          >
+            {t('menu.profile')}
+          </button>
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => {
+              setIsOpen(false)
               logout.mutate(undefined, { onSettled: () => navigate('/login', { replace: true }) })
             }}
           >
@@ -50,6 +62,7 @@ export function UserMenu() {
           </button>
         </div>
       )}
+      {isProfileOpen && <ProfileModal onClose={() => setIsProfileOpen(false)} />}
     </div>
   )
 }
