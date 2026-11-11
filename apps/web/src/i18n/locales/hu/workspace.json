@@ -1,12 +1,4 @@
 {
-  "invite": {
-    "eyebrow": "Meghívás",
-    "title": "Felhasználó meghívása",
-    "emailPlaceholder": "email@pelda.hu",
-    "emailAria": "Email cím",
-    "submit": "Meghívás",
-    "sent": "A meghívót elküldtük."
-  },
   "fields": {
     "name": "Név"
   },
@@ -42,5 +34,52 @@
     "all": "Táblák",
     "empty": "Még nincs tábla ezen a munkaterületen.",
     "loadError": "A munkaterület nem érhető el."
+  },
+  "membersPage": {
+    "eyebrow": "Munkaterület",
+    "title": "Tagok és meghívók",
+    "back": "Vissza a táblákhoz",
+    "members": "Tagok",
+    "you": "(te)",
+    "remove": "Eltávolítás",
+    "leave": "Kilépés",
+    "roleAria": "{{name}} szerepköre",
+    "joined": "Csatlakozott",
+    "invite": {
+      "title": "Meghívás e-mailben",
+      "email": "E-mail-cím",
+      "role": "Szerepkör",
+      "submit": "Meghívó küldése",
+      "sent": "A meghívót elküldtük.",
+      "emailPlaceholder": "email@pelda.hu"
+    },
+    "pending": {
+      "title": "Függő meghívók",
+      "empty": "Nincs függő meghívó.",
+      "revoke": "Visszavonás",
+      "expires": "Lejár"
+    },
+    "settings": {
+      "title": "Munkaterület",
+      "rename": "Átnevezés",
+      "delete": "Munkaterület törlése",
+      "deleteHint": "Csak üres munkaterület törölhető."
+    },
+    "confirmDelete": {
+      "eyebrow": "Munkaterület",
+      "title": "Munkaterület törlése",
+      "message": "Biztosan törlöd ezt a munkaterületet? Ez nem vonható vissza.",
+      "confirm": "Törlés"
+    },
+    "loadError": "A munkaterület nem érhető el."
+  },
+  "accept": {
+    "title": "Meghívás munkaterületre",
+    "description": "Elfogadod a meghívást, és csatlakozol a munkaterülethez?",
+    "submit": "Meghívás elfogadása",
+    "needLogin": "A meghívás elfogadásához jelentkezz be vagy regisztrálj a meghívóban szereplő e-mail-címmel.",
+    "login": "Bejelentkezés",
+    "register": "Regisztráció",
+    "missingToken": "A meghívó hivatkozása hiányos."
   }
 }
