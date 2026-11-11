@@ -1,0 +1,78 @@
+import type { BoardDto } from '@taskflow/shared'
+import { describe, expect, it } from 'vitest'
+import { toColumns } from './boardMapper'
+
+const board: BoardDto = {
+  id: 'b',
+  title: 'T',
+  visibility: 'private',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  labels: [{ id: 'l1', boardId: 'b', name: 'UI', color: 'blue' }],
+  columns: [
+    {
+      id: 'c1',
+      boardId: 'b',
+      title: 'Teendők',
+      accent: 'blue',
+      isDone: false,
+      position: 'a0',
+      cards: [],
+    },
+    {
+      id: 'c2',
+      boardId: 'b',
+      title: 'Kész',
+      accent: 'green',
+      isDone: true,
+      position: 'a1',
+      cards: [
+        {
+          id: 'k1',
+          columnId: 'c2',
+          title: 'Kártya',
+          description: 'Leírás',
+          priority: 'high',
+          dueDate: null,
+          coverImage: null,
+          position: 'a0',
+          labelIds: ['l1', 'missing'],
+          checklists: [
+            {
+              id: 'cl',
+              cardId: 'k1',
+              title: 'Lista',
+              position: 'a0',
+              items: [{ id: 'i1', checklistId: 'cl', text: 'Egy', done: true, position: 'a0' }],
+            },
+          ],
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+          version: 1,
+        },
+      ],
+    },
+  ],
+}
+
+describe('toColumns', () => {
+  it('keeps column order and maps column fields', () => {
+    const columns = toColumns(board)
+    expect(Object.keys(columns)).toEqual(['c1', 'c2'])
+    expect(columns.c2).toMatchObject({ title: 'Kész', accent: 'green', done: true })
+  })
+
+  it('maps cards with labels, checklist and the done flag of the column', () => {
+    const [task] = toColumns(board).c2!.tasks
+    expect(task).toEqual({
+      id: 'k1',
+      title: 'Kártya',
+      description: 'Leírás',
+      priority: 'high',
+      tags: [{ label: 'UI', color: 'blue' }],
+      dueDate: undefined,
+      coverImage: undefined,
+      done: true,
+      checklist: { title: 'Lista', items: [{ id: 'i1', text: 'Egy', done: true }] },
+    })
+  })
+})

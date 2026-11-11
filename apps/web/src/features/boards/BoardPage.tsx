@@ -8,42 +8,57 @@ import { countTasks, filterColumns } from './filterColumns'
 import { Topbar } from './Topbar'
 import { COLUMN_ACCENTS, type Dialog } from './types'
 import { useBoardDrag } from './useBoardDrag'
-import { useBoardMeta } from './useBoardMeta'
-import { useBoardState } from './useBoardState'
+import { useBoardData } from './useBoardData'
 import './BoardPage.css'
 
 export function BoardPage() {
-  const { t } = useTranslation(['card', 'column'])
-  const board = useBoardState()
-  const meta = useBoardMeta()
+  const { t } = useTranslation(['card', 'column', 'board'])
+  const { status, retry, columns, meta, actions } = useBoardData()
   const [searchQuery, setSearchQuery] = useState('')
   const [dialog, setDialog] = useState<Dialog | null>(null)
 
   const drag = useBoardDrag({
-    onMoveTask: board.moveTask,
-    onReorderColumns: board.reorderColumns,
+    onMoveTask: actions.moveTask,
+    onReorderColumns: actions.reorderColumns,
   })
 
   const visibleColumns = useMemo(
-    () => filterColumns(board.columns, searchQuery, (priority) => t(`card:priority.${priority}`)),
-    [board.columns, searchQuery, t],
+    () => filterColumns(columns, searchQuery, (priority) => t(`card:priority.${priority}`)),
+    [columns, searchQuery, t],
   )
-  const totalTasks = useMemo(() => countTasks(board.columns), [board.columns])
+  const totalTasks = useMemo(() => countTasks(columns), [columns])
 
   const handleAddColumn = () => {
-    const index = Object.keys(board.columns).length
-    board.addColumn(
+    const index = Object.keys(columns).length
+    actions.addColumn(
       t('column:defaultTitle', { number: index + 1 }),
       COLUMN_ACCENTS[index % COLUMN_ACCENTS.length] ?? 'blue',
     )
   }
 
   const handleDeleteColumn = (columnId: string) => {
-    if (Object.keys(board.columns).length <= 1) {
+    if (Object.keys(columns).length <= 1) {
       window.alert(t('column:minOneColumn'))
       return
     }
     setDialog({ type: 'column-delete', columnId })
+  }
+
+  if (status !== 'ready') {
+    return (
+      <div className="app-shell">
+        <p className="board-status" role={status === 'error' ? 'alert' : 'status'}>
+          {t(
+            `board:${status === 'loading' ? 'loading' : status === 'empty' ? 'empty' : 'loadError'}`,
+          )}
+        </p>
+        {status === 'error' && (
+          <button type="button" className="secondary-button" onClick={retry}>
+            {t('board:retry')}
+          </button>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -66,7 +81,7 @@ export function BoardPage() {
               onDeleteColumn={handleDeleteColumn}
               onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
               onEditTask={(columnId, task) => setDialog({ type: 'card-edit', columnId, task })}
-              onDeleteTask={board.deleteTask}
+              onDeleteTask={actions.deleteTask}
             />
           </main>
         </div>
@@ -74,11 +89,11 @@ export function BoardPage() {
 
       <BoardDialogs
         dialog={dialog}
-        columns={board.columns}
+        columns={columns}
         onClose={() => setDialog(null)}
-        onSaveTask={board.saveTask}
-        onUpdateColumn={board.updateColumn}
-        onDeleteColumn={board.deleteColumn}
+        onSaveTask={actions.saveTask}
+        onUpdateColumn={actions.updateColumn}
+        onDeleteColumn={actions.deleteColumn}
       />
     </div>
   )

@@ -1,0 +1,73 @@
+import {
+  boardListSchema,
+  boardSchema,
+  type BoardDto,
+  type BoardSummaryDto,
+  type CardDto,
+  type ChecklistDto,
+  type ChecklistItemDto,
+  type ColumnDto,
+  type CreateCardRequest,
+  type CreateChecklistRequest,
+  type CreateChecklistItemInput,
+  type CreateColumnRequest,
+  type CreateLabelInput,
+  type LabelDto,
+  type MoveCardInput,
+  type MoveColumnInput,
+  type UpdateBoardInput,
+  type UpdateCardInput,
+  type UpdateChecklistItemInput,
+  type UpdateColumnInput,
+} from '@taskflow/shared'
+import { apiFetch } from './client'
+
+export const listBoards = async (): Promise<BoardSummaryDto[]> =>
+  boardListSchema.parse(await apiFetch('GET', '/boards')).data
+
+export const getBoard = async (boardId: string): Promise<BoardDto> =>
+  boardSchema.parse(await apiFetch('GET', `/boards/${boardId}`))
+
+export const updateBoard = (boardId: string, input: UpdateBoardInput) =>
+  apiFetch<BoardSummaryDto>('PATCH', `/boards/${boardId}`, input)
+
+export const createLabel = (boardId: string, input: CreateLabelInput) =>
+  apiFetch<LabelDto>('POST', `/boards/${boardId}/labels`, input)
+
+export const createColumn = (boardId: string, input: CreateColumnRequest) =>
+  apiFetch<ColumnDto>('POST', `/boards/${boardId}/columns`, input)
+
+export const updateColumn = (columnId: string, input: UpdateColumnInput) =>
+  apiFetch<ColumnDto>('PATCH', `/columns/${columnId}`, input)
+
+export const moveColumn = (columnId: string, input: MoveColumnInput) =>
+  apiFetch<ColumnDto>('POST', `/columns/${columnId}/move`, input)
+
+export const deleteColumn = (columnId: string, moveCardsTo?: string) =>
+  apiFetch('DELETE', `/columns/${columnId}${moveCardsTo ? `?moveCardsTo=${moveCardsTo}` : ''}`)
+
+export const createCard = (columnId: string, input: CreateCardRequest) =>
+  apiFetch<CardDto>('POST', `/columns/${columnId}/cards`, input)
+
+export const updateCard = (cardId: string, input: UpdateCardInput) =>
+  apiFetch<CardDto>('PATCH', `/cards/${cardId}`, input)
+
+export const moveCard = (cardId: string, input: MoveCardInput) =>
+  apiFetch<CardDto>('POST', `/cards/${cardId}/move`, input)
+
+export const deleteCard = (cardId: string) => apiFetch('DELETE', `/cards/${cardId}`)
+
+export const createChecklist = (cardId: string, input: CreateChecklistRequest) =>
+  apiFetch<ChecklistDto>('POST', `/cards/${cardId}/checklists`, input)
+
+export const updateChecklist = (checklistId: string, title: string) =>
+  apiFetch<ChecklistDto>('PATCH', `/checklists/${checklistId}`, { title })
+
+export const createChecklistItem = (checklistId: string, input: CreateChecklistItemInput) =>
+  apiFetch<ChecklistItemDto>('POST', `/checklists/${checklistId}/items`, input)
+
+export const updateChecklistItem = (itemId: string, input: UpdateChecklistItemInput) =>
+  apiFetch<ChecklistItemDto>('PATCH', `/checklist-items/${itemId}`, input)
+
+export const deleteChecklistItem = (itemId: string) =>
+  apiFetch('DELETE', `/checklist-items/${itemId}`)
