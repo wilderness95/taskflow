@@ -15,6 +15,10 @@ export const hu = {
     subject: 'Meghívást kaptál a TaskFlow-ba',
     body: 'Szia!\n\n{{inviter}} meghívott a TaskFlow-ba. A regisztrációhoz nyisd meg ezt a hivatkozást:\n{{link}}\n\nA meghívó {{days}} napig érvényes.',
   },
+  workspaceInvitation: {
+    subject: 'Meghívás a(z) {{workspace}} munkaterületre',
+    body: 'Szia!\n\n{{inviter}} meghívott a(z) {{workspace}} munkaterületre a TaskFlow-ban ({{role}} szerepkörrel). A meghívás elfogadásához nyisd meg ezt a hivatkozást:\n{{link}}\n\nA meghívó {{days}} napig érvényes.',
+  },
 } as const
 
 export type Messages = typeof hu

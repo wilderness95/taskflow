@@ -1,6 +1,8 @@
+import type { InvitableRole } from '@taskflow/shared'
 import { and, eq, isNull, lt, sql } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
-import { emailTokens, invitations, sessions, users } from '../../db/schema.js'
+import { emailTokens, invitations, sessions, users, workspaceMembers } from '../../db/schema.js'
+import { createWorkspace } from '../../db/workspaceFactory.js'
 
 export type UserRow = typeof users.$inferSelect
 export type SessionRow = typeof sessions.$inferSelect
@@ -71,6 +73,18 @@ export function createAuthRepository(db: Db) {
       db.select().from(invitations).where(eq(invitations.tokenHash, tokenHash)).get(),
     markInvitationAccepted: (id: string, now: Date): void => {
       db.update(invitations).set({ acceptedAt: now }).where(eq(invitations.id, id)).run()
+    },
+    /** Minden felhasználónak van egy saját munkaterülete (a seed felhasználóé már létezik). */
+    ensurePersonalWorkspace: (userId: string, name: string): void => {
+      const hasWorkspace = db
+        .select()
+        .from(workspaceMembers)
+        .where(eq(workspaceMembers.userId, userId))
+        .get()
+      if (!hasWorkspace) createWorkspace(db, { name, ownerId: userId })
+    },
+    addWorkspaceMember: (workspaceId: string, userId: string, role: InvitableRole): void => {
+      db.insert(workspaceMembers).values({ workspaceId, userId, role }).onConflictDoNothing().run()
     },
     transaction: <T>(fn: () => T): T => db.transaction(fn),
   }

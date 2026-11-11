@@ -53,3 +53,40 @@ export async function login(app: App, email: string, password = PASSWORD) {
   })
   return { res, cookie: cookieFrom(res) }
 }
+
+type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
+
+/** Egy bejelentkezett (vagy névtelen) kliens: JSON-t küld és vár vissza. */
+export function client(app: App, cookie?: string) {
+  const call = async (method: Method, url: string, payload?: object) => {
+    const res = await app.inject({
+      method,
+      url: `/api/v1${url}`,
+      payload,
+      headers: cookie ? { cookie } : {},
+    })
+    return { status: res.statusCode, body: res.body ? (res.json() as any) : null } // eslint-disable-line @typescript-eslint/no-explicit-any
+  }
+  return {
+    get: (url: string) => call('GET', url),
+    post: (url: string, payload?: object) => call('POST', url, payload),
+    patch: (url: string, payload?: object) => call('PATCH', url, payload),
+    put: (url: string, payload?: object) => call('PUT', url, payload),
+    delete: (url: string) => call('DELETE', url),
+  }
+}
+export type TestClient = ReturnType<typeof client>
+
+/** Új felhasználó regisztrálása (nyitott regisztrációs módú alkalmazásban) és bejelentkezett kliense. */
+export async function signUp(app: App, email: string, name = email.split('@')[0]!) {
+  const { res, cookie } = await register(app, { email, name })
+  if (res.statusCode !== 201) throw new Error(`signUp failed: ${res.body}`)
+  const user = res.json() as { id: string; email: string; name: string }
+  return { user, cookie, api: client(app, cookie) }
+}
+
+/** A legutóbbi levélből a tokenes hivatkozás tokenje. */
+export const tokenFromLastMail = (mailer: { last(): { text: string } }): string => {
+  const params = new URL(mailer.last().text.match(/https?:\/\/\S+/)![0]).searchParams
+  return (params.get('token') ?? params.get('invite'))!
+}
