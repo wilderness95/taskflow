@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type ModalProps = {
   eyebrow: string
@@ -15,6 +16,8 @@ export function Modal({
   cardClassName = 'modal-card',
   children,
 }: ModalProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={cardClassName} onClick={(event) => event.stopPropagation()}>
@@ -23,7 +26,7 @@ export function Modal({
             <span className="eyebrow">{eyebrow}</span>
             <h2>{title}</h2>
           </div>
-          <button type="button" className="close-button" onClick={onClose} aria-label="Bezárás">
+          <button type="button" className="close-button" onClick={onClose} aria-label={t('close')}>
             ×
           </button>
         </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
 import type { BoardDrag } from '../boards/useBoardDrag'
 import type { Column, Task } from '../boards/types'
@@ -24,6 +25,7 @@ export function ColumnView({
   onEditTask,
   onDeleteTask,
 }: ColumnViewProps) {
+  const { t } = useTranslation('column')
   const { taskDrag, columnDrag } = drag
   const isTaskTarget = taskDrag.targetColumnId === columnId
   const isBeingDragged = columnDrag.activeColumnId === columnId
@@ -50,7 +52,7 @@ export function ColumnView({
           <button
             type="button"
             className="column-action"
-            aria-label={`Oszlop átnevezése: ${column.title}`}
+            aria-label={t('renameAria', { title: column.title })}
             onClick={onRename}
           >
             ✎
@@ -58,7 +60,7 @@ export function ColumnView({
           <button
             type="button"
             className="column-action danger"
-            aria-label={`Oszlop törlése: ${column.title}`}
+            aria-label={t('deleteAria', { title: column.title })}
             onClick={onDelete}
           >
             🗑
@@ -74,7 +76,7 @@ export function ColumnView({
             onClick={onAddTask}
             {...drag.getEmptyColumnProps(columnId)}
           >
-            + Kártya hozzáadása
+            {t('addCard')}
           </button>
         ) : (
           <>
@@ -91,7 +93,7 @@ export function ColumnView({
             ))}
 
             <button type="button" className="add-card" onClick={onAddTask}>
-              + Kártya hozzáadása
+              {t('addCard')}
             </button>
           </>
         )}

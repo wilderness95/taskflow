@@ -1,5 +1,6 @@
+import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
-import { VIEWS, VIEW_OPTIONS } from './boardOptions'
+import { VIEWS } from './boardOptions'
 import type { BoardView } from './types'
 
 type ViewSwitcherProps = {
@@ -8,8 +9,10 @@ type ViewSwitcherProps = {
 }
 
 export function ViewSwitcher({ activeView, onChange }: ViewSwitcherProps) {
+  const { t } = useTranslation('board')
+
   return (
-    <div className="view-switcher" aria-label="Nézet választó">
+    <div className="view-switcher" aria-label={t('views.aria')}>
       {VIEWS.map((view) => (
         <button
           key={view}
@@ -17,7 +20,7 @@ export function ViewSwitcher({ activeView, onChange }: ViewSwitcherProps) {
           className={classNames('view-tab', activeView === view && 'active')}
           onClick={() => onChange(view)}
         >
-          {VIEW_OPTIONS[view].label}
+          {t(`views.${view}.label`)}
         </button>
       ))}
     </div>

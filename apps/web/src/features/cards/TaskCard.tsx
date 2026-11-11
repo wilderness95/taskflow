@@ -1,9 +1,9 @@
 import { getChecklistProgress, getDueDateState } from '@taskflow/shared'
+import { useTranslation } from 'react-i18next'
+import { formatShortDate } from '../../i18n/format'
 import { classNames } from '../../shared/lib/classNames'
 import type { DragProps } from '../boards/useBoardDrag'
 import type { Task } from '../boards/types'
-import { formatDueDate } from './formatDueDate'
-import { priorityLabels } from './priorityLabels'
 
 type TaskCardProps = {
   task: Task
@@ -22,6 +22,7 @@ export function TaskCard({
   onEdit,
   onDelete,
 }: TaskCardProps) {
+  const { t } = useTranslation('card')
   const checklistProgress = getChecklistProgress(task.checklist)
   const dueState = getDueDateState(task.dueDate)
 
@@ -39,12 +40,12 @@ export function TaskCard({
 
       <div className="task-card-top">
         <span className={`priority-pill priority-${task.priority}`}>
-          {priorityLabels[task.priority]}
+          {t(`priority.${task.priority}`)}
         </span>
         <button
           type="button"
           className="delete-button"
-          aria-label={`Töröld a ${task.title} feladatot`}
+          aria-label={t('deleteAria', { title: task.title })}
           onClick={(event) => {
             event.stopPropagation()
             onDelete()
@@ -66,12 +67,12 @@ export function TaskCard({
         </div>
       )}
 
-      <p>{task.description}</p>
+      <p>{task.description || t('noDescription')}</p>
 
       {task.dueDate && (
         <div className={`task-due ${dueState}`}>
-          <span className="task-due-label">Határidő</span>
-          <strong>{formatDueDate(task.dueDate)}</strong>
+          <span className="task-due-label">{t('dueLabel')}</span>
+          <strong>{formatShortDate(task.dueDate)}</strong>
         </div>
       )}
 

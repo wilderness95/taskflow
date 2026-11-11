@@ -1,4 +1,5 @@
 import { getChecklistProgress, type ChecklistItem } from '@taskflow/shared'
+import { useTranslation } from 'react-i18next'
 import { createId } from '../../shared/lib/ids'
 import { classNames } from '../../shared/lib/classNames'
 
@@ -15,6 +16,7 @@ export function ChecklistEditor({
   onTitleChange,
   onItemsChange,
 }: ChecklistEditorProps) {
+  const { t } = useTranslation('card')
   const { percent } = getChecklistProgress({ items })
 
   const updateItem = (index: number, changes: Partial<ChecklistItem>) =>
@@ -30,7 +32,11 @@ export function ChecklistEditor({
   return (
     <div className="checklist-panel">
       <div className="checklist-title-row">
-        <button type="button" className="checklist-toggle-button" aria-label="Checklist bejelölése">
+        <button
+          type="button"
+          className="checklist-toggle-button"
+          aria-label={t('checklist.toggleAria')}
+        >
           ✓
         </button>
         <input
@@ -40,7 +46,7 @@ export function ChecklistEditor({
           onChange={(event) => onTitleChange(event.target.value)}
         />
         <button type="button" className="delete-checklist-button">
-          Delete
+          {t('checklist.delete')}
         </button>
       </div>
 
@@ -52,7 +58,7 @@ export function ChecklistEditor({
       </div>
 
       <div className="checklist-items">
-        {items.length === 0 && <div className="checklist-empty-state">Nincs elem a listában.</div>}
+        {items.length === 0 && <div className="checklist-empty-state">{t('checklist.empty')}</div>}
 
         {items.map((item, index) => (
           <div key={item.id ?? `checklist-${index}`} className="checklist-item-row">
@@ -60,14 +66,14 @@ export function ChecklistEditor({
               type="button"
               className={classNames('checklist-item-toggle', item.done && 'is-checked')}
               onClick={() => updateItem(index, { done: !item.done })}
-              aria-label={item.done ? 'Kijelölés megszüntetése' : 'Kijelölés'}
+              aria-label={item.done ? t('checklist.uncheck') : t('checklist.check')}
             >
               {item.done ? '✓' : ''}
             </button>
             <input
               type="text"
               value={item.text}
-              placeholder="Add an item"
+              placeholder={t('checklist.itemPlaceholder')}
               onChange={(event) => updateItem(index, { text: event.target.value })}
             />
             <button
@@ -82,7 +88,7 @@ export function ChecklistEditor({
       </div>
 
       <button type="button" className="add-checklist-item-button" onClick={addItem}>
-        Add an item
+        {t('checklist.addItem')}
       </button>
     </div>
   )

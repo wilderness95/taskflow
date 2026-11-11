@@ -1,11 +1,13 @@
-import { priorityLabels } from '../cards/priorityLabels'
+import type { Priority } from '@taskflow/shared'
 import type { Columns, Task } from './types'
 
-const matchesQuery = (task: Task, query: string): boolean =>
+type PriorityLabel = (priority: Priority) => string
+
+const matchesQuery = (task: Task, query: string, getPriorityLabel: PriorityLabel): boolean =>
   [
     task.title,
     task.description,
-    priorityLabels[task.priority],
+    getPriorityLabel(task.priority),
     task.dueDate,
     ...task.tags.map((tag) => tag.label),
   ]
@@ -15,7 +17,11 @@ const matchesQuery = (task: Task, query: string): boolean =>
     .includes(query)
 
 /** A keresés a kártyák szövegére, prioritására, határidejére és címkéire szűr; az oszlopok megmaradnak. */
-export const filterColumns = (columns: Columns, rawQuery: string): Columns => {
+export const filterColumns = (
+  columns: Columns,
+  rawQuery: string,
+  getPriorityLabel: PriorityLabel,
+): Columns => {
   const query = rawQuery.trim().toLowerCase()
   if (!query) {
     return columns
@@ -24,7 +30,10 @@ export const filterColumns = (columns: Columns, rawQuery: string): Columns => {
   return Object.fromEntries(
     Object.entries(columns).map(([columnId, column]) => [
       columnId,
-      { ...column, tasks: column.tasks.filter((task) => matchesQuery(task, query)) },
+      {
+        ...column,
+        tasks: column.tasks.filter((task) => matchesQuery(task, query, getPriorityLabel)),
+      },
     ]),
   )
 }

@@ -1,16 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { makeTask } from '../boards/testUtils'
-import {
-  buildTaskFromDraft,
-  createDraftFromTask,
-  createEmptyDraft,
-  DEFAULT_CHECKLIST_TITLE,
-  EMPTY_DESCRIPTION,
-} from './taskDraft'
+import { buildTaskFromDraft, createDraftFromTask, createEmptyDraft } from './taskDraft'
+
+const DEFAULT_TITLE = 'Alapértelmezett lista'
 
 describe('createEmptyDraft', () => {
   it('az adott oszlopra és közepes prioritásra áll', () => {
-    expect(createEmptyDraft('doing')).toMatchObject({
+    expect(createEmptyDraft('doing', DEFAULT_TITLE)).toMatchObject({
       column: 'doing',
       priority: 'medium',
       title: '',
@@ -26,19 +22,19 @@ describe('createDraftFromTask', () => {
         { label: 'UX', color: 'amber' },
       ],
     })
-    expect(createDraftFromTask(task, 'todo').tags).toBe('UI, UX')
+    expect(createDraftFromTask(task, 'todo', DEFAULT_TITLE).tags).toBe('UI, UX')
   })
 
   it('checklist nélkül az alapértelmezett cím és üres lista jön', () => {
-    const draft = createDraftFromTask(makeTask('t'), 'todo')
-    expect(draft.checklistTitle).toBe(DEFAULT_CHECKLIST_TITLE)
+    const draft = createDraftFromTask(makeTask('t'), 'todo', DEFAULT_TITLE)
+    expect(draft.checklistTitle).toBe(DEFAULT_TITLE)
     expect(draft.checklistItems).toEqual([])
   })
 })
 
 describe('buildTaskFromDraft', () => {
   const draft = () => ({
-    ...createEmptyDraft('todo'),
+    ...createEmptyDraft('todo', DEFAULT_TITLE),
     title: '  Cím  ',
     tags: 'a, b',
     checklistItems: [
@@ -49,7 +45,11 @@ describe('buildTaskFromDraft', () => {
   })
 
   it('trimmel, címkéket parse-ol, az üres checklist-tételeket eldobja', () => {
-    const task = buildTaskFromDraft(draft(), { id: 't1', done: false })
+    const task = buildTaskFromDraft(draft(), {
+      id: 't1',
+      done: false,
+      defaultChecklistTitle: DEFAULT_TITLE,
+    })
     expect(task.title).toBe('Cím')
     expect(task.tags.map((tag) => tag.label)).toEqual(['a', 'b'])
     expect(task.checklist?.items?.map((item) => item.text)).toEqual(['egy', 'kettő'])
@@ -57,13 +57,25 @@ describe('buildTaskFromDraft', () => {
     expect(task.checklist?.items?.[1]?.id).toBeTruthy()
   })
 
-  it('üres leírás helyett az alapértelmezett szöveget adja', () => {
-    expect(buildTaskFromDraft(draft(), { id: 't1', done: false }).description).toBe(
-      EMPTY_DESCRIPTION,
+  it('az üres leírás üresen marad (a feliratot a megjelenítés adja)', () => {
+    expect(
+      buildTaskFromDraft(draft(), { id: 't1', done: false, defaultChecklistTitle: DEFAULT_TITLE })
+        .description,
+    ).toBe('')
+  })
+
+  it('üres checklist-cím esetén az alapértelmezett címet adja', () => {
+    const task = buildTaskFromDraft(
+      { ...draft(), checklistTitle: '  ' },
+      { id: 't1', done: false, defaultChecklistTitle: DEFAULT_TITLE },
     )
+    expect(task.checklist?.title).toBe(DEFAULT_TITLE)
   })
 
   it('átveszi a "done" jelzőt', () => {
-    expect(buildTaskFromDraft(draft(), { id: 't1', done: true }).done).toBe(true)
+    expect(
+      buildTaskFromDraft(draft(), { id: 't1', done: true, defaultChecklistTitle: DEFAULT_TITLE })
+        .done,
+    ).toBe(true)
   })
 })

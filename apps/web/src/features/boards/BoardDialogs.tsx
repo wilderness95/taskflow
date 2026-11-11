@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ConfirmModal } from '../../shared/ui/ConfirmModal'
 import { createId } from '../../shared/lib/ids'
 import { CardModal } from '../cards/CardModal'
@@ -28,9 +29,13 @@ export function BoardDialogs({
   onUpdateColumn,
   onDeleteColumn,
 }: BoardDialogsProps) {
+  const { t } = useTranslation(['card', 'column'])
+
   if (!dialog) {
     return null
   }
+
+  const defaultChecklistTitle = t('card:checklist.defaultTitle')
 
   switch (dialog.type) {
     case 'card-create':
@@ -41,6 +46,7 @@ export function BoardDialogs({
         const task = buildTaskFromDraft(draft, {
           id: isEdit ? dialog.task.id : createId('task'),
           done: Boolean(columns[draft.column]?.done),
+          defaultChecklistTitle,
         })
         onSaveTask(task, draft.column, isEdit ? dialog.columnId : undefined)
         onClose()
@@ -51,8 +57,8 @@ export function BoardDialogs({
           mode={isEdit ? 'edit' : 'create'}
           initialDraft={
             isEdit
-              ? createDraftFromTask(dialog.task, dialog.columnId)
-              : createEmptyDraft(dialog.columnId)
+              ? createDraftFromTask(dialog.task, dialog.columnId, defaultChecklistTitle)
+              : createEmptyDraft(dialog.columnId, defaultChecklistTitle)
           }
           columns={columns}
           onSave={handleSave}
@@ -82,10 +88,10 @@ export function BoardDialogs({
     case 'column-delete':
       return (
         <ConfirmModal
-          eyebrow="Oszlop törlése"
-          title="Biztos vagy benne?"
-          message="A törölt oszlopban lévő feladatok a szomszédos oszlopba kerülnek."
-          confirmLabel="Törlés"
+          eyebrow={t('column:delete.eyebrow')}
+          title={t('column:delete.title')}
+          message={t('column:delete.message')}
+          confirmLabel={t('column:delete.confirm')}
           onConfirm={() => {
             onDeleteColumn(dialog.columnId)
             onClose()

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Board } from './Board'
 import { BoardDialogs } from './BoardDialogs'
 import { BoardHeader } from './BoardHeader'
@@ -11,6 +12,7 @@ import { useBoardMeta } from './useBoardMeta'
 import { useBoardState } from './useBoardState'
 
 export function BoardPage() {
+  const { t } = useTranslation(['card', 'column'])
   const board = useBoardState()
   const meta = useBoardMeta()
   const [searchQuery, setSearchQuery] = useState('')
@@ -22,22 +24,22 @@ export function BoardPage() {
   })
 
   const visibleColumns = useMemo(
-    () => filterColumns(board.columns, searchQuery),
-    [board.columns, searchQuery],
+    () => filterColumns(board.columns, searchQuery, (priority) => t(`card:priority.${priority}`)),
+    [board.columns, searchQuery, t],
   )
   const totalTasks = useMemo(() => countTasks(board.columns), [board.columns])
 
   const handleAddColumn = () => {
     const index = Object.keys(board.columns).length
     board.addColumn(
-      `Új oszlop ${index + 1}`,
+      t('column:defaultTitle', { number: index + 1 }),
       COLUMN_ACCENTS[index % COLUMN_ACCENTS.length] ?? 'blue',
     )
   }
 
   const handleDeleteColumn = (columnId: string) => {
     if (Object.keys(board.columns).length <= 1) {
-      window.alert('Legalább egy oszlopnak maradnia kell.')
+      window.alert(t('column:minOneColumn'))
       return
     }
     setDialog({ type: 'column-delete', columnId })

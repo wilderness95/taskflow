@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
 import { BoardTitle } from './BoardTitle'
 import type { BoardMeta } from './useBoardMeta'
@@ -11,10 +12,12 @@ type BoardHeaderProps = {
 }
 
 export function BoardHeader({ meta, onInvite, onAddColumn }: BoardHeaderProps) {
+  const { t } = useTranslation('board')
+
   return (
     <section className="board-header">
       <div className="board-header-main">
-        <span className="eyebrow">Board</span>
+        <span className="eyebrow">{t('eyebrow')}</span>
         <BoardTitle title={meta.title} onChange={meta.setTitle} />
       </div>
 
@@ -23,7 +26,7 @@ export function BoardHeader({ meta, onInvite, onAddColumn }: BoardHeaderProps) {
           type="button"
           className={classNames('board-star-button', meta.isStarred && 'is-starred')}
           onClick={meta.toggleStar}
-          aria-label={meta.isStarred ? 'Kedvenc eltávolítása' : 'Kedvenc hozzáadása'}
+          aria-label={meta.isStarred ? t('star.remove') : t('star.add')}
         >
           ★
         </button>
@@ -38,10 +41,10 @@ export function BoardHeader({ meta, onInvite, onAddColumn }: BoardHeaderProps) {
         </div>
 
         <button type="button" className="secondary-button" onClick={onInvite}>
-          + Meghívás
+          {t('invite')}
         </button>
         <button type="button" className="primary-button" onClick={onAddColumn}>
-          + Új oszlop
+          {t('addColumn')}
         </button>
       </div>
     </section>

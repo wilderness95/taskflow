@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type BoardTitleProps = {
   title: string
@@ -6,6 +7,7 @@ type BoardTitleProps = {
 }
 
 export function BoardTitle({ title, onChange }: BoardTitleProps) {
+  const { t } = useTranslation('board')
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState(title)
 
@@ -48,7 +50,7 @@ export function BoardTitle({ title, onChange }: BoardTitleProps) {
       type="button"
       className="board-title-row"
       onClick={startEditing}
-      aria-label="Táblacím szerkesztése"
+      aria-label={t('editTitleAria')}
     >
       <h1>{title}</h1>
     </button>

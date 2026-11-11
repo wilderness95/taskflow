@@ -1,9 +1,9 @@
 import { isPriority, parseTags, PRIORITIES } from '@taskflow/shared'
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../shared/ui/Modal'
 import type { Columns } from '../boards/types'
 import { ChecklistEditor } from './ChecklistEditor'
-import { priorityLabels } from './priorityLabels'
 import type { TaskDraft } from './taskDraft'
 
 type CardModalProps = {
@@ -15,6 +15,7 @@ type CardModalProps = {
 }
 
 export function CardModal({ mode, initialDraft, columns, onSave, onClose }: CardModalProps) {
+  const { t } = useTranslation(['card', 'common'])
   const [draft, setDraft] = useState(initialDraft)
   const isCreate = mode === 'create'
 
@@ -31,34 +32,34 @@ export function CardModal({ mode, initialDraft, columns, onSave, onClose }: Card
 
   return (
     <Modal
-      eyebrow={isCreate ? 'Új feladat' : 'Feladat szerkesztése'}
-      title={isCreate ? 'Kártya hozzáadása' : 'Kártya módosítása'}
+      eyebrow={isCreate ? t('card:modal.createEyebrow') : t('card:modal.editEyebrow')}
+      title={isCreate ? t('card:modal.createTitle') : t('card:modal.editTitle')}
       onClose={onClose}
     >
       <form className="task-form" onSubmit={handleSubmit}>
         <label>
-          Cím
+          {t('card:fields.title')}
           <input
             type="text"
             value={draft.title}
-            placeholder="Pl. Jira ticket frissítése"
+            placeholder={t('card:fields.titlePlaceholder')}
             onChange={(event) => setField('title', event.target.value)}
           />
         </label>
 
         <label>
-          Leírás
+          {t('card:fields.description')}
           <textarea
             rows={4}
             value={draft.description}
-            placeholder="Mit kell megcsinálni?"
+            placeholder={t('card:fields.descriptionPlaceholder')}
             onChange={(event) => setField('description', event.target.value)}
           />
         </label>
 
         <div className="form-row">
           <label>
-            Prioritás
+            {t('card:fields.priority')}
             <select
               value={draft.priority}
               onChange={(event) => {
@@ -69,14 +70,14 @@ export function CardModal({ mode, initialDraft, columns, onSave, onClose }: Card
             >
               {PRIORITIES.map((priority) => (
                 <option key={priority} value={priority}>
-                  {priorityLabels[priority]}
+                  {t(`card:priority.${priority}`)}
                 </option>
               ))}
             </select>
           </label>
 
           <label>
-            Oszlop
+            {t('card:fields.column')}
             <select
               value={draft.column}
               onChange={(event) => setField('column', event.target.value)}
@@ -91,11 +92,11 @@ export function CardModal({ mode, initialDraft, columns, onSave, onClose }: Card
         </div>
 
         <label className="single-field">
-          Címkék
+          {t('card:fields.tags')}
           <input
             type="text"
             value={draft.tags}
-            placeholder="UI, UX, Marketing"
+            placeholder={t('card:fields.tagsPlaceholder')}
             onChange={(event) => setField('tags', event.target.value)}
           />
           <div className="tag-preview-row">
@@ -108,7 +109,7 @@ export function CardModal({ mode, initialDraft, columns, onSave, onClose }: Card
         </label>
 
         <label className="single-field">
-          Határidő
+          {t('card:fields.dueDate')}
           <input
             type="date"
             value={draft.dueDate}
@@ -125,10 +126,10 @@ export function CardModal({ mode, initialDraft, columns, onSave, onClose }: Card
 
         <div className="modal-actions">
           <button type="button" className="secondary-button" onClick={onClose}>
-            Mégse
+            {t('common:cancel')}
           </button>
           <button type="submit" className="primary-button">
-            {isCreate ? 'Hozzáadás' : 'Mentés'}
+            {isCreate ? t('card:modal.create') : t('card:modal.save')}
           </button>
         </div>
       </form>

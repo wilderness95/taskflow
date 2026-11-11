@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ColumnView } from '../columns/ColumnView'
 import type { BoardDrag } from './useBoardDrag'
 import type { Columns, Task } from './types'
@@ -21,8 +22,10 @@ export function Board({
   onEditTask,
   onDeleteTask,
 }: BoardProps) {
+  const { t } = useTranslation('board')
+
   return (
-    <section className="board" aria-label="Kanban board">
+    <section className="board" aria-label={t('boardAria')}>
       {Object.entries(columns).map(([columnId, column]) => (
         <ColumnView
           key={columnId}

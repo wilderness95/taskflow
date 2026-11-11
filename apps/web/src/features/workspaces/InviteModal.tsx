@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from '../../shared/ui/Modal'
 
 type InviteModalProps = {
@@ -6,6 +7,7 @@ type InviteModalProps = {
 }
 
 export function InviteModal({ onClose }: InviteModalProps) {
+  const { t } = useTranslation(['workspace', 'common'])
   const [email, setEmail] = useState('')
 
   const handleSubmit = (event: FormEvent) => {
@@ -20,8 +22,8 @@ export function InviteModal({ onClose }: InviteModalProps) {
 
   return (
     <Modal
-      eyebrow="Meghívás"
-      title="Tag hozzáadása"
+      eyebrow={t('workspace:invite.eyebrow')}
+      title={t('workspace:invite.title')}
       onClose={onClose}
       cardClassName="invite-modal-card"
     >
@@ -30,16 +32,16 @@ export function InviteModal({ onClose }: InviteModalProps) {
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="email@pelda.hu"
-          aria-label="Email cím"
+          placeholder={t('workspace:invite.emailPlaceholder')}
+          aria-label={t('workspace:invite.emailAria')}
         />
 
         <div className="modal-actions">
           <button type="button" className="secondary-button" onClick={onClose}>
-            Mégse
+            {t('common:cancel')}
           </button>
           <button type="submit" className="primary-button">
-            Meghívás
+            {t('workspace:invite.submit')}
           </button>
         </div>
       </form>

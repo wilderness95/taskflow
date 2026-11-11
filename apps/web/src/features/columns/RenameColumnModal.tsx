@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
 import { Modal } from '../../shared/ui/Modal'
 import { COLUMN_ACCENTS, type Column, type ColumnAccent } from '../boards/types'
@@ -18,6 +19,7 @@ type RenameColumnModalProps = {
 }
 
 export function RenameColumnModal({ column, onSave, onClose }: RenameColumnModalProps) {
+  const { t } = useTranslation(['column', 'common'])
   const [title, setTitle] = useState(column.title)
   const [accent, setAccent] = useState(column.accent)
 
@@ -30,20 +32,20 @@ export function RenameColumnModal({ column, onSave, onClose }: RenameColumnModal
   }
 
   return (
-    <Modal eyebrow="Oszlop neve" title="Átnevezés" onClose={onClose}>
+    <Modal eyebrow={t('column:rename.eyebrow')} title={t('column:rename.title')} onClose={onClose}>
       <form className="task-form" onSubmit={handleSubmit}>
         <label>
-          Név
+          {t('column:rename.name')}
           <input
             type="text"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Írd be az új oszlop nevét"
+            placeholder={t('column:rename.namePlaceholder')}
           />
         </label>
 
         <label>
-          Pötty szín
+          {t('column:rename.accent')}
           <div className="accent-picker">
             {COLUMN_ACCENTS.map((value) => (
               <button
@@ -51,7 +53,7 @@ export function RenameColumnModal({ column, onSave, onClose }: RenameColumnModal
                 type="button"
                 className={classNames('accent-swatch', accent === value && 'selected')}
                 style={{ background: ACCENT_COLORS[value] }}
-                aria-label={`Szín: ${value}`}
+                aria-label={t('column:rename.accentAria', { color: t(`column:accent.${value}`) })}
                 onClick={() => setAccent(value)}
               />
             ))}
@@ -60,10 +62,10 @@ export function RenameColumnModal({ column, onSave, onClose }: RenameColumnModal
 
         <div className="modal-actions">
           <button type="button" className="secondary-button" onClick={onClose}>
-            Mégse
+            {t('common:cancel')}
           </button>
           <button type="submit" className="primary-button">
-            Mentés
+            {t('common:save')}
           </button>
         </div>
       </form>
