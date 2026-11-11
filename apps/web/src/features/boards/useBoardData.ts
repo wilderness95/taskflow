@@ -3,6 +3,7 @@ import type { BoardDto } from '@taskflow/shared'
 import { useMemo, useState } from 'react'
 import * as api from '../../api/boards'
 import { saveCard, type SaveCardInput } from '../cards/saveCard'
+import { moveCardInBoard, moveColumnInBoard } from './boardCache'
 import { toColumns } from './boardMapper'
 import type { BoardView, ColumnAccent, Visibility } from './types'
 
@@ -28,6 +29,30 @@ export function useBoardData() {
   const useWrite = <TVars>(fn: (vars: TVars) => Promise<unknown>) =>
     useMutation({ mutationFn: fn, onSettled: refresh })
 
+  /** Optimista írás: a gyorsítótár azonnal frissül, hibánál visszaáll, végül a szerver állapota az igazság. */
+  const useOptimisticWrite = <TVars>(
+    fn: (vars: TVars) => Promise<unknown>,
+    apply: (current: BoardDto, vars: TVars) => BoardDto,
+  ) =>
+    useMutation({
+      mutationFn: fn,
+      onMutate: async (vars: TVars) => {
+        const key = boardKey(boardId ?? '')
+        await queryClient.cancelQueries({ queryKey: key })
+        const previous = queryClient.getQueryData<BoardDto>(key)
+        if (previous) {
+          queryClient.setQueryData(key, apply(previous, vars))
+        }
+        return { previous }
+      },
+      onError: (_error, _vars, context) => {
+        if (context?.previous) {
+          queryClient.setQueryData(boardKey(boardId ?? ''), context.previous)
+        }
+      },
+      onSettled: refresh,
+    })
+
   const addColumn = useWrite(({ title, accent }: { title: string; accent: ColumnAccent }) =>
     api.createColumn(boardId ?? '', { title, accent }),
   )
@@ -43,13 +68,14 @@ export function useBoardData() {
     const fallback = ids[index - 1] ?? ids[index + 1]
     return api.deleteColumn(columnId, hasCards ? fallback : undefined)
   })
-  const moveColumn = useWrite(
+  const moveColumn = useOptimisticWrite(
     ({ columnId, beforeColumnId }: { columnId: string; beforeColumnId: string | null }) =>
       api.moveColumn(columnId, { beforeColumnId }),
+    (current, { columnId, beforeColumnId }) => moveColumnInBoard(current, columnId, beforeColumnId),
   )
   const saveTask = useWrite((input: SaveCardInput) => saveCard(board as BoardDto, input))
   const deleteTask = useWrite((taskId: string) => api.deleteCard(taskId))
-  const moveTask = useWrite(
+  const moveTask = useOptimisticWrite(
     ({
       taskId,
       toColumnId,
@@ -59,6 +85,8 @@ export function useBoardData() {
       toColumnId: string
       targetTaskId: string | null
     }) => api.moveCard(taskId, { columnId: toColumnId, beforeCardId: targetTaskId }),
+    (current, { taskId, toColumnId, targetTaskId }) =>
+      moveCardInBoard(current, taskId, toColumnId, targetTaskId),
   )
   const updateBoard = useWrite((input: { title?: string; visibility?: Visibility }) =>
     api.updateBoard(boardId ?? '', input),
