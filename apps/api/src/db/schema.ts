@@ -418,3 +418,26 @@ export const checklistItemsRelations = relations(checklistItems, ({ one }) => ({
     references: [checklists.id],
   }),
 }))
+
+/** Kimenő webhook egy táblához (board admin kezeli); a titok titkosítva tárolt (HMAC-aláíráshoz kell). */
+export const webhooks = sqliteTable(
+  'webhooks',
+  {
+    id: id(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    /** AES-256-GCM, `iv.tag.ciphertext` (base64url). */
+    secretEnc: text('secret_enc').notNull(),
+    /** JSON: esemény-minták (`*`, `card.*`, `card.moved`). */
+    events: text('events').notNull(),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    failureCount: integer('failure_count').notNull().default(0),
+    lastStatus: integer('last_status'),
+    lastDeliveryAt: integer('last_delivery_at', { mode: 'timestamp_ms' }),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('webhooks_board_idx').on(t.boardId)],
+)

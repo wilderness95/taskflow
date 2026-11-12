@@ -28,6 +28,8 @@ const envSchema = z.object({
   DUE_REMINDER_INTERVAL_MINUTES: z.coerce.number().int().min(0).default(60),
   /** Ennyi sikertelen belépés után a fiók 15 percre zárolódik. */
   LOGIN_MAX_FAILURES: z.coerce.number().int().min(1).default(10),
+  /** Webhook célként a privát/loopback címek engedélyezése (csak fejlesztéshez; élesben tiltva: SSRF). */
+  WEBHOOK_ALLOW_PRIVATE_TARGETS: z.stringbool().default(false),
   /** Gemini API kulcs a hangasszisztenshez; csak a szerveren él. Nélküle a hangvégpont nem elérhető. */
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_LIVE_MODEL: z.string().default('gemini-2.5-flash-native-audio-preview-12-2025'),

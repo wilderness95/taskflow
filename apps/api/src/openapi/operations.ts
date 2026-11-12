@@ -57,6 +57,11 @@ import {
   memberSchema,
   updateMemberSchema,
   updateWorkspaceSchema,
+  createWebhookSchema,
+  createdWebhookSchema,
+  updateWebhookSchema,
+  webhookListSchema,
+  webhookSchema,
   workspaceInvitationListSchema,
   workspaceInvitationSchema,
   workspaceListSchema,
@@ -109,8 +114,44 @@ const auth = { tag: 'Auth' }
 const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
 const voice = { tag: 'Voice' }
+const webhook = { tag: 'Webhooks' }
 
 export const operations: Operation[] = [
+  {
+    ...webhook,
+    method: 'get',
+    path: '/boards/{id}/webhooks',
+    summary: 'List the outgoing webhooks of a board (board admin, session only)',
+    success: { status: 200, schema: webhookListSchema },
+    errors: [403],
+  },
+  {
+    ...webhook,
+    method: 'post',
+    path: '/boards/{id}/webhooks',
+    summary:
+      'Create a webhook; the signing `secret` is returned only once. Deliveries are POSTs of a WebhookPayload with `X-TaskFlow-Signature: t=<unix>,v1=<hex HMAC-SHA256 of "<t>.<body>">` (board admin, session only)',
+    body: createWebhookSchema,
+    success: { status: 201, schema: createdWebhookSchema },
+    errors: [403, 422],
+  },
+  {
+    ...webhook,
+    method: 'patch',
+    path: '/webhooks/{id}',
+    summary: 'Change the URL, events or active flag (enabling resets the failure counter)',
+    body: updateWebhookSchema,
+    success: { status: 200, schema: webhookSchema },
+    errors: [403, 422],
+  },
+  {
+    ...webhook,
+    method: 'delete',
+    path: '/webhooks/{id}',
+    summary: 'Delete a webhook',
+    success: { status: 204 },
+    errors: [403],
+  },
   {
     ...voice,
     method: 'get',

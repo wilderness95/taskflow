@@ -45,6 +45,11 @@ import { createToolHost } from './modules/voice/toolHost.js'
 import { MAX_FRAME_BYTES, voiceRoutes } from './modules/voice/voice.routes.js'
 import { createVoiceService } from './modules/voice/voice.service.js'
 import type { LiveConnector } from './modules/voice/liveConnector.js'
+import { createSecretBox } from './lib/secretBox.js'
+import { createWebhookDispatcher } from './modules/webhooks/webhooks.dispatcher.js'
+import { createWebhooksRepository } from './modules/webhooks/webhooks.repository.js'
+import { webhooksRoutes } from './modules/webhooks/webhooks.routes.js'
+import { createWebhooksService } from './modules/webhooks/webhooks.service.js'
 import { AppError } from './errors.js'
 import { filtersRoutes } from './modules/filters/filters.routes.js'
 import { createFiltersRepository } from './modules/filters/filters.repository.js'
@@ -69,7 +74,12 @@ declare module 'fastify' {
 export function buildApp(
   config: Config,
   db: Db,
-  deps: { mailer?: Mailer; fileStore?: FileStore; liveConnector?: LiveConnector | null } = {},
+  deps: {
+    mailer?: Mailer
+    fileStore?: FileStore
+    liveConnector?: LiveConnector | null
+    webhookRetryDelaysMs?: number[]
+  } = {},
 ): FastifyInstance {
   const app = Fastify({
     logger:
@@ -224,6 +234,31 @@ export function buildApp(
     logger: app.log,
   })
   app.register(healthRoutes({ voice: voice.available }))
+  const secrets = createSecretBox(config.SESSION_SECRET)
+  const webhooksRepo = createWebhooksRepository(db)
+  const dispatcher = createWebhookDispatcher({
+    repo: webhooksRepo,
+    secrets,
+    bus,
+    logger: app.log,
+    allowPrivateTargets: config.WEBHOOK_ALLOW_PRIVATE_TARGETS,
+    retryDelaysMs: deps.webhookRetryDelaysMs,
+  })
+  app.addHook('onClose', async () => {
+    dispatcher.stop()
+    await dispatcher.idle()
+  })
+  app.register(
+    webhooksRoutes(
+      createWebhooksService({
+        repo: webhooksRepo,
+        access,
+        activity,
+        secrets,
+        allowPrivateTargets: config.WEBHOOK_ALLOW_PRIVATE_TARGETS,
+      }),
+    ),
+  )
   app.register(websocket, { options: { maxPayload: MAX_FRAME_BYTES } })
   app.register(voiceRoutes(voice, { allowedOrigin: new URL(config.APP_URL).origin }))
   return app
