@@ -4,6 +4,9 @@ import {
   createApiKeySchema,
   createdApiKeySchema,
   activityListSchema,
+  boardSnapshotSchema,
+  cardListQuerySchema,
+  cardListSchema,
   pageQuerySchema,
   boardListSchema,
   boardMemberListSchema,
@@ -77,6 +80,22 @@ const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
 
 export const operations: Operation[] = [
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/snapshot',
+    summary:
+      'Compact agent-friendly summary of a board: columns, cards, due dates, stats, recent activity',
+    success: { status: 200, schema: boardSnapshotSchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/cards',
+    summary: 'List cards of a board with filters and cursor pagination (ordered by id)',
+    query: cardListQuerySchema,
+    success: { status: 200, schema: cardListSchema },
+  },
   {
     ...board,
     method: 'get',

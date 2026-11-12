@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import {
   boardMemberParamsSchema,
+  cardListQuerySchema,
   createBoardSchema,
   createColumnSchema,
   createLabelSchema,
@@ -74,6 +75,18 @@ export function boardsRoutes(service: BoardsService) {
       )
       return reply.status(201).send(label)
     })
+
+    app.get('/api/v1/boards/:id/snapshot', async (req) =>
+      service.snapshot(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
+    app.get('/api/v1/boards/:id/cards', async (req) =>
+      service.listCards(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        cardListQuerySchema.parse(req.query),
+      ),
+    )
 
     app.get('/api/v1/boards/:id/activity', async (req) =>
       service.activity(
