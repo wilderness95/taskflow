@@ -12,7 +12,7 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
   - Hangasszisztens: `@google/genai` (Gemini Live), `@fastify/websocket`.
   - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k (megvan); hibakódok (tervezett).
 - Üzemeltetés: Docker Compose (`web` + `api` + `cloudflared`) a házi szerveren, Cloudflare Tunnelen, saját domainnel.
-- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) és az M4 (nyilvános API, API kulcsok) kész; az M5 (kollaboráció, valós idő) kész; az M6 (funkcióbővítés: archiválás, címkekezelés, csatolmányok, szűrők, nézetek, billentyűzet) kész; az M7 (MCP, élő hangasszisztens, webhookok, üzemeltetés, E2E) az `m7-ai-ops` branchen készült. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
+- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) és az M4 (nyilvános API, API kulcsok) kész; az M5 (kollaboráció, valós idő) kész; az M6 (funkcióbővítés: archiválás, címkekezelés, csatolmányok, szűrők, nézetek, billentyűzet) kész; az M7 (MCP, élő hangasszisztens, webhookok, üzemeltetés, E2E) az `m7-ai-ops` branchen készült; az M8 (listák: teendő-/bevásárlólista) kész, az M9 (Android) opcionális és még nem ütemezett. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
 
 ## Parancsok
 - Fejlesztés: `npm run dev`
@@ -52,6 +52,7 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 - MCP: az eszközök (`apps/mcp/src/tools.ts`) az API kulcsos REST fölött vékony, beszédbarát összevonások; új eszköz a meglévő végpontokra épüljön, nem kerüli meg az API-t. A kliens minden író kérésre `Idempotency-Key`-t tesz.
 - Hangasszisztens (`modules/voice/`): `WS /api/v1/voice/live` csak session-nel és `Origin`-ellenőrzéssel; a Gemini API kulcs nem kerülhet a böngészőbe; az eszközhívások a belépett felhasználó session cookie-jával futnak az API-n át (nincs külön jogosultsági út). Új munkamenet-korlát vagy üzenet a `packages/shared/src/schemas/voice.ts`-ben.
 - Webhook (`modules/webhooks/`): csak session, board admin; a kimenő kérés aláírt (HMAC), a célcím nem lehet privát hálózat (SSRF). Visszafejthető titkot csak a `lib/secretBox.ts`-en át tárolj, és csak ha a nyers érték kell (az API kulcs és a jelszó továbbra is csak hash).
+- Lista (`modules/lists/`): munkaterület-szintű, nem tábla; a hozzáférés a munkaterületi szerepkörből jön (`list:read`/`list:write`, `AccessService.requireList*`). Az archivált lista nem törlődik; az író műveletek az `ActivityService.record`-ot `listId`-vel hívják, ami a lista SSE csatornájára (`GET /lists/{id}/events`) is kimegy.
 - Új külső kulcsokhoz/szolgáltatásokhoz tartozó változó a `.env.example`-be és a `docker-compose.yml`-be is kerüljön.
 
 ## Hozzáférhetőség

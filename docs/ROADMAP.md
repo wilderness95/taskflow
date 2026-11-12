@@ -370,6 +370,15 @@ Cél: egyszerű, kanban nélküli lista (teendő, bevásárlás), amely munkater
 
 **Nincs az első verzióban:** határidő/emlékeztető, mennyiség/egység mezők, MCP-eszköz a listákhoz (később, a meglévő végpontokra épülve).
 
+**Megvalósítás (kész):**
+- Adatmodell: `lists` (munkaterület, `archivedAt`), `list_sections`, `list_items` (`done`, `recurring`, `position`, `version`); migráció `0012`. Szakasz törlésekor a tételek szakasz nélkül megmaradnak (a sorrendjük megőrzésével).
+- Jogosultság: új `list:read` / `list:write` munkaterületi művelet a központi policyban (`owner`/`admin`/`member` ír, `viewer` olvas); az `AccessService.requireList|requireListSection|requireListItem` oldja fel az erőforrást, nem tagnak 404.
+- API: `GET|POST /workspaces/{id}/lists` (`?archived=true`), `GET|PATCH /lists/{id}`, `POST /lists/{id}/archive|restore|clear-done|reset-recurring`, `POST /lists/{id}/sections|items`, `PATCH|DELETE /list-sections|list-items/{id}`, `POST /list-sections|list-items/{id}/move`, `GET /lists/{id}/events` (SSE, `list` esemény). Korlátok: 100 lista / munkaterület, 50 szakasz és 500 tétel / lista. A kulcs hatóköre az alapszabály (olvasás `boards:read`, írás `boards:write`).
+- Valós idő: az `ActivityService.record` az opcionális `listId`-vel a lista saját SSE csatornájára is publikál (`EventBus.publishList`), a webhookoktól és a tábla-csatornától függetlenül; az írások a `activity_log`-ba kerülnek (`workspaceId`-val, `boardId` nélkül).
+- Frontend: `features/lists/` (`/w/:id/lists` áttekintés, `/l/:id` lista); tételek felvétele Enterrel, optimista pipálás, szerkesztő (szöveg, szakasz, ismétlődés; érintésre is jó), húzásos és Alt + nyíl (aria-live) sorrendezés, szakaszkezelés, „Ismétlődők visszaállítása” / „Kipipáltak törlése” / archiválás, archivált listák visszaállítása; `lists` i18n névtér.
+- Tesztek: unit (`listItems`, `listMoves`, `listCache`), integrációs és jogosultsági (`lists.integration.test.ts`, SSE-vel), E2E (`apps/e2e/tests/lists.spec.ts`).
+- Nem része az M8-nak: határidő/emlékeztető, mennyiség/egység, MCP-eszköz (lásd fent).
+
 ### M9 – Android: PWA + TWA, GitHub Release (opcionális, még nem ütemezett)
 
 Cél: a webes kliens mobilon is használható, és telepíthető Android appként. Play Store **nem** cél; az APK terjesztése GitHub Releases-en át történik.
