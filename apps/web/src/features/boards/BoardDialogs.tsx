@@ -10,11 +10,12 @@ import {
 } from '../cards/taskDraft'
 import { RenameColumnModal } from '../columns/RenameColumnModal'
 import { BoardMembersModal } from './BoardMembersModal'
-import type { ColumnAccent, Columns, Dialog, Task } from './types'
+import type { Assignee, ColumnAccent, Columns, Dialog, Task } from './types'
 
 type BoardDialogsProps = {
   dialog: Dialog | null
   columns: Columns
+  participants: Assignee[]
   onClose: () => void
   onSaveTask: (task: Task, columnId: string, originalColumnId?: string) => void
   onUpdateColumn: (columnId: string, title: string, accent: ColumnAccent) => void
@@ -27,6 +28,7 @@ type BoardDialogsProps = {
 export function BoardDialogs({
   dialog,
   columns,
+  participants,
   onClose,
   onSaveTask,
   onUpdateColumn,
@@ -53,6 +55,7 @@ export function BoardDialogs({
           id: isEdit ? dialog.task.id : createId('task'),
           done: Boolean(columns[draft.column]?.done),
           defaultChecklistTitle,
+          participants,
         })
         onSaveTask(task, draft.column, isEdit ? dialog.columnId : undefined)
         onClose()
@@ -67,6 +70,7 @@ export function BoardDialogs({
               : createEmptyDraft(dialog.columnId, defaultChecklistTitle)
           }
           columns={columns}
+          participants={participants}
           onSave={handleSave}
           onClose={onClose}
         />

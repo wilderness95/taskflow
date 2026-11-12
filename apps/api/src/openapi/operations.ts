@@ -10,6 +10,7 @@ import {
   pageQuerySchema,
   boardListSchema,
   boardMemberListSchema,
+  boardParticipantListSchema,
   boardMemberSchema,
   setBoardMemberSchema,
   boardSchema,
@@ -354,6 +355,14 @@ export const operations: Operation[] = [
     path: '/boards/{id}/members',
     summary: 'List explicit board members',
     success: { status: 200, schema: boardMemberListSchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/participants',
+    summary:
+      'List everyone with access to the board (assignable to cards, mentionable in comments)',
+    success: { status: 200, schema: boardParticipantListSchema },
   },
   {
     ...board,

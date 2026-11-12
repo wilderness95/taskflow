@@ -16,6 +16,7 @@ const card = (over: Partial<CardDto> = {}): CardDto => ({
   coverImage: null,
   position: 'a0',
   labelIds: [],
+  assigneeIds: [],
   checklists: [],
   createdAt: '',
   updatedAt: '',

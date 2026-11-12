@@ -85,6 +85,7 @@ export async function saveCard(board: BoardDto, input: SaveCardInput): Promise<v
     priority: task.priority,
     dueDate: task.dueDate || null,
     labelIds,
+    assigneeIds: task.assignees.map((assignee) => assignee.id),
   }
   const firstCardId = (targetId: string) =>
     board.columns.find((column) => column.id === targetId)?.cards[0]?.id

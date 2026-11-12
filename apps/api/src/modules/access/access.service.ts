@@ -46,8 +46,46 @@ export function createAccessService(repo: AccessRepository) {
     return requireBoard(actor, boardId, action)
   }
 
+  /** A tábla résztvevői: akik a policy szerint legalább olvashatják (tagság alapján, névtelen nélkül). */
+  const participants = (board: BoardRow): { userId: string; role: BoardRole }[] => {
+    const boardRoles = new Map(repo.boardMemberRoles(board.id).map((m) => [m.userId, m.role]))
+    const workspaceRoles = new Map(
+      board.workspaceId
+        ? repo.workspaceMemberRoles(board.workspaceId).map((m) => [m.userId, m.role])
+        : [],
+    )
+    const result: { userId: string; role: BoardRole }[] = []
+    for (const userId of new Set([...boardRoles.keys(), ...workspaceRoles.keys()])) {
+      const role = effectiveBoardRole(
+        { id: userId },
+        {
+          visibility: board.visibility,
+          workspaceRole: workspaceRoles.get(userId) ?? null,
+          boardRole: boardRoles.get(userId) ?? null,
+        },
+      )
+      if (role) result.push({ userId, role })
+    }
+    return result
+  }
+
   return {
     requireBoard,
+    participants,
+    /** A résztvevők megjeleníthető adatokkal, név szerint rendezve. */
+    participantProfiles(board: BoardRow) {
+      const roles = new Map(participants(board).map((p) => [p.userId, p.role]))
+      return repo
+        .usersByIds([...roles.keys()])
+        .map((u) => ({
+          userId: u.id,
+          name: u.name,
+          email: u.email,
+          avatarUrl: u.avatarUrl,
+          role: roles.get(u.id)!,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    },
     requireColumn: (actor: PolicyActor, columnId: string, action: BoardAction) =>
       viaBoardId(actor, repo.boardIdOfColumn(columnId), action, 'Column'),
     requireCard: (actor: PolicyActor, cardId: string, action: BoardAction) =>

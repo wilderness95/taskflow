@@ -31,6 +31,7 @@ export function createCardsService(deps: {
   const hydrate = (rows: CardRow[]): CardDto[] => {
     const ids = rows.map((r) => r.id)
     const labelIds = cards.labelIdsByCard(ids)
+    const assignees = cards.assigneeIdsByCard(ids)
     const lists = checklists.listByCardIds(ids)
     return rows.map((r) => ({
       id: r.id,
@@ -42,6 +43,7 @@ export function createCardsService(deps: {
       coverImage: r.coverImage,
       position: r.position,
       labelIds: labelIds.get(r.id) ?? [],
+      assigneeIds: assignees.get(r.id) ?? [],
       checklists: lists.filter((l) => l.cardId === r.id).map(toChecklistDto),
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
@@ -58,6 +60,21 @@ export function createCardsService(deps: {
   }
 
   const require = (id: string): CardRow => orNotFound(cards.findById(id), 'Card')
+
+  /** A hozzárendelt felhasználóknak a tábla résztvevői közül kell kikerülniük. */
+  const assertAssignees = (
+    board: Parameters<AccessService['participants']>[0],
+    userIds: string[],
+  ) => {
+    const unique = [...new Set(userIds)]
+    const allowed = new Set(access.participants(board).map((p) => p.userId))
+    if (unique.some((id) => !allowed.has(id))) {
+      throw new AppError(422, 'invalid_assignee', 'Assignees must have access to the board', {
+        assigneeIds: userIds,
+      })
+    }
+    return unique
+  }
 
   /** Optimista zárolás: ha a kliens `version`-t küldött, annak egyeznie kell a mentettel. */
   const assertVersion = (card: CardRow, expected: number | undefined) => {
@@ -96,6 +113,7 @@ export function createCardsService(deps: {
       const column = columns.findById(columnId)
       if (!column) throw notFound('Column')
       const labelIds = assertLabels(column.boardId, input.labelIds)
+      const assigneeIds = assertAssignees(board, input.assigneeIds)
       const id = cards.transaction(() => {
         const row = cards.insert({
           id: newId(),
@@ -109,6 +127,7 @@ export function createCardsService(deps: {
           createdBy: actor.id,
         })
         cards.setLabels(row.id, labelIds)
+        cards.setAssignees(row.id, assigneeIds)
         return row.id
       })
       activity.record(actor, {
@@ -116,7 +135,7 @@ export function createCardsService(deps: {
         action: 'card.created',
         entityType: 'card',
         entityId: id,
-        meta: { title: input.title, columnId },
+        meta: { title: input.title, columnId, assigneeIds },
       })
       return hydrate([require(id)])[0]!
     },
@@ -125,8 +144,11 @@ export function createCardsService(deps: {
       const { board } = access.requireCard(actor, id, 'board:write')
       const card = require(id)
       assertVersion(card, input.version)
-      const { labelIds, version: _version, ...fields } = input
+      const { labelIds, assigneeIds, version: _version, ...fields } = input
+      const before = cards.assigneeIdsByCard([id]).get(id) ?? []
+      const assigned = assigneeIds ? assertAssignees(board, assigneeIds) : undefined
       cards.transaction(() => {
+        if (assigned) cards.setAssignees(id, assigned)
         if (labelIds) {
           const column = columns.findById(card.columnId)!
           cards.setLabels(id, assertLabels(column.boardId, labelIds))
@@ -140,7 +162,15 @@ export function createCardsService(deps: {
         entityId: id,
         meta: {
           title: card.title,
-          fields: Object.keys(fields).concat(labelIds ? ['labelIds'] : []),
+          fields: Object.keys(fields)
+            .concat(labelIds ? ['labelIds'] : [])
+            .concat(assigned ? ['assigneeIds'] : []),
+          ...(assigned
+            ? {
+                assignedIds: assigned.filter((u) => !before.includes(u)),
+                unassignedIds: before.filter((u) => !assigned.includes(u)),
+              }
+            : {}),
         },
       })
       return hydrate([require(id)])[0]!
