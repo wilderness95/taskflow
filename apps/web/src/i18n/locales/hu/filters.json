@@ -1,0 +1,28 @@
+{
+  "title": "Haladó szűrők",
+  "open": "Szűrők",
+  "openCount": "Szűrők ({{count, number}})",
+  "priority": "Prioritás",
+  "labels": "Címke",
+  "assignees": "Felelős",
+  "due": "Határidő",
+  "dueStates": {
+    "overdue": "Lejárt",
+    "soon": "Hamarosan esedékes",
+    "normal": "Később",
+    "none": "Nincs határidő"
+  },
+  "clear": "Szűrők törlése",
+  "noLabels": "Nincs címke a táblán.",
+  "saved": {
+    "title": "Mentett szűrők",
+    "empty": "Még nincs mentett szűrő.",
+    "loadError": "A mentett szűrők betöltése nem sikerült.",
+    "namePlaceholder": "Szűrő neve",
+    "nameAria": "Mentett szűrő neve",
+    "save": "Mentés",
+    "deleteAria": "Mentett szűrő törlése: {{name}}",
+    "nameTaken": "Ilyen nevű szűrőd már van.",
+    "saveError": "A szűrő mentése nem sikerült."
+  }
+}

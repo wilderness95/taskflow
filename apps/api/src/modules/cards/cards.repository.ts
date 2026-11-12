@@ -7,6 +7,7 @@ export type CardFilter = {
   columnId?: string
   priority?: CardRow['priority']
   labelId?: string
+  assigneeId?: string
   dueBefore?: string
   dueAfter?: string
   q?: string
@@ -65,6 +66,9 @@ export function createCardsRepository(db: Db) {
             filter.priority ? eq(cards.priority, filter.priority) : undefined,
             filter.labelId
               ? sql`exists (select 1 from ${cardLabels} where ${cardLabels.cardId} = ${cards.id} and ${cardLabels.labelId} = ${filter.labelId})`
+              : undefined,
+            filter.assigneeId
+              ? sql`exists (select 1 from ${cardAssignees} where ${cardAssignees.cardId} = ${cards.id} and ${cardAssignees.userId} = ${filter.assigneeId})`
               : undefined,
             filter.dueBefore ? lte(cards.dueDate, filter.dueBefore) : undefined,
             filter.dueAfter ? gte(cards.dueDate, filter.dueAfter) : undefined,

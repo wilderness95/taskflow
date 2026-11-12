@@ -159,6 +159,7 @@ export function useBoardData(boardId: string) {
     workspaceId: board?.workspaceId,
     columns,
     participants,
+    labels: board?.labels ?? [],
     meta: {
       title: board?.title ?? '',
       setTitle: (title: string) => updateBoard.mutate({ title }),

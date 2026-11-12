@@ -1,3 +1,4 @@
+import { countActiveFilters, EMPTY_BOARD_FILTER, type BoardFilter } from '@taskflow/shared'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -5,8 +6,9 @@ import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
 import { BoardDialogs } from './BoardDialogs'
 import { BoardHeader } from './BoardHeader'
+import { BoardFilterPanel } from '../filters/BoardFilterPanel'
 import { BoardToolbar } from './BoardToolbar'
-import { countTasks, filterColumns } from './filterColumns'
+import { applyBoardFilter, countTasks, filterColumns } from './filterColumns'
 import { Topbar } from './Topbar'
 import { COLUMN_ACCENTS, type Dialog } from './types'
 import { useBoardDrag } from './useBoardDrag'
@@ -22,8 +24,11 @@ const STATUS_KEYS = {
 export function BoardPage() {
   const { t } = useTranslation(['card', 'column', 'board'])
   const { boardId = '' } = useParams()
-  const { status, retry, columns, participants, meta, actions, workspaceId } = useBoardData(boardId)
+  const { status, retry, columns, participants, meta, actions, workspaceId, labels } =
+    useBoardData(boardId)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filter, setFilter] = useState<BoardFilter>(EMPTY_BOARD_FILTER)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [dialog, setDialog] = useState<Dialog | null>(null)
 
   const drag = useBoardDrag({
@@ -48,8 +53,12 @@ export function BoardPage() {
   }, [requestedCardId, status, columns, meta.permissions.write, setSearchParams])
 
   const visibleColumns = useMemo(
-    () => filterColumns(columns, searchQuery, (priority) => t(`card:priority.${priority}`)),
-    [columns, searchQuery, t],
+    () =>
+      applyBoardFilter(
+        filterColumns(columns, searchQuery, (priority) => t(`card:priority.${priority}`)),
+        filter,
+      ),
+    [columns, searchQuery, filter, t],
   )
   const totalTasks = useMemo(() => countTasks(columns), [columns])
 
@@ -121,7 +130,23 @@ export function BoardPage() {
                 {t('board:readOnly')}
               </p>
             )}
-            <BoardToolbar meta={meta} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+            <BoardToolbar
+              meta={meta}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              activeFilterCount={countActiveFilters(filter)}
+              filtersOpen={filtersOpen}
+              onToggleFilters={() => setFiltersOpen((open) => !open)}
+            />
+            {filtersOpen && (
+              <BoardFilterPanel
+                boardId={boardId}
+                filter={filter}
+                onChange={setFilter}
+                labels={labels}
+                participants={participants}
+              />
+            )}
             <Board
               columns={visibleColumns}
               drag={drag}

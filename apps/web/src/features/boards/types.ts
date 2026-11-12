@@ -22,6 +22,8 @@ export type Task = {
   description: string
   priority: Priority
   tags: Tag[]
+  /** A kártya címkéinek azonosítói (a szűréshez; a `tags` a megjelenítéshez). */
+  labelIds: string[]
   dueDate?: string
   coverImage?: string
   /** A borítóként használt csatolmány (kép) azonosítója. */

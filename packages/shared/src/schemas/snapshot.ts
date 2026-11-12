@@ -8,6 +8,8 @@ export const cardListQuerySchema = pageQuerySchema.extend({
   columnId: idSchema.optional(),
   priority: prioritySchema.optional(),
   labelId: idSchema.optional(),
+  /** Csak a kártyák, amelyekhez ez a felhasználó hozzá van rendelve. */
+  assigneeId: idSchema.optional(),
   /** Határidő legkésőbb ekkor (`YYYY-MM-DD`, bezárólag). */
   dueBefore: dateSchema.optional(),
   /** Határidő legkorábban ekkor (`YYYY-MM-DD`, bezárólag). */

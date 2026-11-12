@@ -64,6 +64,7 @@ export const buildTaskFromDraft = (
   attachmentCount: 0,
   dueDate: draft.dueDate,
   tags: parseTags(draft.tags),
+  labelIds: [],
   assignees: draft.assigneeIds.map(
     (assigneeId) =>
       participants.find((p) => p.id === assigneeId) ?? {

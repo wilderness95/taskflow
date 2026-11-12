@@ -14,6 +14,7 @@ const toTask = (
     title: card.title,
     description: card.description,
     priority: card.priority,
+    labelIds: card.labelIds.filter((id) => labels.some((label) => label.id === id)),
     tags: card.labelIds.flatMap((id) => {
       const label = labels.find((item) => item.id === id)
       return label ? [{ label: label.name, color: label.color }] : []

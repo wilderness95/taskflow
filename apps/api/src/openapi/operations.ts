@@ -9,6 +9,9 @@ import {
   cardListSchema,
   pageQuerySchema,
   attachmentListSchema,
+  createSavedFilterSchema,
+  savedFilterListSchema,
+  savedFilterSchema,
   attachmentSchema,
   uploadAttachmentQuerySchema,
   boardArchiveSchema,
@@ -96,6 +99,7 @@ const column = { tag: 'Columns' }
 const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
 const attachment = { tag: 'Attachments' }
+const filter = { tag: 'Saved filters' }
 const comment = { tag: 'Comments' }
 const notification = { tag: 'Notifications' }
 const auth = { tag: 'Auth' }
@@ -549,6 +553,29 @@ export const operations: Operation[] = [
     body: updateCardSchema,
     success: { status: 200, schema: cardSchema },
     errors: [409, 422],
+  },
+  {
+    ...filter,
+    method: 'get',
+    path: '/boards/{id}/filters',
+    summary: 'List my saved card filters on a board (session only)',
+    success: { status: 200, schema: savedFilterListSchema },
+  },
+  {
+    ...filter,
+    method: 'post',
+    path: '/boards/{id}/filters',
+    summary: 'Save a card filter on a board under a name (session only)',
+    body: createSavedFilterSchema,
+    success: { status: 201, schema: savedFilterSchema },
+    errors: [409, 422],
+  },
+  {
+    ...filter,
+    method: 'delete',
+    path: '/filters/{id}',
+    summary: 'Delete one of my saved filters (session only)',
+    success: { status: 204 },
   },
   {
     ...attachment,

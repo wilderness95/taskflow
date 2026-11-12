@@ -80,6 +80,7 @@ describe('toColumns', () => {
       description: 'Leírás',
       priority: 'high',
       tags: [{ label: 'UI', color: 'blue' }],
+      labelIds: ['l1'],
       assignees: [{ id: 'u1', name: 'Olga', avatarUrl: null }],
       dueDate: undefined,
       coverImage: undefined,
