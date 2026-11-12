@@ -177,3 +177,34 @@
 .list-item:focus-within {
   border-color: rgba(147, 197, 253, 0.6);
 }
+
+/* Halk ikongombok: egérrel csak ráállva/fókuszban látszanak, érintésen mindig. */
+.list-icon-button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.list-icon-button:hover,
+.list-icon-button:focus-visible {
+  background: rgba(148, 163, 184, 0.18);
+  color: #fff;
+}
+
+@media (hover: hover) {
+  .list-item .list-item-actions {
+    opacity: 0;
+  }
+
+  .list-item:hover .list-item-actions,
+  .list-item:focus-within .list-item-actions {
+    opacity: 1;
+  }
+}

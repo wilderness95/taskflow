@@ -94,19 +94,21 @@ export function ListItemRow({
             <div className="list-item-actions">
               <button
                 type="button"
-                className="secondary-button"
+                className="list-icon-button"
                 aria-label={t('item.editAria', { text: item.text })}
+                title={t('item.edit')}
                 onClick={() => setIsEditing(true)}
               >
-                {t('item.edit')}
+                <span aria-hidden="true">✎</span>
               </button>
               <button
                 type="button"
-                className="secondary-button"
+                className="list-icon-button"
                 aria-label={t('item.deleteAria', { text: item.text })}
+                title={t('item.delete')}
                 onClick={() => mutations.deleteItem.mutate(item.id)}
               >
-                {t('item.delete')}
+                <span aria-hidden="true">✕</span>
               </button>
             </div>
           )}
