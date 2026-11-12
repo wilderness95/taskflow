@@ -49,6 +49,18 @@ export const adminUserListSchema = z.object({
 export const setAdminRoleSchema = z.object({ isAdmin: z.boolean() })
 export type SetAdminRoleInput = z.infer<typeof setAdminRoleSchema>
 
+export const adminWorkspaceSchema = z.object({
+  id: idSchema,
+  name: z.string(),
+  memberCount: z.number().int(),
+})
+export type AdminWorkspaceDto = z.infer<typeof adminWorkspaceSchema>
+
+export const adminWorkspaceListSchema = z.object({
+  data: z.array(adminWorkspaceSchema),
+  nextCursor: z.string().nullable(),
+})
+
 export const adminInvitationSchema = z.object({
   id: idSchema,
   email: z.string(),

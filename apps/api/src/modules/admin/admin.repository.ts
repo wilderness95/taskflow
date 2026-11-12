@@ -182,6 +182,19 @@ export function createAdminRepository(db: Db) {
     insertInvitation: (values: typeof invitations.$inferInsert): void => {
       db.insert(invitations).values(values).run()
     },
+    /** A munkaterületek tagszámmal, legújabb elöl (a meghívó célpontjának kiválasztásához). */
+    listWorkspaceSummaries: (limit: number, beforeId?: string) =>
+      db
+        .select({
+          id: workspaces.id,
+          name: workspaces.name,
+          memberCount: sql<number>`(select count(*) from ${workspaceMembers} where ${workspaceMembers.workspaceId} = ${workspaces.id})`,
+        })
+        .from(workspaces)
+        .where(beforeId ? lt(workspaces.id, beforeId) : undefined)
+        .orderBy(desc(workspaces.id))
+        .limit(limit)
+        .all(),
     findWorkspace: (id: string) => db.select().from(workspaces).where(eq(workspaces.id, id)).get(),
     /** Már tagja-e a munkaterületnek a megadott e-mail-című felhasználó. */
     isMemberByEmail: (workspaceId: string, email: string): boolean =>

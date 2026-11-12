@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import {
+  adminWorkspaceListSchema,
   adminOverviewSchema,
   auditListSchema,
   auditQuerySchema,
@@ -1094,6 +1095,16 @@ export const operations: Operation[] = [
       'Platform audit log, newest first; filter by `action`, `actorId`, `targetUserId` and the `from`/`to` ISO time range (platform admin, session only)',
     query: auditQuerySchema,
     success: { status: 200, schema: auditListSchema },
+    errors: [403],
+  },
+  {
+    ...admin,
+    method: 'get',
+    path: '/admin/workspaces',
+    summary:
+      'List all workspaces with member counts, newest first; the target choices for invitations (platform admin, session only)',
+    query: pageQuerySchema,
+    success: { status: 200, schema: adminWorkspaceListSchema },
     errors: [403],
   },
 ]

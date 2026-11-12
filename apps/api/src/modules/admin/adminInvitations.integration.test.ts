@@ -46,6 +46,7 @@ describe('admin invitations: access control', () => {
     for (const api of [client(t.app), regular, bearer(t.app, key)]) {
       const results = [
         await api.get('/admin/invitations'),
+        await api.get('/admin/workspaces'),
         await api.post('/admin/invitations', body),
         await api.post(`/admin/invitations/${invited.id}/resend`),
         await api.delete(`/admin/invitations/${invited.id}`),
@@ -58,6 +59,15 @@ describe('admin invitations: access control', () => {
 })
 
 describe('admin invitations', () => {
+  it('lists every workspace with its member count', async () => {
+    const { admin } = await setup()
+    const own = (await admin.api.get('/workspaces')).body.data[0]
+    const res = await admin.api.get('/admin/workspaces')
+    expect(res.status).toBe(200)
+    expect(res.body.data).toEqual([{ id: own.id, name: own.name, memberCount: 1 }])
+    expect(res.body.nextCursor).toBeNull()
+  })
+
   it('sends a platform invitation that works for registration and becomes accepted', async () => {
     const { admin } = await setup()
     const created = await admin.api.post('/admin/invitations', { email: 'new@example.com' })

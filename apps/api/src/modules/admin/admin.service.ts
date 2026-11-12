@@ -272,6 +272,16 @@ export function createAdminService(deps: {
       return audit.list(query)
     },
 
+    listWorkspaces(actor: Actor, query: { limit: number; cursor?: string }) {
+      requirePlatformAdmin(actor)
+      const rows = repo.listWorkspaceSummaries(query.limit + 1, query.cursor)
+      const page = rows.slice(0, query.limit)
+      return {
+        data: page,
+        nextCursor: rows.length > query.limit ? page[page.length - 1]!.id : null,
+      }
+    },
+
     listInvitations(actor: Actor, query: AdminInvitationsQuery) {
       requirePlatformAdmin(actor)
       const now = new Date()

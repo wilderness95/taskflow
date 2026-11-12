@@ -5,6 +5,7 @@ import {
   auditQuerySchema,
   createAdminInvitationSchema,
   idParamsSchema,
+  pageQuerySchema,
   setAdminRoleSchema,
 } from '@taskflow/shared'
 import { clientIp, requireActor } from '../../auth/auth.plugin.js'
@@ -52,6 +53,10 @@ export function adminRoutes(service: AdminService) {
         setAdminRoleSchema.parse(req.body),
         ctx(req),
       ),
+    )
+
+    app.get('/api/v1/admin/workspaces', async (req) =>
+      service.listWorkspaces(requireActor(req), pageQuerySchema.parse(req.query)),
     )
 
     app.get('/api/v1/admin/invitations', async (req) =>
