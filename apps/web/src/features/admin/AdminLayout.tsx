@@ -50,6 +50,8 @@ export function AdminLayout() {
               {t('admin:nav.overview')}
             </NavLink>
             <NavLink to="/admin/users">{t('admin:nav.users')}</NavLink>
+            <NavLink to="/admin/invitations">{t('admin:nav.invitations')}</NavLink>
+            <NavLink to="/admin/audit">{t('admin:nav.audit')}</NavLink>
           </nav>
           <Outlet />
         </main>

@@ -8,7 +8,9 @@
   "loadError": "Az adatok nem tölthetők be.",
   "nav": {
     "overview": "Áttekintés",
-    "users": "Felhasználók"
+    "users": "Felhasználók",
+    "invitations": "Meghívók",
+    "audit": "Auditnapló"
   },
   "overview": {
     "stats": "Számok",
@@ -50,6 +52,27 @@
       "admin.invitation_resent": "{{actor}} újraküldte a meghívót: {{target}}",
       "admin.invitation_revoked": "{{actor}} visszavonta a meghívót: {{target}}",
       "unknown": "{{actor}}: ismeretlen esemény"
+    },
+    "title": "Auditnapló",
+    "action": "Esemény",
+    "allActions": "Minden esemény",
+    "from": "Ettől",
+    "to": "Eddig",
+    "types": {
+      "auth.registered": "Regisztráció",
+      "auth.login_succeeded": "Sikeres bejelentkezés",
+      "auth.login_failed": "Sikertelen bejelentkezés",
+      "auth.login_blocked": "Letiltott bejelentkezés",
+      "auth.password_reset": "Jelszó-visszaállítás",
+      "admin.user_suspended": "Fiók felfüggesztése",
+      "admin.user_restored": "Fiók visszaállítása",
+      "admin.user_sessions_revoked": "Munkamenetek lezárása",
+      "admin.user_admin_granted": "Platform-admin jog adása",
+      "admin.user_admin_revoked": "Platform-admin jog elvétele",
+      "admin.user_verification_resent": "Megerősítő levél újraküldése",
+      "admin.invitation_created": "Meghívó küldése",
+      "admin.invitation_resent": "Meghívó újraküldése",
+      "admin.invitation_revoked": "Meghívó visszavonása"
     }
   },
   "errors": {
@@ -135,6 +158,36 @@
         "message": "{{name}} elveszíti az adminisztrációs felületet.",
         "confirm": "Jog elvétele"
       }
+    }
+  },
+  "invitations": {
+    "title": "Meghívók",
+    "new": "Új meghívó",
+    "email": "E-mail-cím",
+    "target": "Cél",
+    "platform": "Platform-regisztráció (munkaterület nélkül)",
+    "role": "Szerepkör",
+    "send": "Meghívó küldése",
+    "sent": "A meghívót elküldtük.",
+    "resent": "Az új meghívót elküldtük.",
+    "status": "Állapot",
+    "allStatuses": "Mind",
+    "statuses": {
+      "pending": "Függő",
+      "accepted": "Elfogadva",
+      "expired": "Lejárt",
+      "revoked": "Visszavonva"
+    },
+    "empty": "Nincs a feltételeknek megfelelő meghívó.",
+    "workspaceRole": "{{workspace}} ({{role}})",
+    "sentAt": "Elküldve: {{date}}",
+    "expiresAt": "Lejár: {{date}}",
+    "resend": "Újraküldés",
+    "revoke": "Visszavonás",
+    "confirm": {
+      "eyebrow": "Megerősítés",
+      "title": "Meghívó visszavonása",
+      "message": "A(z) {{email}} címre küldött meghívó nem lesz használható."
     }
   }
 }

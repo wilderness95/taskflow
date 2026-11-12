@@ -2,7 +2,13 @@ import {
   adminOverviewSchema,
   adminUserDetailSchema,
   adminUserListSchema,
+  adminInvitationListSchema,
+  adminInvitationSchema,
+  adminWorkspaceListSchema,
   auditListSchema,
+  type AdminInvitationDto,
+  type AdminInvitationsQuery,
+  type CreateAdminInvitationRequest,
   type AdminOverviewDto,
   type AdminUserDetailDto,
   type AdminUsersQuery,
@@ -42,3 +48,21 @@ export const resendUserVerification = (id: string) => userAction(id, 'resend-ver
 
 export const setUserAdminRole = async (id: string, isAdmin: boolean): Promise<AdminUserDetailDto> =>
   adminUserDetailSchema.parse(await apiFetch('PUT', `/admin/users/${id}/admin`, { isAdmin }))
+
+export const listAdminWorkspaces = async () =>
+  adminWorkspaceListSchema.parse(await apiFetch('GET', '/admin/workspaces?limit=200')).data
+
+export const listAdminInvitations = async (query: Partial<AdminInvitationsQuery>) =>
+  adminInvitationListSchema.parse(
+    await apiFetch('GET', `/admin/invitations${toQueryString(query)}`),
+  )
+
+export const createAdminInvitation = async (
+  input: CreateAdminInvitationRequest,
+): Promise<AdminInvitationDto> =>
+  adminInvitationSchema.parse(await apiFetch('POST', '/admin/invitations', input))
+
+export const resendAdminInvitation = async (id: string): Promise<AdminInvitationDto> =>
+  adminInvitationSchema.parse(await apiFetch('POST', `/admin/invitations/${id}/resend`))
+
+export const revokeAdminInvitation = (id: string) => apiFetch('DELETE', `/admin/invitations/${id}`)

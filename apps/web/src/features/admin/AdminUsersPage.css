@@ -37,3 +37,9 @@
   outline-offset: 4px;
   border-radius: 8px;
 }
+
+.admin-field {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+}

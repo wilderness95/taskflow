@@ -24,3 +24,19 @@
 .user-badge-unverified {
   background: rgba(245, 158, 11, 0.2);
 }
+
+.invitation-pending {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.invitation-accepted {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.invitation-revoked {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.invitation-expired {
+  background: rgba(245, 158, 11, 0.2);
+}
