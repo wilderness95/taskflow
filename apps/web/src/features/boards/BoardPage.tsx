@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
@@ -61,6 +61,11 @@ export function BoardPage() {
     )
   }
 
+  const navigate = useNavigate()
+  const handleArchiveBoard = () => {
+    actions.archiveBoard().then(() => navigate(workspaceId ? `/w/${workspaceId}` : '/'))
+  }
+
   const handleDeleteColumn = (columnId: string) => {
     if (Object.keys(columns).length <= 1) {
       window.alert(t('column:minOneColumn'))
@@ -106,6 +111,8 @@ export function BoardPage() {
               meta={meta}
               onMembers={() => setDialog({ type: 'members' })}
               onActivity={() => setDialog({ type: 'activity' })}
+              onArchive={() => setDialog({ type: 'archive' })}
+              onArchiveBoard={() => setDialog({ type: 'board-archive' })}
               onAddColumn={handleAddColumn}
             />
             {!meta.permissions.write && (
@@ -122,6 +129,8 @@ export function BoardPage() {
               onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
               onEditTask={(columnId, task) => setDialog({ type: 'card-edit', columnId, task })}
               onDeleteTask={actions.deleteTask}
+              onArchiveColumn={actions.archiveColumn}
+              onArchiveTask={actions.archiveTask}
               readOnly={!meta.permissions.write}
             />
           </main>
@@ -136,9 +145,11 @@ export function BoardPage() {
         onSaveTask={actions.saveTask}
         onUpdateColumn={actions.updateColumn}
         onDeleteColumn={actions.deleteColumn}
+        onArchiveBoard={handleArchiveBoard}
         boardId={boardId}
         workspaceId={workspaceId ?? ''}
         canManageMembers={meta.permissions.manageMembers}
+        canWrite={meta.permissions.write}
         isBoardAdmin={meta.permissions.update}
       />
     </div>

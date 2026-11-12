@@ -11,6 +11,8 @@ type ColumnViewProps = {
   drag: BoardDrag
   onRename: () => void
   onDelete: () => void
+  onArchive: () => void
+  onArchiveTask: (taskId: string) => void
   onAddTask: () => void
   onEditTask: (task: Task) => void
   onDeleteTask: (taskId: string) => void
@@ -23,6 +25,8 @@ export function ColumnView({
   drag,
   onRename,
   onDelete,
+  onArchive,
+  onArchiveTask,
   onAddTask,
   onEditTask,
   onDeleteTask,
@@ -63,6 +67,14 @@ export function ColumnView({
             </button>
             <button
               type="button"
+              className="column-action"
+              aria-label={t('archiveAria', { title: column.title })}
+              onClick={onArchive}
+            >
+              🗄
+            </button>
+            <button
+              type="button"
               className="column-action danger"
               aria-label={t('deleteAria', { title: column.title })}
               onClick={onDelete}
@@ -98,6 +110,7 @@ export function ColumnView({
                 isDropTarget={taskDrag.targetTaskId === task.id}
                 onEdit={() => onEditTask(task)}
                 onDelete={() => onDeleteTask(task.id)}
+                onArchive={() => onArchiveTask(task.id)}
                 readOnly={readOnly}
               />
             ))}

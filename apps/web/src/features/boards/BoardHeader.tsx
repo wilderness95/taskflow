@@ -12,11 +12,20 @@ type BoardHeaderProps = {
   meta: BoardMeta
   onMembers: () => void
   onActivity: () => void
+  onArchive: () => void
+  onArchiveBoard: () => void
   onAddColumn: () => void
 }
 
-export function BoardHeader({ meta, onMembers, onActivity, onAddColumn }: BoardHeaderProps) {
-  const { t } = useTranslation('board')
+export function BoardHeader({
+  meta,
+  onMembers,
+  onActivity,
+  onArchive,
+  onArchiveBoard,
+  onAddColumn,
+}: BoardHeaderProps) {
+  const { t } = useTranslation(['board', 'archive'])
 
   return (
     <section className="board-header">
@@ -52,6 +61,14 @@ export function BoardHeader({ meta, onMembers, onActivity, onAddColumn }: BoardH
         <button type="button" className="secondary-button" onClick={onActivity}>
           {t('activity.open')}
         </button>
+        <button type="button" className="secondary-button" onClick={onArchive}>
+          {t('archive:open')}
+        </button>
+        {meta.permissions.update && (
+          <button type="button" className="secondary-button" onClick={onArchiveBoard}>
+            {t('archive:board.archive')}
+          </button>
+        )}
         {meta.permissions.write && (
           <button type="button" className="primary-button" onClick={onAddColumn}>
             {t('addColumn')}

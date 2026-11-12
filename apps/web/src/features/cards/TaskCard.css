@@ -54,6 +54,26 @@
   margin: 12px 12px 10px;
 }
 
+.task-card-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.archive-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.7;
+}
+
+.archive-button:hover {
+  opacity: 1;
+}
+
 .task-tags {
   display: flex;
   flex-wrap: wrap;

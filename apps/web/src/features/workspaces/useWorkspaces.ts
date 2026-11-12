@@ -33,6 +33,23 @@ export function useWorkspaceBoards(workspaceId: string) {
   })
 }
 
+export const archivedBoardsKey = (workspaceId: string) =>
+  ['boards', 'workspace', workspaceId, 'archived'] as const
+
+/** Az archivált táblák (csak a visszaállíthatók); a visszaállítás frissíti a listákat. */
+export function useArchivedBoards(workspaceId: string) {
+  const queryClient = useQueryClient()
+  const query = useQuery({
+    queryKey: archivedBoardsKey(workspaceId),
+    queryFn: () => boardsApi.listArchivedBoards(workspaceId),
+  })
+  const restore = useMutation({
+    mutationFn: (boardId: string) => boardsApi.restoreBoard(boardId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['boards'] }),
+  })
+  return { query, restore }
+}
+
 export function useCreateBoard(workspaceId: string) {
   const queryClient = useQueryClient()
   return useMutation({

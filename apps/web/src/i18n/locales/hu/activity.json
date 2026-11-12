@@ -14,7 +14,8 @@
     "board": {
       "created": "{{actor}} létrehozta a(z) „{{title}}” táblát",
       "updated": "{{actor}} módosította a tábla beállításait",
-      "archived": "{{actor}} archiválta a táblát"
+      "archived": "{{actor}} archiválta a táblát",
+      "restored": "{{actor}} visszaállította a táblát"
     },
     "board_member": {
       "set": "{{actor}} módosította egy tábla-tag szerepkörét",
@@ -24,7 +25,9 @@
       "created": "{{actor}} létrehozta a(z) „{{title}}” oszlopot",
       "updated": "{{actor}} módosított egy oszlopot",
       "moved": "{{actor}} áthelyezett egy oszlopot",
-      "deleted": "{{actor}} törölt egy oszlopot"
+      "deleted": "{{actor}} törölt egy oszlopot",
+      "archived": "{{actor}} archivált egy oszlopot",
+      "restored": "{{actor}} visszaállított egy oszlopot"
     },
     "label": {
       "created": "{{actor}} létrehozta a(z) „{{name}}” címkét"
@@ -33,7 +36,9 @@
       "created": "{{actor}} létrehozta a(z) „{{title}}” kártyát",
       "updated": "{{actor}} módosította a(z) „{{title}}” kártyát",
       "moved": "{{actor}} áthelyezte a(z) „{{title}}” kártyát",
-      "deleted": "{{actor}} törölte a(z) „{{title}}” kártyát"
+      "deleted": "{{actor}} törölte a(z) „{{title}}” kártyát",
+      "archived": "{{actor}} archiválta a(z) „{{title}}” kártyát",
+      "restored": "{{actor}} visszaállította a(z) „{{title}}” kártyát"
     },
     "comment": {
       "created": "{{actor}} hozzászólt a(z) „{{title}}” kártyához",

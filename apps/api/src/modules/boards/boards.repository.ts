@@ -1,5 +1,5 @@
 import type { BoardRole, WorkspaceRole } from '@taskflow/shared'
-import { and, asc, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
 import {
   boardMembers,
@@ -24,7 +24,7 @@ export type BoardListRow = {
 export function createBoardsRepository(db: Db) {
   return {
     /** A felhasználó munkaterületeinek táblái a hozzá tartozó szerepkörökkel (a láthatóságot a policy dönti el). */
-    listForUser: (userId: string, workspaceId?: string): BoardListRow[] => {
+    listForUser: (userId: string, workspaceId?: string, archived = false): BoardListRow[] => {
       const rows = db
         .select({ board: boards, workspaceRole: workspaceMembers.role })
         .from(boards)
@@ -37,7 +37,7 @@ export function createBoardsRepository(db: Db) {
         )
         .where(
           and(
-            isNull(boards.archivedAt),
+            archived ? isNotNull(boards.archivedAt) : isNull(boards.archivedAt),
             workspaceId ? eq(boards.workspaceId, workspaceId) : undefined,
           ),
         )
@@ -129,6 +129,12 @@ export function createBoardsRepository(db: Db) {
         .from(boards)
         .where(and(eq(boards.id, id), isNull(boards.archivedAt)))
         .get(),
+    findArchived: (id: string): BoardRow | undefined =>
+      db
+        .select()
+        .from(boards)
+        .where(and(eq(boards.id, id), isNotNull(boards.archivedAt)))
+        .get(),
     insert: (values: typeof boards.$inferInsert): BoardRow =>
       db.insert(boards).values(values).returning().get(),
     update: (id: string, values: Partial<typeof boards.$inferInsert>): BoardRow | undefined =>
@@ -137,7 +143,14 @@ export function createBoardsRepository(db: Db) {
       db
         .select()
         .from(columns)
-        .where(eq(columns.boardId, boardId))
+        .where(and(eq(columns.boardId, boardId), isNull(columns.archivedAt)))
+        .orderBy(asc(columns.position))
+        .all(),
+    listArchivedColumns: (boardId: string): ColumnRow[] =>
+      db
+        .select()
+        .from(columns)
+        .where(and(eq(columns.boardId, boardId), isNotNull(columns.archivedAt)))
         .orderBy(asc(columns.position))
         .all(),
     listLabels: (boardId: string): LabelRow[] =>
@@ -156,7 +169,7 @@ export function createBoardsRepository(db: Db) {
       db
         .select({ position: columns.position })
         .from(columns)
-        .where(eq(columns.boardId, boardId))
+        .where(and(eq(columns.boardId, boardId), isNull(columns.archivedAt)))
         .orderBy(desc(columns.position))
         .limit(1)
         .get()?.position ?? null,

@@ -116,6 +116,7 @@ export function createNotificationsRepository(db: Db) {
           and(
             isNull(cards.archivedAt),
             isNull(boards.archivedAt),
+            isNull(columns.archivedAt),
             eq(columns.isDone, false),
             gte(cards.dueDate, fromDate),
             lte(cards.dueDate, toDate),

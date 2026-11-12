@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import {
+  boardListQuerySchema,
   boardMemberParamsSchema,
   cardListQuerySchema,
   createBoardSchema,
@@ -18,7 +19,11 @@ export function boardsRoutes(service: BoardsService) {
     app.get('/api/v1/boards', async (req) => ({ data: service.list(requireActor(req)) }))
 
     app.get('/api/v1/workspaces/:id/boards', async (req) => ({
-      data: service.list(requireActor(req), idParamsSchema.parse(req.params).id),
+      data: service.list(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        boardListQuerySchema.parse(req.query).archived,
+      ),
     }))
 
     app.post('/api/v1/workspaces/:id/boards', async (req, reply) => {
@@ -47,6 +52,14 @@ export function boardsRoutes(service: BoardsService) {
       service.remove(requireActor(req), idParamsSchema.parse(req.params).id)
       return reply.status(204).send()
     })
+
+    app.post('/api/v1/boards/:id/restore', async (req) =>
+      service.restore(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
+    app.get('/api/v1/boards/:id/archive', async (req) =>
+      service.archive(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
 
     app.put('/api/v1/boards/:id/star', async (req, reply) => {
       service.star(requireActor(req), idParamsSchema.parse(req.params).id)

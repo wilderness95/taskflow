@@ -1,8 +1,10 @@
 import { generateKeyBetween } from 'fractional-indexing'
 import {
+  boardRoleCan,
   effectiveBoardRole,
   getChecklistProgress,
   getDueDateState,
+  type BoardArchiveDto,
   type BoardSnapshotDto,
   type CardListQuery,
   type BoardDto,
@@ -57,14 +59,16 @@ export function createBoardsService(
 
   return {
     /** A felhasználó összes olvasható táblája (opcionálisan egy munkaterületre szűrve). */
-    list(actor: Actor, workspaceId?: string): BoardSummaryDto[] {
+    list(actor: Actor, workspaceId?: string, archived = false): BoardSummaryDto[] {
       if (workspaceId) access.requireWorkspace(actor, workspaceId, 'workspace:read')
-      return repo.listForUser(actor.id, workspaceId).flatMap((row) => {
+      return repo.listForUser(actor.id, workspaceId, archived).flatMap((row) => {
         const role = effectiveBoardRole(actor, {
           visibility: row.board.visibility,
           workspaceRole: row.workspaceRole,
           boardRole: row.boardRole,
         })
+        // Archivált táblát csak az látja, aki vissza is állíthatja (tábla-admin).
+        if (archived && !boardRoleCan(role, 'board:delete')) return []
         return role ? [toSummary(row.board, role, row.starred)] : []
       })
     },
@@ -185,6 +189,20 @@ export function createBoardsService(
       log(actor, id, 'board.archived', 'board', id)
     },
 
+    restore(actor: Actor, id: string): BoardSummaryDto {
+      const { role } = access.requireArchivedBoard(actor, id, 'board:delete')
+      const restored = repo.update(id, { archivedAt: null })!
+      log(actor, id, 'board.restored', 'board', id, { title: restored.title })
+      return toSummary(restored, role, repo.isStarred(id, actor.id))
+    },
+    /** A tábla archivált kártyái és oszlopai. */
+    archive(actor: Actor, id: string): BoardArchiveDto {
+      access.requireBoard(actor, id, 'board:read')
+      return {
+        cards: cards.listArchived(actor, id),
+        columns: repo.listArchivedColumns(id).map(toColumnDto),
+      }
+    },
     /** A tábla tevékenységnaplója (legújabb elöl), cursor-lapozással. */
     activity(actor: Actor, boardId: string, page: { limit: number; cursor?: string }) {
       access.requireBoard(actor, boardId, 'board:read')

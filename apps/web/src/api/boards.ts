@@ -1,4 +1,5 @@
 import {
+  boardArchiveSchema,
   boardListSchema,
   boardMemberListSchema,
   boardParticipantListSchema,
@@ -7,6 +8,7 @@ import {
   boardSummarySchema,
   type CreateBoardRequest,
   boardSchema,
+  type BoardArchiveDto,
   type BoardDto,
   type BoardSummaryDto,
   type CardDto,
@@ -32,6 +34,25 @@ export const listBoards = async (workspaceId?: string): Promise<BoardSummaryDto[
   boardListSchema.parse(
     await apiFetch('GET', workspaceId ? `/workspaces/${workspaceId}/boards` : '/boards'),
   ).data
+
+/** A munkaterület archivált táblái (csak azok, amelyeket a felhasználó vissza is állíthat). */
+export const listArchivedBoards = async (workspaceId: string): Promise<BoardSummaryDto[]> =>
+  boardListSchema.parse(await apiFetch('GET', `/workspaces/${workspaceId}/boards?archived=true`))
+    .data
+
+export const archiveBoard = (boardId: string) => apiFetch('DELETE', `/boards/${boardId}`)
+export const restoreBoard = (boardId: string) =>
+  apiFetch<BoardSummaryDto>('POST', `/boards/${boardId}/restore`)
+
+export const getBoardArchive = async (boardId: string): Promise<BoardArchiveDto> =>
+  boardArchiveSchema.parse(await apiFetch('GET', `/boards/${boardId}/archive`))
+
+export const archiveColumn = (columnId: string) =>
+  apiFetch<ColumnDto>('POST', `/columns/${columnId}/archive`)
+export const restoreColumn = (columnId: string) =>
+  apiFetch<ColumnDto>('POST', `/columns/${columnId}/restore`)
+export const archiveCard = (cardId: string) => apiFetch<CardDto>('POST', `/cards/${cardId}/archive`)
+export const restoreCard = (cardId: string) => apiFetch<CardDto>('POST', `/cards/${cardId}/restore`)
 
 export const createBoard = async (
   workspaceId: string,

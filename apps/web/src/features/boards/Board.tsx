@@ -9,6 +9,8 @@ type BoardProps = {
   drag: BoardDrag
   onRenameColumn: (columnId: string) => void
   onDeleteColumn: (columnId: string) => void
+  onArchiveColumn: (columnId: string) => void
+  onArchiveTask: (taskId: string) => void
   onAddTask: (columnId: string) => void
   onEditTask: (columnId: string, task: Task) => void
   onDeleteTask: (columnId: string, taskId: string) => void
@@ -20,6 +22,8 @@ export function Board({
   drag,
   onRenameColumn,
   onDeleteColumn,
+  onArchiveColumn,
+  onArchiveTask,
   onAddTask,
   onEditTask,
   onDeleteTask,
@@ -37,6 +41,8 @@ export function Board({
           drag={drag}
           onRename={() => onRenameColumn(columnId)}
           onDelete={() => onDeleteColumn(columnId)}
+          onArchive={() => onArchiveColumn(columnId)}
+          onArchiveTask={onArchiveTask}
           onAddTask={() => onAddTask(columnId)}
           onEditTask={(task) => onEditTask(columnId, task)}
           onDeleteTask={(taskId) => onDeleteTask(columnId, taskId)}

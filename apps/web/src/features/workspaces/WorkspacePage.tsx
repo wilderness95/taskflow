@@ -6,18 +6,19 @@ import { rememberWorkspace } from '../../shared/lib/lastWorkspace'
 import { CreateBoardModal } from './CreateBoardModal'
 import { WorkspaceBoardCard } from './WorkspaceBoardCard'
 import { WorkspaceTopbar } from './WorkspaceTopbar'
-import { useToggleStar, useWorkspace, useWorkspaceBoards } from './useWorkspaces'
+import { useArchivedBoards, useToggleStar, useWorkspace, useWorkspaceBoards } from './useWorkspaces'
 import '../../shared/styles/base.css'
 import '../../shared/styles/buttons.css'
 import './WorkspacePage.css'
 
 /** Egy munkaterület tábláinak listája; a csillagozott táblák külön szekcióban. */
 export function WorkspacePage() {
-  const { t } = useTranslation(['workspace', 'common'])
+  const { t } = useTranslation(['workspace', 'common', 'archive'])
   const { workspaceId = '' } = useParams()
   const workspace = useWorkspace(workspaceId)
   const boards = useWorkspaceBoards(workspaceId)
   const toggleStar = useToggleStar(workspaceId)
+  const archived = useArchivedBoards(workspaceId)
   const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
@@ -92,6 +93,28 @@ export function WorkspacePage() {
                   </div>
                 )}
               </section>
+
+              {(archived.query.data?.length ?? 0) > 0 && (
+                <section aria-label={t('archive:boards.title')}>
+                  <h2>{t('archive:boards.title')}</h2>
+                  <ul className="workspace-archived-list">
+                    {archived.query.data?.map((board) => (
+                      <li key={board.id}>
+                        <span>{board.title}</span>
+                        <button
+                          type="button"
+                          className="secondary-button"
+                          aria-label={t('archive:boards.restoreAria', { title: board.title })}
+                          disabled={archived.restore.isPending}
+                          onClick={() => archived.restore.mutate(board.id)}
+                        >
+                          {t('archive:boards.restore')}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </>
           )}
         </main>
