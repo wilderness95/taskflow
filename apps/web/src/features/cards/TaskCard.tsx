@@ -2,6 +2,7 @@ import { getChecklistProgress, getDueDateState } from '@taskflow/shared'
 import { useTranslation } from 'react-i18next'
 import { formatShortDate } from '../../i18n/format'
 import { classNames } from '../../shared/lib/classNames'
+import { AssigneeStack } from './AssigneeStack'
 import type { DragProps } from '../boards/useBoardDrag'
 import type { Task } from '../boards/types'
 import '../../shared/styles/buttons.css'
@@ -83,6 +84,8 @@ export function TaskCard({
           <strong>{formatShortDate(task.dueDate)}</strong>
         </div>
       )}
+
+      <AssigneeStack assignees={task.assignees} />
 
       {checklistProgress.total > 0 && (
         <>

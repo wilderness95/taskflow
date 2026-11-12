@@ -283,6 +283,14 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 - tevékenység-napló panel a táblán / a kártyán;
 - értesítések (a harang ikon): hozzárendelés, említés, közelgő határidő.
 
+**Megvalósítás (kész):**
+- SSE: `GET /boards/{id}/events` (`text/event-stream`, 25 mp-es heartbeat); az eseményt az `ActivityService.record` adja ki egy folyamaton belüli bus-ra (`events/eventBus.ts`), így minden naplózott írás (ember és agent) élőben megjelenik. Az esemény vékony (`BoardEvent`), a kliens újraolvassa a változást. Felhasználónként legfeljebb 20 nyitott csatorna. Több api példánynál külső bróker kellene.
+- Optimista zárolás: a `PATCH /cards/{id}` és a `POST /cards/{id}/move` opcionális `version` mezője; eltérésnél `409 version_conflict` (`details.card`: az aktuális kártya). `version` nélkül utolsó írás nyer (agent-barát).
+- Felelősök: `card_assignees`, `assigneeIds` a kártyán; `GET /boards/{id}/participants` a hozzárendelhető/megemlíthető felhasználókat adja.
+- Kommentek: `comments`, `comment_mentions`; `GET|POST /cards/{id}/comments`, `PATCH|DELETE /comments/{id}`; az @említés a szövegben `@Név`, a `mentionIds` explicit (az API kulccsal írt komment `viaApiKey`).
+- Tevékenység: tábla- és kártyaszintű napló (`GET /cards/{id}/activity`), panel a táblán és a kártya szerkesztőjében.
+- Értesítések: `notifications` tábla, `GET /notifications`, `POST /notifications/{id}/read|read-all` (csak session); a határidő-emlékeztetőt időzítő adja ki (`DUE_REMINDER_INTERVAL_MINUTES`), kártyánként és határidőnként egyszer.
+
 ### M6 – Funkcióbővítés (Sprint 10–11)
 - a nézetváltó bekötése: **Lista**, **Naptár** (határidő alapján), **Idővonal**;
 - haladó szűrés (címke, tag, határidő, prioritás), mentett szűrők;

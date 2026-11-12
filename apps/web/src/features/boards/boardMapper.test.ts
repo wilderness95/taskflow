@@ -39,6 +39,7 @@ const board: BoardDto = {
           coverImage: null,
           position: 'a0',
           labelIds: ['l1', 'missing'],
+          assigneeIds: ['u1'],
           checklists: [
             {
               id: 'cl',
@@ -64,17 +65,24 @@ describe('toColumns', () => {
     expect(columns.c2).toMatchObject({ title: 'Kész', accent: 'green', done: true })
   })
 
-  it('maps cards with labels, checklist and the done flag of the column', () => {
+  it('falls back to a placeholder for assignees missing from the participants', () => {
     const [task] = toColumns(board).c2!.tasks
+    expect(task!.assignees).toEqual([{ id: 'u1', name: '?', avatarUrl: null }])
+  })
+
+  it('maps cards with labels, checklist and the done flag of the column', () => {
+    const [task] = toColumns(board, [{ id: 'u1', name: 'Olga', avatarUrl: null }]).c2!.tasks
     expect(task).toEqual({
       id: 'k1',
       title: 'Kártya',
       description: 'Leírás',
       priority: 'high',
       tags: [{ label: 'UI', color: 'blue' }],
+      assignees: [{ id: 'u1', name: 'Olga', avatarUrl: null }],
       dueDate: undefined,
       coverImage: undefined,
       done: true,
+      version: 1,
       checklist: { title: 'Lista', items: [{ id: 'i1', text: 'Egy', done: true }] },
     })
   })

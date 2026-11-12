@@ -11,7 +11,6 @@
   },
   "taskCount_one": "{{count, number}} feladat",
   "taskCount_other": "{{count, number}} feladat",
-  "notifications": "Értesítések",
   "settings": "Beállítások",
   "editTitleAria": "Táblacím szerkesztése",
   "star": {
@@ -61,9 +60,13 @@
   "loadError": "A tábla betöltése nem sikerült.",
   "retry": "Újrapróbálás",
   "saveError": "A mentés nem sikerült, a tábla frissült a szerver állapotával.",
+  "conflictError": "Ezt a kártyát közben valaki más módosította, ezért a mentés elmaradt. A tábla frissült a legfrissebb állapottal, kérjük, próbáld újra.",
   "notFound": "Ez a tábla nem létezik, vagy nincs hozzáférésed.",
   "backToWorkspace": "Vissza a munkaterülethez",
   "readOnly": "Csak olvasási jogod van ezen a táblán.",
+  "activity": {
+    "open": "Tevékenység"
+  },
   "members": {
     "open": "Tagok",
     "eyebrow": "Tábla",

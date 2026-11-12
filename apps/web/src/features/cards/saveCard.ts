@@ -85,6 +85,7 @@ export async function saveCard(board: BoardDto, input: SaveCardInput): Promise<v
     priority: task.priority,
     dueDate: task.dueDate || null,
     labelIds,
+    assigneeIds: task.assignees.map((assignee) => assignee.id),
   }
   const firstCardId = (targetId: string) =>
     board.columns.find((column) => column.id === targetId)?.cards[0]?.id
@@ -93,9 +94,16 @@ export async function saveCard(board: BoardDto, input: SaveCardInput): Promise<v
 
   let card: CardDto
   if (existing) {
-    card = await api.updateCard(existing.id, fields)
+    card = await api.updateCard(existing.id, {
+      ...fields,
+      version: task.version ?? existing.version,
+    })
     if (columnId !== originalColumnId) {
-      card = await api.moveCard(card.id, { columnId, beforeCardId: firstCardId(columnId) })
+      card = await api.moveCard(card.id, {
+        columnId,
+        beforeCardId: firstCardId(columnId),
+        version: card.version,
+      })
     }
     card = { ...card, checklists: existing.checklists }
   } else {

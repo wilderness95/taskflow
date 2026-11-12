@@ -1,6 +1,6 @@
 import { DEFAULT_PRIORITY, parseTags, type ChecklistItem, type Priority } from '@taskflow/shared'
 import { createId } from '../../shared/lib/ids'
-import type { Task } from '../boards/types'
+import type { Assignee, Task } from '../boards/types'
 
 /** A kártya szerkesztőűrlapjának állapota (a mezők még szövegként, nyers formában). */
 export type TaskDraft = {
@@ -11,6 +11,7 @@ export type TaskDraft = {
   dueDate: string
   /** Vesszővel elválasztott címkék. */
   tags: string
+  assigneeIds: string[]
   checklistTitle: string
   checklistItems: ChecklistItem[]
 }
@@ -23,6 +24,7 @@ export const createEmptyDraft = (columnId: string, defaultChecklistTitle: string
   column: columnId,
   dueDate: '',
   tags: '',
+  assigneeIds: [],
   checklistTitle: defaultChecklistTitle,
   checklistItems: [],
 })
@@ -38,6 +40,7 @@ export const createDraftFromTask = (
   column: columnId,
   dueDate: task.dueDate ?? '',
   tags: task.tags.map((tag) => tag.label).join(', '),
+  assigneeIds: task.assignees.map((assignee) => assignee.id),
   checklistTitle: task.checklist?.title ?? defaultChecklistTitle,
   checklistItems: task.checklist?.items ?? [],
 })
@@ -48,11 +51,13 @@ type BuildTaskOptions = {
   done: boolean
   /** Ezt kapja a checklist, ha a felhasználó üresen hagyta a címét. */
   defaultChecklistTitle: string
+  /** A tábla résztvevői: ebből oldódnak fel a kiválasztott felelősök. */
+  participants?: Assignee[]
 }
 
 export const buildTaskFromDraft = (
   draft: TaskDraft,
-  { id, done, defaultChecklistTitle }: BuildTaskOptions,
+  { id, done, defaultChecklistTitle, participants = [] }: BuildTaskOptions,
 ): Task => ({
   id,
   title: draft.title.trim(),
@@ -62,6 +67,14 @@ export const buildTaskFromDraft = (
   done,
   dueDate: draft.dueDate,
   tags: parseTags(draft.tags),
+  assignees: draft.assigneeIds.map(
+    (assigneeId) =>
+      participants.find((p) => p.id === assigneeId) ?? {
+        id: assigneeId,
+        name: '?',
+        avatarUrl: null,
+      },
+  ),
   checklist: {
     title: draft.checklistTitle.trim() || defaultChecklistTitle,
     items: draft.checklistItems

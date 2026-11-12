@@ -16,6 +16,7 @@ const card = (over: Partial<CardDto> = {}): CardDto => ({
   coverImage: null,
   position: 'a0',
   labelIds: [],
+  assigneeIds: [],
   checklists: [],
   createdAt: '',
   updatedAt: '',
@@ -93,7 +94,10 @@ describe('saveCard', () => {
 
   it('puts a new card before the first one of a non-empty column', async () => {
     await saveCard(board(), { task: makeTask('x'), columnId: 'c2' })
-    expect(api.moveCard).toHaveBeenCalledWith('new', { columnId: 'c2', beforeCardId: 'first' })
+    expect(api.moveCard).toHaveBeenCalledWith('new', {
+      columnId: 'c2',
+      beforeCardId: 'first',
+    })
   })
 
   it('creates a checklist with items, marking done ones', async () => {
@@ -155,9 +159,13 @@ describe('saveCard', () => {
     await saveCard(board([existing]), { task, columnId: 'c2', originalColumnId: 'c1' })
     expect(api.updateCard).toHaveBeenCalledWith(
       'k1',
-      expect.objectContaining({ title: task.title }),
+      expect.objectContaining({ title: task.title, version: existing.version }),
     )
-    expect(api.moveCard).toHaveBeenCalledWith('k1', { columnId: 'c2', beforeCardId: 'first' })
+    expect(api.moveCard).toHaveBeenCalledWith('k1', {
+      columnId: 'c2',
+      beforeCardId: 'first',
+      version: expect.any(Number),
+    })
     expect(api.updateChecklist).toHaveBeenCalledWith('cl', 'New')
     expect(api.deleteChecklistItem).toHaveBeenCalledWith('gone')
     expect(api.updateChecklistItem).toHaveBeenCalledTimes(1)

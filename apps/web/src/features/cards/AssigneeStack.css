@@ -1,0 +1,32 @@
+.assignee-stack {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  margin-top: 10px;
+}
+
+.assignee-stack-item + .assignee-stack-item,
+.assignee-stack-item + .assignee-stack-more {
+  margin-left: -6px;
+}
+
+.assignee-stack-item .avatar {
+  width: 24px;
+  height: 24px;
+  font-size: 0.7rem;
+  border-width: 2px;
+  object-fit: cover;
+}
+
+.assignee-stack-more {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.25);
+  color: #e5eefb;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
