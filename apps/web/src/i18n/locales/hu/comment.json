@@ -1,0 +1,15 @@
+{
+  "title": "Hozzászólások",
+  "empty": "Még nincs hozzászólás.",
+  "loadError": "A hozzászólások betöltése nem sikerült.",
+  "placeholder": "Írj hozzászólást... (@ említéshez használd az alábbi gombokat)",
+  "newAria": "Új hozzászólás",
+  "editAria": "Hozzászólás szerkesztése",
+  "mentionAria": "Említés",
+  "send": "Küldés",
+  "edit": "Szerkesztés",
+  "delete": "Törlés",
+  "deleteConfirm": "Biztosan törlöd ezt a hozzászólást?",
+  "edited": "(szerkesztve)",
+  "viaApiKey": "API kulcs"
+}

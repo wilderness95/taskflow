@@ -123,6 +123,7 @@ export function BoardPage() {
         boardId={boardId}
         workspaceId={workspaceId ?? ''}
         canManageMembers={meta.permissions.manageMembers}
+        isBoardAdmin={meta.permissions.update}
       />
     </div>
   )
