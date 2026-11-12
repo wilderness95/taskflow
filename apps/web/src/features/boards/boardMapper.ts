@@ -25,6 +25,7 @@ const toTask = (
     dueDate: card.dueDate ?? undefined,
     coverImage: card.coverImage ?? undefined,
     done,
+    version: card.version,
     checklist: checklist && {
       title: checklist.title,
       items: checklist.items.map(({ id, text, done: itemDone }) => ({ id, text, done: itemDone })),

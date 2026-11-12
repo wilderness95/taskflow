@@ -24,6 +24,8 @@ export type Task = {
   done?: boolean
   checklist?: ChecklistLike
   assignees: Assignee[]
+  /** A kártya szerveroldali verziója a betöltéskor (optimista zároláshoz); új kártyának nincs. */
+  version?: number
 }
 
 export type Column = {

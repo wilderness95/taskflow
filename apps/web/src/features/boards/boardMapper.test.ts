@@ -82,6 +82,7 @@ describe('toColumns', () => {
       dueDate: undefined,
       coverImage: undefined,
       done: true,
+      version: 1,
       checklist: { title: 'Lista', items: [{ id: 'i1', text: 'Egy', done: true }] },
     })
   })
