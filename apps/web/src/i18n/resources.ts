@@ -10,6 +10,7 @@ import common from './locales/hu/common.json'
 import filters from './locales/hu/filters.json'
 import labels from './locales/hu/labels.json'
 import notification from './locales/hu/notification.json'
+import views from './locales/hu/views.json'
 import workspace from './locales/hu/workspace.json'
 
 /**
@@ -30,6 +31,7 @@ export const resources = {
     filters,
     labels,
     notification,
+    views,
     workspace,
   },
 } as const

@@ -1,0 +1,65 @@
+.timeline-view {
+  overflow-x: auto;
+  padding: 0 8px 12px;
+}
+
+.timeline-row {
+  display: grid;
+  align-items: center;
+  min-height: 34px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.timeline-axis {
+  position: sticky;
+  top: 0;
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.timeline-label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding: 4px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.timeline-day {
+  text-align: center;
+  padding: 4px 0;
+}
+
+.timeline-day.is-today {
+  background: rgba(96, 165, 250, 0.25);
+  font-weight: 700;
+}
+
+.timeline-day.is-month-start {
+  border-left: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.timeline-bar {
+  height: 14px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.timeline-bar.is-done {
+  background: #22c55e;
+}
+
+.timeline-unscheduled {
+  padding: 12px 8px 0;
+}
+
+.timeline-unscheduled ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
