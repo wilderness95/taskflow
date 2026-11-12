@@ -1,0 +1,44 @@
+.user-detail {
+  display: grid;
+  gap: 14px;
+  min-width: min(480px, 100%);
+}
+
+.user-detail h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.user-detail p {
+  margin: 0;
+}
+
+.user-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-detail-workspaces {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-detail-workspaces li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgb(var(--slate) / 0.08);
+}
+
+.user-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

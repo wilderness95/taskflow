@@ -7,7 +7,8 @@
   "loading": "Betöltés…",
   "loadError": "Az adatok nem tölthetők be.",
   "nav": {
-    "overview": "Áttekintés"
+    "overview": "Áttekintés",
+    "users": "Felhasználók"
   },
   "overview": {
     "stats": "Számok",
@@ -67,5 +68,73 @@
     "invitation_not_resendable": "Ez a meghívó már nem küldhető újra.",
     "invitation_not_pending": "Csak függő meghívó vonható vissza.",
     "unknown": "Valami hiba történt. Próbáld újra."
+  },
+  "loadMore": "Továbbiak betöltése",
+  "users": {
+    "title": "Felhasználók",
+    "search": "Keresés",
+    "searchPlaceholder": "Név vagy e-mail-cím",
+    "status": "Állapot",
+    "statuses": {
+      "all": "Mind",
+      "active": "Aktív",
+      "suspended": "Felfüggesztett",
+      "unverified": "Megerősítetlen"
+    },
+    "empty": "Nincs a feltételeknek megfelelő felhasználó.",
+    "open": "{{name}} adatlapja",
+    "badge": {
+      "admin": "Platform-admin",
+      "suspended": "Felfüggesztve",
+      "unverified": "Megerősítetlen e-mail"
+    },
+    "detail": {
+      "eyebrow": "Felhasználó",
+      "registered": "Regisztrált: {{date}}",
+      "suspendedAt": "Felfüggesztve: {{date}}",
+      "workspaces": "Munkaterületek",
+      "noWorkspaces": "Nem tagja munkaterületnek.",
+      "sessions_one": "{{count}} aktív munkamenet",
+      "sessions_other": "{{count}} aktív munkamenet"
+    },
+    "actions": {
+      "suspend": "Felfüggesztés",
+      "restore": "Visszaállítás",
+      "revokeSessions": "Kijelentkeztetés mindenhonnan",
+      "resendVerification": "Megerősítő levél újraküldése",
+      "grantAdmin": "Platform-admin jog adása",
+      "revokeAdmin": "Platform-admin jog elvétele"
+    },
+    "done": {
+      "suspend": "A fiók felfüggesztve.",
+      "restore": "A fiók visszaállítva.",
+      "revokeSessions": "A munkamenetek lezárva.",
+      "resendVerification": "A megerősítő levelet elküldtük.",
+      "grantAdmin": "A platform-admin jog megadva.",
+      "revokeAdmin": "A platform-admin jog elvéve."
+    },
+    "confirm": {
+      "eyebrow": "Megerősítés",
+      "suspend": {
+        "title": "Fiók felfüggesztése",
+        "message": "{{name}} azonnal kijelentkezik, és a fiókja meg az API kulcsai nem használhatók, amíg vissza nem állítod.",
+        "confirm": "Felfüggesztés"
+      },
+      "revokeSessions": {
+        "title": "Kijelentkeztetés mindenhonnan",
+        "message": "{{name}} minden eszközön kijelentkezik.",
+        "confirm": "Kijelentkeztetés"
+      },
+      "grantAdmin": {
+        "title": "Platform-admin jog adása",
+        "message": "{{name}} hozzáfér majd az összes felhasználóhoz, meghívóhoz és az auditnaplóhoz.",
+        "confirm": "Jog megadása"
+      },
+      "revokeAdmin": {
+        "title": "Platform-admin jog elvétele",
+        "message": "{{name}} elveszíti az adminisztrációs felületet.",
+        "confirm": "Jog elvétele"
+      }
+    }
   }
 }

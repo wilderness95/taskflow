@@ -1,7 +1,11 @@
 import {
   adminOverviewSchema,
+  adminUserDetailSchema,
+  adminUserListSchema,
   auditListSchema,
   type AdminOverviewDto,
+  type AdminUserDetailDto,
+  type AdminUsersQuery,
   type AuditQuery,
 } from '@taskflow/shared'
 import { apiFetch } from './client'
@@ -21,3 +25,20 @@ export const fetchAdminOverview = async (): Promise<AdminOverviewDto> =>
 
 export const listAuditEvents = async (query: Partial<AuditQuery>) =>
   auditListSchema.parse(await apiFetch('GET', `/admin/audit${toQueryString(query)}`))
+
+export const listAdminUsers = async (query: Partial<AdminUsersQuery>) =>
+  adminUserListSchema.parse(await apiFetch('GET', `/admin/users${toQueryString(query)}`))
+
+export const getAdminUser = async (id: string): Promise<AdminUserDetailDto> =>
+  adminUserDetailSchema.parse(await apiFetch('GET', `/admin/users/${id}`))
+
+const userAction = async (id: string, action: string): Promise<AdminUserDetailDto> =>
+  adminUserDetailSchema.parse(await apiFetch('POST', `/admin/users/${id}/${action}`))
+
+export const suspendUser = (id: string) => userAction(id, 'suspend')
+export const restoreUser = (id: string) => userAction(id, 'restore')
+export const revokeUserSessions = (id: string) => userAction(id, 'revoke-sessions')
+export const resendUserVerification = (id: string) => userAction(id, 'resend-verification')
+
+export const setUserAdminRole = async (id: string, isAdmin: boolean): Promise<AdminUserDetailDto> =>
+  adminUserDetailSchema.parse(await apiFetch('PUT', `/admin/users/${id}/admin`, { isAdmin }))

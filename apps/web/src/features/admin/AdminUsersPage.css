@@ -1,0 +1,39 @@
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-filters label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.admin-filters input[type='search'] {
+  min-width: 240px;
+}
+
+.admin-more {
+  justify-self: start;
+}
+
+.admin-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-user-row:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
