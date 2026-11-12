@@ -9,6 +9,8 @@ import { VerifyEmailPage } from '../features/auth/VerifyEmailPage'
 import { GuestOnly, RequireAuth } from '../features/auth/RequireAuth'
 import { BoardPage } from '../features/boards/BoardPage'
 import { AcceptInvitationPage } from '../features/auth/AcceptInvitationPage'
+import { ListPage } from '../features/lists/ListPage'
+import { ListsPage } from '../features/lists/ListsPage'
 import { WorkspaceMembersPage } from '../features/workspaces/WorkspaceMembersPage'
 import { WorkspacePage } from '../features/workspaces/WorkspacePage'
 import { RootRedirect } from './RootRedirect'
@@ -31,6 +33,8 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/w/:workspaceId" element={<WorkspacePage />} />
+            <Route path="/w/:workspaceId/lists" element={<ListsPage />} />
+            <Route path="/l/:listId" element={<ListPage />} />
             <Route path="/w/:workspaceId/members" element={<WorkspaceMembersPage />} />
             <Route path="/settings/api-keys" element={<ApiKeysPage />} />
             <Route path="/b/:boardId" element={<BoardPage />} />

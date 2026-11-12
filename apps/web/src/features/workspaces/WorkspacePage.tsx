@@ -13,7 +13,7 @@ import './WorkspacePage.css'
 
 /** Egy munkaterület tábláinak listája; a csillagozott táblák külön szekcióban. */
 export function WorkspacePage() {
-  const { t } = useTranslation(['workspace', 'common', 'archive'])
+  const { t } = useTranslation(['workspace', 'common', 'archive', 'lists'])
   const { workspaceId = '' } = useParams()
   const workspace = useWorkspace(workspaceId)
   const boards = useWorkspaceBoards(workspaceId)
@@ -47,6 +47,9 @@ export function WorkspacePage() {
                   {workspace && <small>{t(`roles.${workspace.role}`)}</small>}
                 </div>
                 <div className="workspace-actions">
+                  <Link to={`/w/${workspaceId}/lists`} className="secondary-button">
+                    {t('lists:nav.lists')}
+                  </Link>
                   <Link to={`/w/${workspaceId}/members`} className="secondary-button">
                     {canManageMembers ? t('boards.manageMembers') : t('boards.members')}
                   </Link>

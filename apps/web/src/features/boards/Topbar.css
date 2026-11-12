@@ -105,7 +105,10 @@
   background: rgba(148, 163, 184, 0.06);
   color: #ebf2ff;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
 }
 
 .icon-button:hover {
