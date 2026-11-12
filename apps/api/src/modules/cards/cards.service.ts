@@ -59,6 +59,15 @@ export function createCardsService(deps: {
 
   const require = (id: string): CardRow => orNotFound(cards.findById(id), 'Card')
 
+  /** Optimista zárolás: ha a kliens `version`-t küldött, annak egyeznie kell a mentettel. */
+  const assertVersion = (card: CardRow, expected: number | undefined) => {
+    if (expected === undefined || expected === card.version) return
+    throw new AppError(409, 'version_conflict', 'The card was modified by someone else', {
+      currentVersion: card.version,
+      card: hydrate([card])[0],
+    })
+  }
+
   return {
     listForColumns: (columnIds: string[]): CardDto[] => hydrate(cards.listByColumnIds(columnIds)),
 
@@ -115,7 +124,8 @@ export function createCardsService(deps: {
     update(actor: Actor, id: string, input: UpdateCardInput): CardDto {
       const { board } = access.requireCard(actor, id, 'board:write')
       const card = require(id)
-      const { labelIds, ...fields } = input
+      assertVersion(card, input.version)
+      const { labelIds, version: _version, ...fields } = input
       cards.transaction(() => {
         if (labelIds) {
           const column = columns.findById(card.columnId)!
@@ -128,7 +138,10 @@ export function createCardsService(deps: {
         action: 'card.updated',
         entityType: 'card',
         entityId: id,
-        meta: { title: card.title, fields: Object.keys(input) },
+        meta: {
+          title: card.title,
+          fields: Object.keys(fields).concat(labelIds ? ['labelIds'] : []),
+        },
       })
       return hydrate([require(id)])[0]!
     },
@@ -137,6 +150,7 @@ export function createCardsService(deps: {
     move(actor: Actor, id: string, input: MoveCardInput): CardDto {
       const { board } = access.requireCard(actor, id, 'board:write')
       const card = require(id)
+      assertVersion(card, input.version)
       const target = columns.findById(input.columnId)
       const source = columns.findById(card.columnId)!
       if (!target || target.boardId !== source.boardId) throw notFound('Column')

@@ -450,19 +450,21 @@ export const operations: Operation[] = [
     ...card,
     method: 'patch',
     path: '/cards/{id}',
-    summary: 'Update a card',
+    summary:
+      'Update a card (optional `version` enables optimistic locking: 409 version_conflict on mismatch)',
     body: updateCardSchema,
     success: { status: 200, schema: cardSchema },
-    errors: [422],
+    errors: [409, 422],
   },
   {
     ...card,
     method: 'post',
     path: '/cards/{id}/move',
-    summary: 'Move a card to a column, before another card (or to the end)',
+    summary:
+      'Move a card to a column, before another card (or to the end); optional `version` enables optimistic locking',
     body: moveCardSchema,
     success: { status: 200, schema: cardSchema },
-    errors: [422],
+    errors: [409, 422],
   },
   {
     ...card,

@@ -26,7 +26,8 @@ export const queryClient: QueryClient = new QueryClient({
         return
       }
       // A hibaüzenet fordítása a frontend dolga; a szerver csak hibakódot küld.
-      window.alert(i18n.t('board:saveError'))
+      const conflict = error instanceof ApiError && error.code === 'version_conflict'
+      window.alert(i18n.t(conflict ? 'board:conflictError' : 'board:saveError'))
     },
   }),
 })
