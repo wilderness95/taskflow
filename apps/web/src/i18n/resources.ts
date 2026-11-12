@@ -1,3 +1,4 @@
+import activity from './locales/hu/activity.json'
 import apikeys from './locales/hu/apikeys.json'
 import auth from './locales/hu/auth.json'
 import board from './locales/hu/board.json'
@@ -12,7 +13,7 @@ import workspace from './locales/hu/workspace.json'
  * Új nyelv: `locales/<lang>/*.json` fájlok + egy bejegyzés ide és a `SUPPORTED_LANGUAGES`-be.
  */
 export const resources = {
-  hu: { common, auth, apikeys, board, card, column, comment, workspace },
+  hu: { common, activity, auth, apikeys, board, card, column, comment, workspace },
 } as const
 
 export const defaultNS = 'common'

@@ -9,6 +9,7 @@ import {
   type TaskDraft,
 } from '../cards/taskDraft'
 import { RenameColumnModal } from '../columns/RenameColumnModal'
+import { BoardActivityModal } from '../activity/BoardActivityModal'
 import { BoardMembersModal } from './BoardMembersModal'
 import type { Assignee, ColumnAccent, Columns, Dialog, Task } from './types'
 
@@ -112,6 +113,9 @@ export function BoardDialogs({
           onClose={onClose}
         />
       )
+
+    case 'activity':
+      return <BoardActivityModal boardId={boardId} onClose={onClose} />
 
     case 'members':
       return (

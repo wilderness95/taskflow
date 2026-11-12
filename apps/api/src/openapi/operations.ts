@@ -462,6 +462,14 @@ export const operations: Operation[] = [
   },
   {
     ...card,
+    method: 'get',
+    path: '/cards/{id}/activity',
+    summary: 'Card activity log (card, checklist and comment events), newest first',
+    query: pageQuerySchema,
+    success: { status: 200, schema: activityListSchema },
+  },
+  {
+    ...card,
     method: 'patch',
     path: '/cards/{id}',
     summary:

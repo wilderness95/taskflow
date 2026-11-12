@@ -1,0 +1,54 @@
+{
+  "boardEyebrow": "Tábla",
+  "boardTitle": "Tevékenység",
+  "cardTitle": "Tevékenység",
+  "open": "Tevékenység",
+  "loading": "Tevékenység betöltése...",
+  "loadError": "A tevékenység betöltése nem sikerült.",
+  "empty": "Még nincs rögzített tevékenység.",
+  "loadMore": "Régebbiek betöltése",
+  "unknownActor": "Ismeretlen felhasználó",
+  "viaApiKey": "API kulcs",
+  "actions": {
+    "unknown": "{{actor}}: {{action}}",
+    "board": {
+      "created": "{{actor}} létrehozta a(z) „{{title}}” táblát",
+      "updated": "{{actor}} módosította a tábla beállításait",
+      "archived": "{{actor}} archiválta a táblát"
+    },
+    "board_member": {
+      "set": "{{actor}} módosította egy tábla-tag szerepkörét",
+      "removed": "{{actor}} eltávolított egy tábla-tagot"
+    },
+    "column": {
+      "created": "{{actor}} létrehozta a(z) „{{title}}” oszlopot",
+      "updated": "{{actor}} módosított egy oszlopot",
+      "moved": "{{actor}} áthelyezett egy oszlopot",
+      "deleted": "{{actor}} törölt egy oszlopot"
+    },
+    "label": {
+      "created": "{{actor}} létrehozta a(z) „{{name}}” címkét"
+    },
+    "card": {
+      "created": "{{actor}} létrehozta a(z) „{{title}}” kártyát",
+      "updated": "{{actor}} módosította a(z) „{{title}}” kártyát",
+      "moved": "{{actor}} áthelyezte a(z) „{{title}}” kártyát",
+      "deleted": "{{actor}} törölte a(z) „{{title}}” kártyát"
+    },
+    "comment": {
+      "created": "{{actor}} hozzászólt a(z) „{{title}}” kártyához",
+      "updated": "{{actor}} szerkesztett egy hozzászólást",
+      "deleted": "{{actor}} törölt egy hozzászólást"
+    },
+    "checklist": {
+      "created": "{{actor}} új checklistet adott a kártyához",
+      "updated": "{{actor}} átnevezett egy checklistet",
+      "deleted": "{{actor}} törölt egy checklistet"
+    },
+    "checklist_item": {
+      "created": "{{actor}} új checklist-tételt adott hozzá",
+      "updated": "{{actor}} módosított egy checklist-tételt",
+      "deleted": "{{actor}} törölt egy checklist-tételt"
+    }
+  }
+}
