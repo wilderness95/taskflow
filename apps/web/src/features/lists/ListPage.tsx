@@ -50,7 +50,7 @@ export function ListPage() {
         <WorkspaceTopbar workspaceId={list.workspaceId} />
         <main className="workspace-page list-page">
           <section className="workspace-heading">
-            <div>
+            <div className="list-heading-text">
               <span className="eyebrow">{t('page.eyebrow')}</span>
               <ListTitle
                 title={list.title}

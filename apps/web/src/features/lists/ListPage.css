@@ -5,6 +5,16 @@
   box-sizing: border-box;
 }
 
+.list-heading-text {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+
+.list-heading-text h1 {
+  margin: 0;
+}
+
 .list-title-button {
   border: none;
   background: transparent;
@@ -12,10 +22,6 @@
   padding: 0;
   text-align: left;
   cursor: text;
-}
-
-.list-title-button h1 {
-  margin: 4px 0;
 }
 
 .list-title-input {
