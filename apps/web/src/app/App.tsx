@@ -1,5 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router'
+import { AdminLayout } from '../features/admin/AdminLayout'
+import { AdminOverviewPage } from '../features/admin/AdminOverviewPage'
 import { ApiKeysPage } from '../features/apikeys/ApiKeysPage'
 import { ForgotPasswordPage } from '../features/auth/ForgotPasswordPage'
 import { LoginPage } from '../features/auth/LoginPage'
@@ -39,6 +41,9 @@ export default function App() {
               <Route path="/w/:workspaceId/lists" element={<ListsPage />} />
               <Route path="/l/:listId" element={<ListPage />} />
               <Route path="/w/:workspaceId/members" element={<WorkspaceMembersPage />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminOverviewPage />} />
+              </Route>
               <Route path="/settings/api-keys" element={<ApiKeysPage />} />
               <Route path="/b/:boardId" element={<BoardPage />} />
             </Route>

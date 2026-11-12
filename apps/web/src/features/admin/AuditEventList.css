@@ -1,0 +1,29 @@
+.audit-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.audit-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgb(var(--slate) / 0.08);
+  border: 1px solid rgb(var(--slate) / 0.16);
+}
+
+.audit-list small {
+  display: flex;
+  gap: 10px;
+  color: rgb(var(--ink) / 0.7);
+}
+
+.audit-ip {
+  font-variant-numeric: tabular-nums;
+}

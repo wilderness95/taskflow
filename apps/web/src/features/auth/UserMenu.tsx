@@ -75,6 +75,18 @@ export function UserMenu() {
           >
             {t('menu.apiKeys')}
           </button>
+          {user.isAdmin && (
+            <button
+              type="button"
+              className="menu-item"
+              onClick={() => {
+                setIsOpen(false)
+                navigate('/admin')
+              }}
+            >
+              {t('menu.admin')}
+            </button>
+          )}
           <button
             type="button"
             className="menu-item"
