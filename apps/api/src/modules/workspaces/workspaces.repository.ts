@@ -3,8 +3,11 @@ import { and, asc, count, desc, eq, gt, inArray, isNull } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
 import {
   boardMembers,
+  attachments,
   boardStars,
   boards,
+  cards,
+  columns,
   invitations,
   users,
   workspaceMembers,
@@ -49,8 +52,54 @@ export function createWorkspacesRepository(db: Db) {
       db.delete(invitations).where(eq(invitations.workspaceId, id)).run()
       db.delete(workspaces).where(eq(workspaces.id, id)).run()
     },
+    /** Az aktív (nem archivált) táblák száma. */
     countBoards: (id: string): number =>
-      db.select({ n: count() }).from(boards).where(eq(boards.workspaceId, id)).get()?.n ?? 0,
+      db
+        .select({ n: count() })
+        .from(boards)
+        .where(and(eq(boards.workspaceId, id), isNull(boards.archivedAt)))
+        .get()?.n ?? 0,
+    /**
+     * A munkaterület (archivált) tábláinak végleges törlése a tartalmukkal együtt (oszlopok,
+     * kártyák és ezek gyerekei). A csatolmányok fájlkulcsait adja vissza, hogy a hívó a fájlokat is törölje.
+     * Tranzakcióban hívandó, a munkaterület törlése előtt.
+     */
+    purgeBoards: (workspaceId: string): string[] => {
+      const boardIds = db
+        .select({ id: boards.id })
+        .from(boards)
+        .where(eq(boards.workspaceId, workspaceId))
+        .all()
+        .map((b) => b.id)
+      if (boardIds.length === 0) return []
+      const columnIds = db
+        .select({ id: columns.id })
+        .from(columns)
+        .where(inArray(columns.boardId, boardIds))
+        .all()
+        .map((c) => c.id)
+      let keys: string[] = []
+      if (columnIds.length > 0) {
+        const cardIds = db
+          .select({ id: cards.id })
+          .from(cards)
+          .where(inArray(cards.columnId, columnIds))
+          .all()
+          .map((c) => c.id)
+        if (cardIds.length > 0) {
+          keys = db
+            .select({ key: attachments.storageKey })
+            .from(attachments)
+            .where(inArray(attachments.cardId, cardIds))
+            .all()
+            .map((a) => a.key)
+          db.delete(cards).where(inArray(cards.id, cardIds)).run()
+        }
+        db.delete(columns).where(inArray(columns.id, columnIds)).run()
+      }
+      db.delete(boards).where(inArray(boards.id, boardIds)).run()
+      return keys
+    },
 
     listMembers: (workspaceId: string) =>
       db

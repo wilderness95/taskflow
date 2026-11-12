@@ -180,7 +180,7 @@ Külső AI eszközhöz (Claude Desktop, Gemini CLI, OpenCode) stdio MCP szerver 
 }
 ```
 
-Eszközök (munkaterület: `create_workspace`; táblák: `list_workspaces`, `list_boards`, `get_board_overview`, `create_board`, `update_board`, `archive_board`,
+Eszközök (munkaterület: `create_workspace`, `delete_workspace`; táblák: `list_workspaces`, `list_boards`, `get_board_overview`, `create_board`, `update_board`, `archive_board`,
 `restore_board`, `list_archived_boards`, `list_board_archive`; oszlopok: `create_column`, `update_column`, `move_column`,
 `archive_column`, `restore_column`, `delete_column`; kártyák: `get_card`, `create_card`, `search_cards`, `update_card`
 (minden mező), `move_card`, `archive_card`, `restore_card`, `delete_card`; checklist: `add_checklist_items`,

@@ -103,6 +103,7 @@ describe('tools', () => {
     expect(names).toEqual(
       expect.arrayContaining([
         'create_workspace',
+        'delete_workspace',
         'create_board',
         'update_board',
         'archive_board',
