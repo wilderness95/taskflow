@@ -379,6 +379,12 @@ Cél: egyszerű, kanban nélküli lista (teendő, bevásárlás), amely munkater
 - Tesztek: unit (`listItems`, `listMoves`, `listCache`), integrációs és jogosultsági (`lists.integration.test.ts`, SSE-vel), E2E (`apps/e2e/tests/lists.spec.ts`).
 - Nem része az M8-nak: határidő/emlékeztető, mennyiség/egység, MCP-eszköz (lásd fent).
 
+**UI-fejlesztés (az M8 mellett, kész):**
+- Világos/sötét/rendszer téma (design tokenek `tokens.css`, `data-theme`, villanásmentes betöltés, `theme-color` meta); váltó a felhasználói menüben és a parancspalettán.
+- Gyors navigáció a felhasználói menüből (táblák, listák, munkaterületek) és parancspaletta (Ctrl/Cmd + K, ékezetfüggetlen keresés).
+- Toastok az `alert()` helyett, visszavonás kártya-archiváláskor, listatétel törlésekor és lista archiválásakor.
+- Mobilbarát elrendezés: törő fejléc, 44 px-es érintési felületek, biztonságos területek (notch), csökkentett mozgás támogatása, SVG harang ikon, egységes üres állapot.
+
 ### M9 – Android: PWA + TWA, GitHub Release (opcionális, még nem ütemezett)
 
 Cél: a webes kliens mobilon is használható, és telepíthető Android appként. Play Store **nem** cél; az APK terjesztése GitHub Releases-en át történik.

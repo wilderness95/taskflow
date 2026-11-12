@@ -8,6 +8,7 @@ const SHORTCUTS = [
   'filters',
   'views',
   'help',
+  'palette',
   'openCard',
   'moveCard',
   'moveColumn',

@@ -1,0 +1,27 @@
+{
+  "eyebrow": "Gyors ugrás",
+  "title": "Parancspaletta",
+  "inputLabel": "Keresés a parancsok között",
+  "placeholder": "Tábla, lista, munkaterület vagy parancs…",
+  "results": "Találatok",
+  "empty": "Nincs találat.",
+  "theme": "Megjelenés: {{name}}",
+  "themes": {
+    "system": "Rendszer",
+    "light": "Világos",
+    "dark": "Sötét"
+  },
+  "nav": {
+    "boards": "Táblák",
+    "lists": "Listák",
+    "members": "Tagok és meghívók",
+    "apiKeys": "API kulcsok"
+  },
+  "groups": {
+    "navigate": "Oldal",
+    "workspace": "Munkaterület",
+    "board": "Tábla",
+    "list": "Lista",
+    "action": "Parancs"
+  }
+}

@@ -8,6 +8,10 @@
     "filters": { "keys": "F", "label": "Haladó szűrők megnyitása / bezárása" },
     "views": { "keys": "1 – 4", "label": "Nézet váltása: Kanban, Lista, Naptár, Idővonal" },
     "help": { "keys": "?", "label": "Ez a súgó" },
+    "palette": {
+      "keys": "Ctrl + K",
+      "label": "Parancspaletta: gyors ugrás táblára, listára, munkaterületre"
+    },
     "openCard": { "keys": "Enter", "label": "A kiválasztott kártya megnyitása" },
     "moveCard": {
       "keys": "Alt + ↑ ↓ ← →",
