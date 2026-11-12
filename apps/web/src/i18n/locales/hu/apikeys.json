@@ -1,0 +1,59 @@
+{
+  "eyebrow": "Beállítások",
+  "title": "API kulcsok",
+  "intro": "AI agentek és szkriptek hozzáférése a fiókod nevében. A kulcs jogai a hatókör és a te jogaid metszete.",
+  "back": "Vissza a táblákhoz",
+  "loadError": "Az API kulcsok nem tölthetők be.",
+  "empty": "Még nincs API kulcsod.",
+  "lastUsed": "Utoljára használva",
+  "neverUsed": "még nem használták",
+  "expiresAt": "lejár: {{date}}",
+  "noExpiry": "nem jár le",
+  "status": {
+    "active": "Aktív",
+    "revoked": "Visszavonva",
+    "expired": "Lejárt"
+  },
+  "list": {
+    "title": "Kulcsaim"
+  },
+  "form": {
+    "title": "Új kulcs",
+    "name": "Név",
+    "namePlaceholder": "pl. Claude agent",
+    "scopes": "Hatókörök",
+    "expiry": "Lejárat",
+    "never": "Nem jár le",
+    "days_one": "{{count}} nap",
+    "days_other": "{{count}} nap",
+    "submit": "Kulcs létrehozása"
+  },
+  "scopes": {
+    "workspacesRead": {
+      "name": "Munkaterületek olvasása",
+      "description": "Munkaterületek és tagjaik listázása"
+    },
+    "boardsRead": {
+      "name": "Táblák olvasása",
+      "description": "Táblák, kártyák, tevékenységnapló és összefoglaló olvasása"
+    },
+    "boardsWrite": {
+      "name": "Táblák írása",
+      "description": "Táblák, oszlopok, kártyák és checklistek létrehozása, módosítása, törlése"
+    }
+  },
+  "created": {
+    "title": "Az új kulcs",
+    "warning": "Másold ki most: ez az egyetlen alkalom, amikor a teljes kulcs látható.",
+    "copy": "Másolás",
+    "copied": "Átmásolva",
+    "done": "Kész"
+  },
+  "revoke": {
+    "action": "Visszavonás",
+    "eyebrow": "API kulcs",
+    "title": "Kulcs visszavonása",
+    "message": "A(z) „{{name}}” kulcs azonnal érvénytelen lesz, ezzel nem lehet többé hozzáférni. Ez nem vonható vissza.",
+    "confirm": "Visszavonás"
+  }
+}
