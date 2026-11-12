@@ -250,6 +250,23 @@ export const cardLabels = sqliteTable(
   (t) => [primaryKey({ columns: [t.cardId, t.labelId] })],
 )
 
+/** Kártyához rendelt felhasználók (a kártya felelősei). */
+export const cardAssignees = sqliteTable(
+  'card_assignees',
+  {
+    cardId: text('card_id')
+      .notNull()
+      .references(() => cards.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.cardId, t.userId] }),
+    index('card_assignees_user_idx').on(t.userId),
+  ],
+)
+
 export const checklists = sqliteTable('checklists', {
   id: id(),
   cardId: text('card_id')

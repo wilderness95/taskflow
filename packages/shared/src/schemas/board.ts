@@ -58,6 +58,8 @@ export const cardSchema = z.object({
   coverImage: z.string().nullable(),
   position: z.string(),
   labelIds: z.array(idSchema),
+  /** A kártyához rendelt felhasználók (a tábla résztvevői közül). */
+  assigneeIds: z.array(idSchema),
   checklists: z.array(checklistSchema),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -127,6 +129,7 @@ export const createCardSchema = z.object({
   dueDate: dateSchema.nullish(),
   coverImage: httpUrlSchema.nullish(),
   labelIds: z.array(idSchema).default([]),
+  assigneeIds: z.array(idSchema).default([]),
 })
 export type CreateCardInput = z.infer<typeof createCardSchema>
 export const updateCardSchema = z
@@ -137,6 +140,7 @@ export const updateCardSchema = z
     dueDate: dateSchema.nullable(),
     coverImage: httpUrlSchema.nullable(),
     labelIds: z.array(idSchema),
+    assigneeIds: z.array(idSchema),
   })
   .partial()
   .extend({ version: versionSchema })
@@ -187,3 +191,6 @@ export const boardMemberListSchema = z.object({ data: z.array(boardMemberSchema)
 
 export const setBoardMemberSchema = z.object({ role: boardRoleSchema })
 export type SetBoardMemberInput = z.infer<typeof setBoardMemberSchema>
+
+/** A tábla résztvevői: akik (munkaterületi vagy tábla-szerepkörrel) olvashatják a táblát; hozzárendelhetők és megemlíthetők. */
+export const boardParticipantListSchema = boardMemberListSchema

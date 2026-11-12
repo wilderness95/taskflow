@@ -12,6 +12,7 @@ const card = (id: string, columnId: string): CardDto => ({
   coverImage: null,
   position: 'a0',
   labelIds: [],
+  assigneeIds: [],
   checklists: [],
   createdAt: '',
   updatedAt: '',

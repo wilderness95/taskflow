@@ -22,7 +22,7 @@ const STATUS_KEYS = {
 export function BoardPage() {
   const { t } = useTranslation(['card', 'column', 'board'])
   const { boardId = '' } = useParams()
-  const { status, retry, columns, meta, actions, workspaceId } = useBoardData(boardId)
+  const { status, retry, columns, participants, meta, actions, workspaceId } = useBoardData(boardId)
   const [searchQuery, setSearchQuery] = useState('')
   const [dialog, setDialog] = useState<Dialog | null>(null)
 
@@ -115,6 +115,7 @@ export function BoardPage() {
       <BoardDialogs
         dialog={dialog}
         columns={columns}
+        participants={participants}
         onClose={() => setDialog(null)}
         onSaveTask={actions.saveTask}
         onUpdateColumn={actions.updateColumn}

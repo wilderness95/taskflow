@@ -6,7 +6,7 @@ import { ApiError } from '../../api/client'
 import { saveCard, type SaveCardInput } from '../cards/saveCard'
 import { moveCardInBoard, moveColumnInBoard } from './boardCache'
 import { toColumns } from './boardMapper'
-import type { BoardView, ColumnAccent, Visibility } from './types'
+import type { Assignee, BoardView, ColumnAccent, Visibility } from './types'
 
 const findCardVersion = (board: BoardDto | undefined, cardId: string): number | undefined =>
   board?.columns.flatMap((column) => column.cards).find((card) => card.id === cardId)?.version
@@ -24,6 +24,20 @@ export function useBoardData(boardId: string) {
     retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 1,
   })
   const board = boardQuery.data
+  const participantsQuery = useQuery({
+    queryKey: [...boardKey(boardId), 'participants'],
+    queryFn: () => api.listBoardParticipants(boardId),
+    enabled: Boolean(board),
+  })
+  const participants = useMemo<Assignee[]>(
+    () =>
+      (participantsQuery.data ?? []).map(({ userId, name, avatarUrl }) => ({
+        id: userId,
+        name,
+        avatarUrl,
+      })),
+    [participantsQuery.data],
+  )
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ['boards'] })
@@ -101,7 +115,10 @@ export function useBoardData(boardId: string) {
     api.updateBoard(boardId, input),
   )
 
-  const columns = useMemo(() => (board ? toColumns(board) : {}), [board])
+  const columns = useMemo(
+    () => (board ? toColumns(board, participants) : {}),
+    [board, participants],
+  )
 
   // A nézetválasztó egyelőre kliensoldali állapot.
   const [activeView, setActiveView] = useState<BoardView>('kanban')
@@ -132,6 +149,7 @@ export function useBoardData(boardId: string) {
     retry: () => void boardQuery.refetch(),
     workspaceId: board?.workspaceId,
     columns,
+    participants,
     meta: {
       title: board?.title ?? '',
       setTitle: (title: string) => updateBoard.mutate({ title }),

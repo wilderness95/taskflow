@@ -6,6 +6,7 @@ export const makeTask = (id: string, overrides: Partial<Task> = {}): Task => ({
   description: '',
   priority: 'medium',
   tags: [],
+  assignees: [],
   ...overrides,
 })
 

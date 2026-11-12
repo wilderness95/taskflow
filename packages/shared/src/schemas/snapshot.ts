@@ -30,6 +30,7 @@ const snapshotCardSchema = z.object({
   /** A határidő lejárt és a kártya nincs kész („done”) oszlopban. */
   overdue: z.boolean(),
   labels: z.array(z.string()),
+  assigneeIds: z.array(idSchema),
   checklist: z.object({ done: z.number().int(), total: z.number().int() }),
   /** A leírás eleje; a teljes szöveg a `GET /cards/{id}` végponton. */
   descriptionExcerpt: z.string(),

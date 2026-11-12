@@ -237,6 +237,14 @@
                                     "type": "string"
                                   }
                                 },
+                                "assigneeIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64
+                                  }
+                                },
                                 "checklist": {
                                   "type": "object",
                                   "properties": {
@@ -271,6 +279,7 @@
                                 "dueDate",
                                 "overdue",
                                 "labels",
+                                "assigneeIds",
                                 "checklist",
                                 "descriptionExcerpt",
                                 "updatedAt"
@@ -591,6 +600,14 @@
                               "maxLength": 64
                             }
                           },
+                          "assigneeIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64
+                            }
+                          },
                           "checklists": {
                             "type": "array",
                             "items": {
@@ -680,6 +697,7 @@
                           "coverImage",
                           "position",
                           "labelIds",
+                          "assigneeIds",
                           "checklists",
                           "createdAt",
                           "updatedAt",
@@ -3954,6 +3972,14 @@
                                     "maxLength": 64
                                   }
                                 },
+                                "assigneeIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 64
+                                  }
+                                },
                                 "checklists": {
                                   "type": "array",
                                   "items": {
@@ -4043,6 +4069,7 @@
                                 "coverImage",
                                 "position",
                                 "labelIds",
+                                "assigneeIds",
                                 "checklists",
                                 "createdAt",
                                 "updatedAt",
@@ -4492,6 +4519,116 @@
         ],
         "summary": "List explicit board members",
         "operationId": "get_boards_id_members",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 64
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "avatarUrl": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "admin",
+                              "editor",
+                              "viewer"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "userId",
+                          "name",
+                          "email",
+                          "avatarUrl",
+                          "role"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{id}/participants": {
+      "get": {
+        "tags": [
+          "Boards"
+        ],
+        "summary": "List everyone with access to the board (assignable to cards, mentionable in comments)",
+        "operationId": "get_boards_id_participants",
         "parameters": [
           {
             "name": "id",
@@ -5652,6 +5789,15 @@
                       "minLength": 1,
                       "maxLength": 64
                     }
+                  },
+                  "assigneeIds": {
+                    "default": [],
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
                   }
                 },
                 "required": [
@@ -5714,6 +5860,14 @@
                       "type": "string"
                     },
                     "labelIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    },
+                    "assigneeIds": {
                       "type": "array",
                       "items": {
                         "type": "string",
@@ -5810,6 +5964,7 @@
                     "coverImage",
                     "position",
                     "labelIds",
+                    "assigneeIds",
                     "checklists",
                     "createdAt",
                     "updatedAt",
@@ -5952,6 +6107,14 @@
                         "maxLength": 64
                       }
                     },
+                    "assigneeIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    },
                     "checklists": {
                       "type": "array",
                       "items": {
@@ -6041,6 +6204,7 @@
                     "coverImage",
                     "position",
                     "labelIds",
+                    "assigneeIds",
                     "checklists",
                     "createdAt",
                     "updatedAt",
@@ -6167,6 +6331,14 @@
                       "maxLength": 64
                     }
                   },
+                  "assigneeIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 64
+                    }
+                  },
                   "version": {
                     "type": "integer",
                     "minimum": 1,
@@ -6230,6 +6402,14 @@
                       "type": "string"
                     },
                     "labelIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    },
+                    "assigneeIds": {
                       "type": "array",
                       "items": {
                         "type": "string",
@@ -6326,6 +6506,7 @@
                     "coverImage",
                     "position",
                     "labelIds",
+                    "assigneeIds",
                     "checklists",
                     "createdAt",
                     "updatedAt",
@@ -6601,6 +6782,14 @@
                         "maxLength": 64
                       }
                     },
+                    "assigneeIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    },
                     "checklists": {
                       "type": "array",
                       "items": {
@@ -6690,6 +6879,7 @@
                     "coverImage",
                     "position",
                     "labelIds",
+                    "assigneeIds",
                     "checklists",
                     "createdAt",
                     "updatedAt",

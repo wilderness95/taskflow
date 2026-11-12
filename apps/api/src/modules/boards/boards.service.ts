@@ -119,6 +119,7 @@ export function createBoardsService(
               dueDate: card.dueDate,
               overdue,
               labels: card.labelIds.flatMap((labelId) => labelNames.get(labelId) ?? []),
+              assigneeIds: card.assigneeIds,
               checklist: {
                 done: progress.reduce((sum, p) => sum + p.done, 0),
                 total: progress.reduce((sum, p) => sum + p.total, 0),
@@ -221,6 +222,12 @@ export function createBoardsService(
       const label = repo.insertLabel({ id: newId(), boardId, ...input })
       log(actor, boardId, 'label.created', 'label', label.id, { name: label.name })
       return { ...label }
+    },
+
+    /** A tábla résztvevői (hozzárendelhető és megemlíthető felhasználók). */
+    listParticipants(actor: Actor, boardId: string): BoardMemberDto[] {
+      const { board } = access.requireBoard(actor, boardId, 'board:read')
+      return access.participantProfiles(board)
     },
 
     listMembers(actor: Actor, boardId: string): BoardMemberDto[] {
