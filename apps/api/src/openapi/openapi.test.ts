@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { buildApp } from '../app.js'
 import { loadConfig } from '../config.js'
 import { createDb, runMigrations } from '../db/client.js'
+import { OPENAPI_FILE, serializeOpenApi } from './export.js'
 import { operations } from './operations.js'
 
 const makeApp = () => {
@@ -44,5 +46,9 @@ describe('openapi', () => {
       .sort()
     const documented = operations.map((o) => `${o.method.toUpperCase()} /api/v1${o.path}`).sort()
     expect(documented).toEqual(actual)
+  })
+
+  it('keeps docs/openapi.json up to date (run `npm run openapi:export -w @taskflow/api`)', () => {
+    expect(readFileSync(OPENAPI_FILE, 'utf8')).toBe(serializeOpenApi())
   })
 })
