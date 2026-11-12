@@ -74,6 +74,8 @@ export type Operation = {
   public?: boolean
   /** A műveletre jellemző hibakódok a 400/404 mellett. */
   errors?: number[]
+  /** A sikeres válasz nem JSON, hanem esemény-folyam (`text/event-stream`). */
+  stream?: boolean
 }
 
 const board = { tag: 'Boards' }
@@ -360,6 +362,15 @@ export const operations: Operation[] = [
     path: '/boards/{id}/members',
     summary: 'List explicit board members',
     success: { status: 200, schema: boardMemberListSchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/events',
+    summary:
+      'Server-Sent Events stream of board changes (event `board`, data: BoardEvent JSON); re-read the changed resource, then reconnect on drop',
+    success: { status: 200 },
+    stream: true,
   },
   {
     ...board,

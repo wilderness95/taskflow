@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { errorResponseSchema, idSchema } from '@taskflow/shared'
+import { boardEventSchema, errorResponseSchema, idSchema } from '@taskflow/shared'
 import { operations, type Operation } from './operations.js'
 
 type Json = Record<string, unknown>
@@ -12,7 +12,7 @@ const jsonSchema = (schema: z.ZodType, io: 'input' | 'output'): Json => {
   return rest
 }
 
-const WRITE_TAGS = new Set(['Boards', 'Columns', 'Cards', 'Checklists', 'API keys'])
+const WRITE_TAGS = new Set(['Boards', 'Columns', 'Cards', 'Checklists', 'Comments', 'API keys'])
 
 const ERROR_DESCRIPTIONS: Record<number, string> = {
   400: 'Validation error or invalid token',
@@ -75,6 +75,11 @@ const operationObject = (op: Operation): Json => {
       description: 'Success',
       ...(op.success.schema && {
         content: { 'application/json': { schema: jsonSchema(op.success.schema, 'output') } },
+      }),
+      ...(op.stream && {
+        content: {
+          'text/event-stream': { schema: jsonSchema(boardEventSchema, 'output') },
+        },
       }),
     },
   }

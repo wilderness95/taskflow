@@ -60,7 +60,12 @@ export function BoardDialogs({
           defaultChecklistTitle,
           participants,
         })
-        onSaveTask(task, draft.column, isEdit ? dialog.columnId : undefined)
+        // A szerkesztés a megnyitáskor látott verzióra épül: közbeni módosításnál konfliktus lesz.
+        onSaveTask(
+          isEdit ? { ...task, version: dialog.task.version } : task,
+          draft.column,
+          isEdit ? dialog.columnId : undefined,
+        )
         onClose()
       }
 

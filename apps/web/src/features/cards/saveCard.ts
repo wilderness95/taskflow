@@ -94,7 +94,10 @@ export async function saveCard(board: BoardDto, input: SaveCardInput): Promise<v
 
   let card: CardDto
   if (existing) {
-    card = await api.updateCard(existing.id, { ...fields, version: existing.version })
+    card = await api.updateCard(existing.id, {
+      ...fields,
+      version: task.version ?? existing.version,
+    })
     if (columnId !== originalColumnId) {
       card = await api.moveCard(card.id, {
         columnId,

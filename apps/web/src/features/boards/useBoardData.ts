@@ -3,6 +3,7 @@ import { boardRoleCan, type BoardDto } from '@taskflow/shared'
 import { useMemo, useState } from 'react'
 import * as api from '../../api/boards'
 import { ApiError } from '../../api/client'
+import { useBoardEvents } from './useBoardEvents'
 import { saveCard, type SaveCardInput } from '../cards/saveCard'
 import { moveCardInBoard, moveColumnInBoard } from './boardCache'
 import { toColumns } from './boardMapper'
@@ -24,6 +25,8 @@ export function useBoardData(boardId: string) {
     retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 1,
   })
   const board = boardQuery.data
+  // Más felhasználók és agentek módosításai élőben jelennek meg.
+  useBoardEvents(boardId, Boolean(board))
   const participantsQuery = useQuery({
     queryKey: [...boardKey(boardId), 'participants'],
     queryFn: () => api.listBoardParticipants(boardId),

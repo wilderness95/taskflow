@@ -1,6 +1,7 @@
-import type { ActivityDto } from '@taskflow/shared'
+import type { ActivityDto, BoardEvent } from '@taskflow/shared'
 import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
+import type { EventBus } from '../../events/eventBus.js'
 import type { ActivityRepository, ActivityRow } from './activity.repository.js'
 
 export type ActivityEvent = {
@@ -37,6 +38,31 @@ export const toActivityDto = (r: ActivityRow): ActivityDto => ({
   createdAt: r.createdAt.toISOString(),
 })
 
+const toBoardEvent = (
+  id: string,
+  actor: Actor,
+  boardId: string,
+  event: ActivityEvent,
+): BoardEvent => {
+  const cardId =
+    event.entityType === 'card'
+      ? event.entityId
+      : typeof event.meta?.cardId === 'string'
+        ? event.meta.cardId
+        : null
+  return {
+    id,
+    boardId,
+    action: event.action,
+    entityType: event.entityType,
+    entityId: event.entityId,
+    cardId,
+    actorType: actor.type,
+    actorId: actor.id,
+    createdAt: new Date().toISOString(),
+  }
+}
+
 const paginate = (rows: ActivityRow[], limit: number) => {
   const page = rows.slice(0, limit)
   return {
@@ -46,11 +72,12 @@ const paginate = (rows: ActivityRow[], limit: number) => {
 }
 
 /** Az írási műveletek naplója (`activity_log`): ki (ember vagy API kulcs) mit csinált. */
-export function createActivityService(repo: ActivityRepository) {
+export function createActivityService(repo: ActivityRepository, bus?: EventBus) {
   return {
     record(actor: Actor, event: ActivityEvent): void {
+      const id = newId()
       repo.insert({
-        id: newId(),
+        id,
         boardId: event.boardId ?? null,
         workspaceId: event.workspaceId ?? null,
         actorType: actor.type,
@@ -61,6 +88,8 @@ export function createActivityService(repo: ActivityRepository) {
         entityId: event.entityId,
         meta: JSON.stringify(event.meta ?? {}),
       })
+      // Valós idejű értesítés a tábla előfizetőinek (a napló az igazság, ez csak jelzés).
+      if (bus && event.boardId) bus.publish(toBoardEvent(id, actor, event.boardId, event))
     },
     listForBoard(boardId: string, limit: number, cursor?: string) {
       // Egyel többet kérünk le, hogy kiderüljön, van-e következő oldal.

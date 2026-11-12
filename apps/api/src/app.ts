@@ -33,6 +33,9 @@ import { createColumnsService } from './modules/columns/columns.service.js'
 import { commentsRoutes } from './modules/comments/comments.routes.js'
 import { createCommentsRepository } from './modules/comments/comments.repository.js'
 import { createCommentsService } from './modules/comments/comments.service.js'
+import { createEventBus } from './events/eventBus.js'
+import { eventsRoutes } from './modules/events/events.routes.js'
+import { createEventsService } from './modules/events/events.service.js'
 import { AppError } from './errors.js'
 import { openApiPlugin } from './openapi/openapi.plugin.js'
 import { createIdempotencyRepository } from './modules/idempotency/idempotency.repository.js'
@@ -78,7 +81,8 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     config,
     logger: app.log,
   })
-  const activity = createActivityService(createActivityRepository(db))
+  const bus = createEventBus()
+  const activity = createActivityService(createActivityRepository(db), bus)
   const apiKeys = createApiKeysService({
     repo: createApiKeysRepository(db),
     users: authRepo,
@@ -135,5 +139,6 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
   app.register(cardsRoutes(cards, checklists))
   app.register(checklistsRoutes(checklists))
   app.register(commentsRoutes(comments))
+  app.register(eventsRoutes(createEventsService(bus, access)))
   return app
 }
