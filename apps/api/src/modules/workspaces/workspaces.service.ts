@@ -17,6 +17,7 @@ import { newId } from '../../db/ids.js'
 import { AppError, notFound } from '../../errors.js'
 import type { Mailer } from '../../mail/mailer.js'
 import { createMailSender } from '../../mail/sendMail.js'
+import type { ActivityService } from '../activity/activity.service.js'
 import { randomToken, sha256 } from '../auth/tokens.js'
 import type { InvitationRow, WorkspaceRow, WorkspacesRepository } from './workspaces.repository.js'
 
@@ -43,9 +44,17 @@ export function createWorkspacesService(deps: {
   repo: WorkspacesRepository
   mailer: Mailer
   config: Config
+  activity: ActivityService
   logger: { error: (obj: unknown, msg: string) => void }
 }) {
-  const { repo, config } = deps
+  const { repo, config, activity } = deps
+  const log = (
+    actor: Actor,
+    workspaceId: string | null,
+    action: string,
+    entityId: string,
+    meta: Record<string, unknown> = {},
+  ) => activity.record(actor, { workspaceId, action, entityType: 'workspace', entityId, meta })
   const sendMail = createMailSender(deps.mailer, deps.logger)
 
   /** A nem tag számára a munkaterület nem létezik (404), így a létezése sem derül ki. */
@@ -75,7 +84,9 @@ export function createWorkspacesService(deps: {
       repo.listForUser(actor.id).map((w) => toWorkspaceDto(w, w.role)),
 
     create(actor: Actor, input: CreateWorkspaceInput): WorkspaceDto {
-      return toWorkspaceDto(repo.create(input.name, actor.id), 'owner')
+      const workspace = repo.create(input.name, actor.id)
+      log(actor, workspace.id, 'workspace.created', workspace.id, { name: workspace.name })
+      return toWorkspaceDto(workspace, 'owner')
     },
 
     get(actor: Actor, id: string): WorkspaceDto {
@@ -85,7 +96,9 @@ export function createWorkspacesService(deps: {
 
     update(actor: Actor, id: string, input: UpdateWorkspaceInput): WorkspaceDto {
       const { role } = authorize(actor, id, 'workspace:update')
-      return toWorkspaceDto(repo.updateName(id, input.name)!, role)
+      const updated = repo.updateName(id, input.name)!
+      log(actor, id, 'workspace.updated', id, { name: updated.name })
+      return toWorkspaceDto(updated, role)
     },
 
     remove(actor: Actor, id: string): void {
@@ -93,7 +106,10 @@ export function createWorkspacesService(deps: {
       if (repo.countBoards(id) > 0) {
         throw new AppError(409, 'workspace_not_empty', 'Delete or move the boards first')
       }
+      const { workspace } = membership(actor, id)
       repo.transaction(() => repo.delete(id))
+      // A napló a munkaterülethez kötött sorokat törli, ezért ez már nem hivatkozik rá.
+      log(actor, null, 'workspace.deleted', id, { name: workspace.name })
     },
 
     listMembers(actor: Actor, id: string): MemberDto[] {
@@ -110,6 +126,7 @@ export function createWorkspacesService(deps: {
       }
       if (input.role !== 'owner') assertNotLastOwner(id, targetRole)
       repo.setRole(id, userId, input.role)
+      log(actor, id, 'workspace_member.role_changed', id, { userId, role: input.role })
       return repo
         .listMembers(id)
         .map((m) => ({ ...m, joinedAt: m.joinedAt.toISOString() }))
@@ -130,6 +147,7 @@ export function createWorkspacesService(deps: {
       }
       assertNotLastOwner(id, targetRole)
       repo.transaction(() => repo.removeMember(id, userId))
+      log(actor, id, 'workspace_member.removed', id, { userId })
     },
 
     listInvitations(actor: Actor, id: string): WorkspaceInvitationDto[] {
@@ -172,6 +190,7 @@ export function createWorkspacesService(deps: {
         link: `${base}/invitations/accept?token=${encodeURIComponent(token)}&email=${encodeURIComponent(input.email)}`,
         days: INVITE_TTL / DAY,
       })
+      log(actor, id, 'workspace_invitation.created', id, { role: input.role })
       return toInvitationDto(invitation)
     },
 
@@ -180,6 +199,7 @@ export function createWorkspacesService(deps: {
       const invitation = repo.findInvitation(invitationId)
       if (!invitation || invitation.workspaceId !== id) throw notFound('Invitation')
       repo.expireInvitation(invitationId, new Date())
+      log(actor, id, 'workspace_invitation.revoked', id)
     },
 
     /** A meghívott (bejelentkezve, a meghívóval egyező e-mail-címmel) csatlakozik a munkaterülethez. */
@@ -210,6 +230,11 @@ export function createWorkspacesService(deps: {
         if (!existingRole) repo.addMember(workspace.id, actor.id, invitation.role!)
         repo.markInvitationAccepted(invitation.id, new Date())
       })
+      if (!existingRole) {
+        log(actor, workspace.id, 'workspace_member.joined', workspace.id, {
+          role: invitation.role,
+        })
+      }
       return toWorkspaceDto(workspace, existingRole ?? invitation.role)
     },
   }

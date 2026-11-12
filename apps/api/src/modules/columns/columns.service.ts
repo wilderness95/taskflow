@@ -3,6 +3,7 @@ import type { ColumnDto, MoveColumnInput, UpdateColumnInput } from '@taskflow/sh
 import { positionBefore } from '../../lib/position.js'
 import { AppError, orNotFound } from '../../errors.js'
 import type { Actor } from '../../auth/actor.js'
+import type { ActivityService } from '../activity/activity.service.js'
 import type { AccessService } from '../access/access.service.js'
 import type { ColumnRow, ColumnsRepository } from './columns.repository.js'
 
@@ -15,26 +16,46 @@ export const toColumnDto = (r: ColumnRow): ColumnDto => ({
   position: r.position,
 })
 
-export function createColumnsService(repo: ColumnsRepository, access: AccessService) {
+export function createColumnsService(
+  repo: ColumnsRepository,
+  access: AccessService,
+  activity: ActivityService,
+) {
   const require = (id: string): ColumnRow => orNotFound(repo.findById(id), 'Column')
 
   return {
     update(actor: Actor, id: string, input: UpdateColumnInput): ColumnDto {
-      access.requireColumn(actor, id, 'board:write')
+      const { board } = access.requireColumn(actor, id, 'board:write')
       require(id)
-      return toColumnDto(repo.update(id, input)!)
+      const column = toColumnDto(repo.update(id, input)!)
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'column.updated',
+        entityType: 'column',
+        entityId: id,
+        meta: { title: column.title, fields: Object.keys(input) },
+      })
+      return column
     },
 
     move(actor: Actor, id: string, input: MoveColumnInput): ColumnDto {
-      access.requireColumn(actor, id, 'board:write')
+      const { board } = access.requireColumn(actor, id, 'board:write')
       const column = require(id)
       const position = positionBefore(repo.listPositions(column.boardId), id, input.beforeColumnId)
-      return toColumnDto(repo.update(id, { position })!)
+      const moved = toColumnDto(repo.update(id, { position })!)
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'column.moved',
+        entityType: 'column',
+        entityId: id,
+        meta: { title: column.title },
+      })
+      return moved
     },
 
     /** Ha az oszlopban vannak kártyák, `moveCardsTo` kötelező: a kártyák a cél oszlop végére kerülnek. */
     remove(actor: Actor, id: string, moveCardsTo?: string): void {
-      access.requireColumn(actor, id, 'board:write')
+      const { board } = access.requireColumn(actor, id, 'board:write')
       const column = require(id)
       repo.transaction(() => {
         if (repo.countCards(id) > 0) {
@@ -56,6 +77,13 @@ export function createColumnsService(repo: ColumnsRepository, access: AccessServ
           }
         }
         repo.delete(id)
+      })
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'column.deleted',
+        entityType: 'column',
+        entityId: id,
+        meta: { title: column.title },
       })
     },
   }

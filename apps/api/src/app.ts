@@ -93,10 +93,11 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     boards: boardsRepo,
     checklists: checklistsRepo,
     access,
+    activity,
   })
-  const boards = createBoardsService(boardsRepo, cards, access)
-  const columns = createColumnsService(columnsRepo, access)
-  const checklists = createChecklistsService(checklistsRepo, cardsRepo, access)
+  const boards = createBoardsService(boardsRepo, cards, access, activity)
+  const columns = createColumnsService(columnsRepo, access, activity)
+  const checklists = createChecklistsService(checklistsRepo, cardsRepo, access, activity)
 
   // Az összes route-ot gyűjti, hogy a teszt ellenőrizhesse az OpenAPI-lefedettséget.
   const routes: string[] = []
@@ -111,6 +112,7 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     repo: createWorkspacesRepository(db),
     mailer,
     config,
+    activity,
     logger: app.log,
   })
   app.register(authRoutes(auth, config))

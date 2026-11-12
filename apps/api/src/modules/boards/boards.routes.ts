@@ -5,6 +5,7 @@ import {
   createColumnSchema,
   createLabelSchema,
   idParamsSchema,
+  pageQuerySchema,
   setBoardMemberSchema,
   updateBoardSchema,
 } from '@taskflow/shared'
@@ -73,6 +74,14 @@ export function boardsRoutes(service: BoardsService) {
       )
       return reply.status(201).send(label)
     })
+
+    app.get('/api/v1/boards/:id/activity', async (req) =>
+      service.activity(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        pageQuerySchema.parse(req.query),
+      ),
+    )
 
     app.get('/api/v1/boards/:id/members', async (req) => ({
       data: service.listMembers(requireActor(req), idParamsSchema.parse(req.params).id),
