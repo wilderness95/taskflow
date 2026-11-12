@@ -14,6 +14,7 @@ import { ListsPage } from '../features/lists/ListsPage'
 import { WorkspaceMembersPage } from '../features/workspaces/WorkspaceMembersPage'
 import { WorkspacePage } from '../features/workspaces/WorkspacePage'
 import { ToastHost } from '../shared/ui/ToastHost'
+import { PaletteHost } from '../features/palette/PaletteHost'
 import { RootRedirect } from './RootRedirect'
 import { queryClient } from './queryClient'
 
@@ -32,13 +33,15 @@ export default function App() {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/invitations/accept" element={<AcceptInvitationPage />} />
           <Route element={<RequireAuth />}>
-            <Route path="/" element={<RootRedirect />} />
-            <Route path="/w/:workspaceId" element={<WorkspacePage />} />
-            <Route path="/w/:workspaceId/lists" element={<ListsPage />} />
-            <Route path="/l/:listId" element={<ListPage />} />
-            <Route path="/w/:workspaceId/members" element={<WorkspaceMembersPage />} />
-            <Route path="/settings/api-keys" element={<ApiKeysPage />} />
-            <Route path="/b/:boardId" element={<BoardPage />} />
+            <Route element={<PaletteHost />}>
+              <Route path="/" element={<RootRedirect />} />
+              <Route path="/w/:workspaceId" element={<WorkspacePage />} />
+              <Route path="/w/:workspaceId/lists" element={<ListsPage />} />
+              <Route path="/l/:listId" element={<ListPage />} />
+              <Route path="/w/:workspaceId/members" element={<WorkspaceMembersPage />} />
+              <Route path="/settings/api-keys" element={<ApiKeysPage />} />
+              <Route path="/b/:boardId" element={<BoardPage />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

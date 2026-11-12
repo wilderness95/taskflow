@@ -59,6 +59,12 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 - Minden interaktív elem billentyűzettel is elérhető és látható fókuszú (`:focus-visible`); a modalok a `shared/ui/Modal`-t használják (dialog szerep, Escape, fókuszcsapda).
 - Új gyorsbillentyű a `useBoardKeyboard`-ban él, és kerüljön be a `shortcuts` névtérbe (súgó ablak).
 
+## Megjelenés (téma, mobil)
+- Sötét és világos téma: a színek `shared/styles/tokens.css` változói (`--text`, `--accent-text`, `rgb(var(--slate) / 0.18)`, `--surface`, `--card`…); új CSS-ben **nincs beégetett szín** (hex/`rgba`), kivéve a témafüggetlen márka- és állapotszíneket (gradiens gomb, jelvény). A téma `data-theme` a `<html>`-en; kezelése `shared/theme/`, a választó a felhasználói menüben van.
+- Hibát, visszajelzést `showToast` (`shared/ui/toast.ts`) jelez, nem `alert()`; visszavonható műveletnél (archiválás, törlés) `action`-nel.
+- Mobil: az érintésre szánt elemek legalább 44 px-esek (`responsive.css`, `pointer: coarse`); az általános reszponzív szabályok a `responsive.css`-ben vannak, amit a `main.tsx` az összes komponens-CSS után tölt be.
+- Gyors ugrás: Ctrl/Cmd + K parancspaletta (`features/palette/`); új globális parancs a `usePaletteItems`-be kerül.
+
 ## Többnyelvűség (i18n)
 Egyelőre csak magyar UI van, de a kódnak fordításra késznek kell lennie:
 - **Nincs beégetett UI-szöveg** komponensben: felirat, placeholder, `aria-label`, toast, confirm mind `t('namespace:kulcs')`.

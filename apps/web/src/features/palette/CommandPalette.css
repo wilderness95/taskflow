@@ -1,0 +1,48 @@
+.palette-card {
+  width: min(100%, 560px);
+}
+
+.palette-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgb(var(--slate) / 0.3);
+  background: rgb(var(--surface));
+  color: var(--text);
+  font: inherit;
+}
+
+.palette-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  max-height: min(50vh, 380px);
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+}
+
+.palette-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.palette-option small {
+  color: rgb(var(--ink) / 0.65);
+  white-space: nowrap;
+}
+
+.palette-option.is-active {
+  background: rgb(var(--accent) / 0.18);
+}
+
+.palette-empty {
+  margin: 12px 4px 0;
+  color: rgb(var(--ink) / 0.7);
+}

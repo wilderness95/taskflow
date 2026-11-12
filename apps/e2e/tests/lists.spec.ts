@@ -100,3 +100,32 @@ test.describe('visszavonás', () => {
     await expect(page.getByRole('checkbox', { name: /Vaj/ })).toBeVisible()
   })
 })
+
+test.describe('parancspaletta', () => {
+  test('Ctrl+K: ugrás listára, és a téma váltása', async ({ page }) => {
+    await register(page, 'Pali')
+    await page.getByRole('link', { name: 'Listák' }).click()
+    await page.getByRole('button', { name: '+ Új lista' }).click()
+    await page.getByRole('dialog').getByLabel('A lista neve').fill('Bevásárlás')
+    await page.getByRole('dialog').getByRole('button', { name: 'Létrehozás' }).click()
+    await expect(page).toHaveURL(/\/l\//)
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/w\//)
+
+    await page.keyboard.press('Control+k')
+    const palette = page.getByRole('dialog', { name: 'Parancspaletta' })
+    await expect(palette).toBeVisible()
+    await palette.getByRole('combobox').fill('bevasar')
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/\/l\//)
+
+    await page.keyboard.press('Control+k')
+    await page.getByRole('combobox').fill('sotet')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+    await page.keyboard.press('Control+k')
+    await page.getByRole('combobox').fill('vilagos')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  })
+})

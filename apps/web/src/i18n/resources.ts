@@ -11,6 +11,7 @@ import filters from './locales/hu/filters.json'
 import labels from './locales/hu/labels.json'
 import lists from './locales/hu/lists.json'
 import notification from './locales/hu/notification.json'
+import palette from './locales/hu/palette.json'
 import shortcuts from './locales/hu/shortcuts.json'
 import views from './locales/hu/views.json'
 import voice from './locales/hu/voice.json'
@@ -35,6 +36,7 @@ export const resources = {
     labels,
     lists,
     notification,
+    palette,
     shortcuts,
     views,
     voice,
