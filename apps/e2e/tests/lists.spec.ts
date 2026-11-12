@@ -79,3 +79,24 @@ test.describe('listák', () => {
     await expect(page.getByRole('link', { name: /Hétvégi bevásárlás/ })).toBeVisible()
   })
 })
+
+test.describe('visszavonás', () => {
+  test('a törölt listatétel a toastból visszaállítható', async ({ page }) => {
+    await register(page, 'Vera')
+    await page.getByRole('link', { name: 'Listák' }).click()
+    await page.getByRole('button', { name: '+ Új lista' }).click()
+    await page.getByRole('dialog').getByLabel('A lista neve').fill('Teendők')
+    await page.getByRole('dialog').getByRole('button', { name: 'Létrehozás' }).click()
+    await page.getByLabel('Új tétel', { exact: true }).fill('Vaj')
+    await page.getByLabel('Új tétel', { exact: true }).press('Enter')
+    await expect(page.getByText('Vaj')).toBeVisible()
+
+    await page.getByRole('listitem').filter({ hasText: 'Vaj' }).hover()
+    await page.getByRole('button', { name: 'Vaj törlése' }).click()
+    await expect(page.getByText('„Vaj” törölve')).toBeVisible()
+    await expect(page.getByRole('checkbox', { name: /Vaj/ })).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Visszavonás' }).click()
+    await expect(page.getByRole('checkbox', { name: /Vaj/ })).toBeVisible()
+  })
+})

@@ -2,6 +2,7 @@ import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query'
 import { ApiError } from '../api/client'
 import { ME_KEY } from '../features/auth/useSession'
 import i18n from '../i18n'
+import { showToast } from '../shared/ui/toast'
 
 const isUnauthenticated = (error: unknown) => error instanceof ApiError && error.status === 401
 
@@ -27,7 +28,10 @@ export const queryClient: QueryClient = new QueryClient({
       }
       // A hibaüzenet fordítása a frontend dolga; a szerver csak hibakódot küld.
       const conflict = error instanceof ApiError && error.code === 'version_conflict'
-      window.alert(i18n.t(conflict ? 'board:conflictError' : 'board:saveError'))
+      showToast({
+        message: i18n.t(conflict ? 'board:conflictError' : 'board:saveError'),
+        kind: 'error',
+      })
     },
   }),
 })
