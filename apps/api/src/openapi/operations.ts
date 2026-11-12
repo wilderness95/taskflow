@@ -245,7 +245,8 @@ export const operations: Operation[] = [
     ...workspace,
     method: 'delete',
     path: '/workspaces/{id}',
-    summary: 'Delete an empty workspace (owner)',
+    summary:
+      'Delete a workspace (owner); 409 while it has active boards. Archived boards are deleted with it, permanently',
     success: { status: 204 },
     errors: [403, 409],
   },

@@ -2412,7 +2412,7 @@
         "tags": [
           "Workspaces"
         ],
-        "summary": "Delete an empty workspace (owner)",
+        "summary": "Delete a workspace (owner); 409 while it has active boards. Archived boards are deleted with it, permanently",
         "operationId": "delete_workspaces_id",
         "parameters": [
           {

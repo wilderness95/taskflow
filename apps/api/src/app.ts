@@ -191,6 +191,7 @@ export function buildApp(
     mailer,
     config,
     activity,
+    files,
     logger: app.log,
   })
   app.register(authRoutes(auth, config))

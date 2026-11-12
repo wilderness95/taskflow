@@ -41,6 +41,24 @@ export function registerBoardTools({ define, api, snapshot, participants }: Tool
     },
   )
 
+  define(
+    'delete_workspace',
+    'Permanently delete a workspace (owner only, needs a signed-in session). Fails while the workspace has active boards: archive them first. Archived boards are deleted with it for good. Ask the user to confirm first, naming the workspace.',
+    { workspace: z.string().describe('Workspace name or id') },
+    async (a) => {
+      const { data } = await api.get<{ data: { id: string; name: string }[] }>('/workspaces')
+      const ws = resolveOne(
+        'workspace',
+        a.workspace,
+        data,
+        (w) => [w.name],
+        (w) => w.id,
+      )
+      await api.delete(`/workspaces/${ws.id}`)
+      return { deleted: true, name: ws.name }
+    },
+  )
+
   define('list_boards', 'List the boards the user can access (id, title, role).', {}, async () => {
     const { data } = await api.get<{
       data: { id: string; title: string; myRole: string; workspaceId: string }[]
