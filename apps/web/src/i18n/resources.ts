@@ -12,6 +12,7 @@ import labels from './locales/hu/labels.json'
 import notification from './locales/hu/notification.json'
 import shortcuts from './locales/hu/shortcuts.json'
 import views from './locales/hu/views.json'
+import voice from './locales/hu/voice.json'
 import workspace from './locales/hu/workspace.json'
 
 /**
@@ -34,6 +35,7 @@ export const resources = {
     notification,
     shortcuts,
     views,
+    voice,
     workspace,
   },
 } as const

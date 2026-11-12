@@ -192,6 +192,11 @@ export function createVoiceService(deps: VoiceServiceDeps) {
     }
   }
 
-  return { check, start, openSessions: (userId: string) => open.get(userId) ?? 0 }
+  return {
+    check,
+    start,
+    available: deps.connector !== null,
+    openSessions: (userId: string) => open.get(userId) ?? 0,
+  }
 }
 export type VoiceService = ReturnType<typeof createVoiceService>

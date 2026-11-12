@@ -4,6 +4,8 @@ import { Link } from 'react-router'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { UserMenu } from '../auth/UserMenu'
 import { SettingsMenu } from './SettingsMenu'
+import { VoiceButton } from '../voice/VoiceButton'
+import { useVoiceAvailable } from '../voice/useVoiceAvailable'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
 import '../../shared/styles/base.css'
 import './Topbar.css'
@@ -15,6 +17,8 @@ type TopbarProps = {
   workspaceId?: string
   /** A `/` gyorsbillentyű ide viszi a fókuszt. */
   searchInputRef?: RefObject<HTMLInputElement | null>
+  /** A nézett tábla; ha megvan és a hangasszisztens be van állítva, megjelenik a mikrofon gomb. */
+  boardId?: string
 }
 
 export function Topbar({
@@ -23,8 +27,10 @@ export function Topbar({
   totalTasks,
   workspaceId,
   searchInputRef,
+  boardId,
 }: TopbarProps) {
   const { t } = useTranslation(['board', 'common'])
+  const voiceAvailable = useVoiceAvailable()
 
   return (
     <header className="topbar">
@@ -50,6 +56,7 @@ export function Topbar({
 
       <div className="topbar-actions">
         <div className="stat-pill">{t('board:taskCount', { count: totalTasks })}</div>
+        {voiceAvailable && boardId && <VoiceButton key={boardId} boardId={boardId} />}
         <NotificationBell />
         <SettingsMenu workspaceId={workspaceId} />
         <UserMenu />

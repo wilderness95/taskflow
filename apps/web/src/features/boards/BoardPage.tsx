@@ -126,6 +126,7 @@ export function BoardPage() {
           totalTasks={totalTasks}
           workspaceId={workspaceId}
           searchInputRef={keyboard.searchInputRef}
+          boardId={boardId}
         />
 
         <div className="workspace-layout">
