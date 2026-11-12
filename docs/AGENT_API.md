@@ -102,7 +102,39 @@ oldal. `limit`: 1–200 (alapértelmezés: 50). Ugyanígy lapozható a `GET /boa
 Minden írás naplózódik; `GET /boards/{id}/activity` megmutatja, ki végezte (`actorType`: `user` vagy `api_key`,
 `apiKeyId`, `actorName`), mit (`action`, pl. `card.moved`) és mivel (`entityType`, `entityId`, `meta`).
 
-## 8. Korlátok
+## 8. Konfliktuskezelés és valós idő
+
+**Optimista zárolás.** A kártya `version` mezője minden módosításnál (mozgatás is) nő. Ha a `PATCH /cards/{id}` vagy
+a `POST /cards/{id}/move` törzsében megadod az általad ismert `version`-t, és közben valaki módosította a kártyát, a
+válasz `409 version_conflict`, a `details.card` pedig az aktuális kártya: olvasd át, és próbáld újra az új verzióval.
+`version` nélkül a módosítás feltétel nélkül érvényes (utolsó írás nyer).
+
+**Felelősök és kommentek.**
+
+```sh
+# a hozzárendelhető felhasználók (a tábla résztvevői)
+curl -H "Authorization: Bearer $KEY" $TF/boards/$BOARD_ID/participants
+# felelősök beállítása (teljes lista)
+curl -X PATCH $TF/cards/$CARD_ID -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"assigneeIds":["'$USER_ID'"]}'
+# hozzászólás említéssel (a szövegben `@Név`, a `mentionIds` a megemlítettek azonosítói)
+curl -X POST $TF/cards/$CARD_ID/comments -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"body":"@Olga megnéznéd?","mentionIds":["'$OLGA_ID'"]}'
+```
+
+A kulccsal írt komment `viaApiKey: true` jelzést kap; az értesítések (`/notifications`) csak böngészős
+bejelentkezéssel érhetők el.
+
+**Élő változások (SSE).** `GET /boards/{id}/events` (`Accept: text/event-stream`, Bearer kulccsal is) a tábla minden
+változásáról küld egy `board` eseményt (`BoardEvent`: `action`, `entityType`, `entityId`, `cardId`, `actorType`, ...).
+Az esemény csak jelzés: olvasd újra az érintett erőforrást (pl. `GET /cards/{id}` vagy a snapshot). Szakadás után
+csatlakozz újra, és olvasd újra a táblát, mert a kimaradt események nem játszódnak vissza.
+
+```sh
+curl -N -H "Authorization: Bearer $KEY" $TF/boards/$BOARD_ID/events
+```
+
+## 9. Korlátok
 
 - Kulcsonként percenként legfeljebb `API_KEY_RATE_LIMIT_MAX` kérés (alapértelmezés: 120); a `X-RateLimit-Limit` és
   `X-RateLimit-Remaining` fejléc mutatja az állást. Túllépés után `429` és `Retry-After`.

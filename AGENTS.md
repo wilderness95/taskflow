@@ -10,7 +10,7 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
   - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer, argon2 (megvan).
   - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k (megvan); hibakódok (tervezett).
 - Üzemeltetés: Docker Compose (`web` + `api` + `cloudflared`) a házi szerveren, Cloudflare Tunnelen, saját domainnel.
-- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) kész; az M4 (nyilvános API, API kulcsok) készül az `m4-public-api` branchen. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
+- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) és az M4 (nyilvános API, API kulcsok) kész; az M5 (kollaboráció, valós idő) készül az `m5-collaboration` branchen. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
 
 ## Parancsok
 - Fejlesztés: `npm run dev`
@@ -38,6 +38,10 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 - API kulcs: `Authorization: Bearer`; az auth plugin (`auth/auth.plugin.ts`) Actor-rá képezi (`type: 'api_key'`), a hatókört az útvonalra (`auth/scopes.ts`, `requiredScope`) kényszeríti. Új végpont hatókörét ott ellenőrizd: alapból GET = `boards:read`, írás = `boards:write`; fiók-/tagság-/kulcskezelés `session`-only (kulccsal 403).
 - Író kérésen az `Idempotency-Key` fejléc támogatott (`plugins/idempotency.ts`); listák cursor-lapozásúak (`pageQuerySchema`: `limit`, `cursor` -> `{ data, nextCursor }`).
 - Az OpenAPI-leírás változásakor futtasd: `npm run openapi:export -w @taskflow/api` (a `docs/openapi.json` frissességét teszt ellenőrzi). Agent-útmutató: `docs/AGENT_API.md`.
+- Valós idő: az `ActivityService.record` egyben a tábla SSE csatornájára (`events/eventBus.ts`, `GET /boards/{id}/events`) is publikál, ezért minden író műveletet naplózz; az esemény csak jelzés, a kliens újraolvassa az adatot.
+- Optimista zárolás: kártya módosítása/mozgatása opcionális `version`-nel; eltérésnél `409 version_conflict`. A frontend a szerkesztő megnyitásakor látott verziót küldi.
+- Értesítés (`NotificationsService.notify`): hozzárendelés és említés után a service hívja; a kiváltó saját magát nem értesíti. Az `/notifications` végpontok session-only.
+- Hozzárendelhető és megemlíthető felhasználó csak a tábla résztvevője (`AccessService.participants`).
 
 ## Többnyelvűség (i18n)
 Egyelőre csak magyar UI van, de a kódnak fordításra késznek kell lennie:
