@@ -10,7 +10,7 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
   - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer, argon2 (megvan).
   - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k (megvan); hibakódok (tervezett).
 - Üzemeltetés: Docker Compose (`web` + `api` + `cloudflared`) a házi szerveren, Cloudflare Tunnelen, saját domainnel.
-- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) készül az `m3-workspaces` branchen. Az API-hoz bejelentkezés kell (session cookie); a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
+- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) kész; az M4 (nyilvános API, API kulcsok) készül az `m4-public-api` branchen. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
 
 ## Parancsok
 - Fejlesztés: `npm run dev`
@@ -34,7 +34,10 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 - REST, `/api/v1/...`, egységes hibaformátum: `{ error: { code, message, details } }`.
 - Minden új végponthoz kell: Zod séma, OpenAPI-leírás, integrációs teszt és jogosultsági teszt (a megengedett és a tiltott eset is).
 - API kulcs: csak a hash-e tárolható; a scope-ok és a tulajdonos jogainak metszete érvényes.
-- Írási műveletek naplózása az `activity_log`-ba (actor-típussal).
+- Írási műveletek naplózása az `activity_log`-ba (actor-típussal): a service-ek az `ActivityService.record(actor, ...)`-t hívják.
+- API kulcs: `Authorization: Bearer`; az auth plugin (`auth/auth.plugin.ts`) Actor-rá képezi (`type: 'api_key'`), a hatókört az útvonalra (`auth/scopes.ts`, `requiredScope`) kényszeríti. Új végpont hatókörét ott ellenőrizd: alapból GET = `boards:read`, írás = `boards:write`; fiók-/tagság-/kulcskezelés `session`-only (kulccsal 403).
+- Író kérésen az `Idempotency-Key` fejléc támogatott (`plugins/idempotency.ts`); listák cursor-lapozásúak (`pageQuerySchema`: `limit`, `cursor` -> `{ data, nextCursor }`).
+- Az OpenAPI-leírás változásakor futtasd: `npm run openapi:export -w @taskflow/api` (a `docs/openapi.json` frissességét teszt ellenőrzi). Agent-útmutató: `docs/AGENT_API.md`.
 
 ## Többnyelvűség (i18n)
 Egyelőre csak magyar UI van, de a kódnak fordításra késznek kell lennie:
