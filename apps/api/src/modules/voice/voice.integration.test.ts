@@ -68,13 +68,16 @@ async function setup(
 async function connect(
   app: ReturnType<typeof buildApp>,
   cookie: string,
-  boardId: string,
+  boardId: string | undefined,
   origin = ORIGIN,
 ) {
+  const query = boardId?.startsWith('workspace:')
+    ? `workspaceId=${boardId.slice('workspace:'.length)}`
+    : `boardId=${boardId}`
   const messages: VoiceServerMessage[] = []
   const audio: Buffer[] = []
   const socket = await app.injectWS(
-    `/api/v1/voice/live?boardId=${boardId}`,
+    `/api/v1/voice/live?${query}`,
     { headers: { cookie, origin, 'cf-connecting-ip': '203.0.113.7' } },
     {
       onInit: (ws) =>
@@ -205,5 +208,32 @@ describe('voice live', () => {
     first.terminate()
     await new Promise((r) => setTimeout(r, 50))
     await expect(connect(app, owner.cookie, board.id)).resolves.toBeDefined()
+  })
+  it('works from the workspace page: tools default to the viewed workspace', async () => {
+    const { connector, state } = fakeConnector()
+    const { app, owner } = await setup({ connector })
+    const wsId = (await owner.api.get('/workspaces')).body.data[0].id as string
+    const { socket, got } = await connect(app, owner.cookie, `workspace:${wsId}`)
+    await got.until(() => got.messages.some((m) => m.type === 'ready'))
+    expect(state.params!.systemInstruction).toContain(wsId)
+
+    state.events!.onToolCalls([{ id: 'w1', name: 'create_board', args: { title: 'Új tábla' } }])
+    await got.until(() => state.toolResponses.length === 1)
+    expect(state.toolResponses[0]!.response).toHaveProperty('output')
+    const boards = (await owner.api.get(`/workspaces/${wsId}/boards`)).body.data
+    expect(boards.map((b: { title: string }) => b.title)).toContain('Új tábla')
+    socket.terminate()
+  })
+
+  it('does not let a non-member open a voice session for a workspace (404)', async () => {
+    const { connector } = fakeConnector()
+    const { app, owner } = await setup({ connector })
+    const wsId = (await owner.api.get('/workspaces')).body.data[0].id as string
+    const other = await signUp(app, 'other2@example.com', 'Ödön')
+    const res = await app.inject({
+      url: `/api/v1/voice/live?workspaceId=${wsId}`,
+      headers: { cookie: other.cookie, origin: ORIGIN },
+    })
+    expect(res.statusCode).toBe(404)
   })
 })

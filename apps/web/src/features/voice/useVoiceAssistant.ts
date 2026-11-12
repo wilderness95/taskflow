@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { voiceServerMessageSchema, type VoiceState } from '@taskflow/shared'
 import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { createPcmPlayer, startMicCapture, type MicCapture, type PcmPlayer } from './voiceAudio'
@@ -34,9 +35,15 @@ const isSupported = () =>
   typeof AudioWorkletNode !== 'undefined' &&
   typeof WebSocket !== 'undefined'
 
-const socketUrl = (boardId: string) => {
+/** Az asszisztens kontextusa: a nézett tábla és/vagy munkaterület (mindkettő hiányozhat). */
+export type VoiceScope = { boardId?: string; workspaceId?: string }
+
+const socketUrl = (scope: VoiceScope) => {
   const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${scheme}://${window.location.host}/api/v1/voice/live?boardId=${encodeURIComponent(boardId)}`
+  const query = new URLSearchParams()
+  if (scope.boardId) query.set('boardId', scope.boardId)
+  if (scope.workspaceId) query.set('workspaceId', scope.workspaceId)
+  return `${scheme}://${window.location.host}/api/v1/voice/live?${query.toString()}`
 }
 
 /**
@@ -44,7 +51,8 @@ const socketUrl = (boardId: string) => {
  * (16 kHz PCM) és a válasz lejátszása (24 kHz PCM). A tábla frissítését nem itt kezeljük: az
  * asszisztens módosításai az SSE csatornán és a TanStack Query-n át maguktól megjelennek.
  */
-export function useVoiceAssistant(boardId: string) {
+export function useVoiceAssistant(scope: VoiceScope) {
+  const queryClient = useQueryClient()
   const [state, dispatch] = useReducer(reducer, initialState)
   const socketRef = useRef<WebSocket | null>(null)
   const micRef = useRef<MicCapture | null>(null)
@@ -87,7 +95,7 @@ export function useVoiceAssistant(boardId: string) {
 
     const player = createPcmPlayer()
     playerRef.current = player
-    const socket = new WebSocket(socketUrl(boardId))
+    const socket = new WebSocket(socketUrl(scope))
     socket.binaryType = 'arraybuffer'
     socketRef.current = socket
     let ready = false
@@ -118,6 +126,13 @@ export function useVoiceAssistant(boardId: string) {
           droppingRef.current = false
           player.flush()
           break
+        case 'tool':
+          // A munkaterület-listának nincs SSE csatornája: az asszisztens módosítása után frissítünk.
+          if (message.ok) {
+            void queryClient.invalidateQueries({ queryKey: ['boards'] })
+            void queryClient.invalidateQueries({ queryKey: ['workspaces'] })
+          }
+          break
         case 'error':
           fail(message.code)
           break
@@ -135,7 +150,7 @@ export function useVoiceAssistant(boardId: string) {
     } catch {
       fail('mic_denied')
     }
-  }, [boardId, fail])
+  }, [scope.boardId, scope.workspaceId, queryClient, fail])
 
   /** Kézi megszakítás: a lejátszás azonnal leáll, a munkamenet tovább hallgat. */
   const interrupt = useCallback(() => {
