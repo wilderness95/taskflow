@@ -16,7 +16,7 @@ describe('app', () => {
     const app = makeApp()
     const res = await app.inject('/api/v1/health')
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ status: 'ok', voice: false })
+    expect(res.json()).toEqual({ status: 'ok', voice: false, registrationOpen: true })
   })
 
   it('unknown route uses the unified error format', async () => {

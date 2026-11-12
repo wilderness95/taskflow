@@ -243,7 +243,13 @@ export function buildApp(
     maxMinutes: config.VOICE_MAX_MINUTES,
     logger: app.log,
   })
-  app.register(healthRoutes({ voice: voice.available }))
+  app.register(
+    healthRoutes({
+      voice: voice.available,
+      registrationOpen: () =>
+        config.REGISTRATION_MODE === 'open' || authRepo.countLoginUsers() === 0,
+    }),
+  )
   const secrets = createSecretBox(config.SESSION_SECRET)
   const webhooksRepo = createWebhooksRepository(db)
   const dispatcher = createWebhookDispatcher({
