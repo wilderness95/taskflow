@@ -125,6 +125,7 @@ export function BoardPage() {
           onSearchChange={setSearchQuery}
           totalTasks={totalTasks}
           workspaceId={workspaceId}
+          searchInputRef={keyboard.searchInputRef}
         />
 
         <div className="workspace-layout">
@@ -145,10 +146,6 @@ export function BoardPage() {
               </p>
             )}
             <BoardToolbar
-              meta={meta}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              searchInputRef={keyboard.searchInputRef}
               activeFilterCount={countActiveFilters(filter)}
               filtersOpen={filtersOpen}
               onToggleFilters={() => setFiltersOpen((open) => !open)}
