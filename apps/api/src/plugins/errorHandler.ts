@@ -25,7 +25,7 @@ export function registerErrorHandler(app: FastifyInstance): void {
       const e = err as { code?: string; message: string }
       return reply.status(status).send({
         error: {
-          code: e.code?.toLowerCase() ?? 'bad_request',
+          code: status === 413 ? 'payload_too_large' : (e.code?.toLowerCase() ?? 'bad_request'),
           message: e.message,
           details: null,
         },

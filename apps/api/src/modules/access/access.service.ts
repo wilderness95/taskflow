@@ -21,8 +21,13 @@ const forbidden = () => new AppError(403, 'forbidden', 'You are not allowed to d
  * az erőforrást, az nem létezik számára (404); ha olvashatja, de a művelet tiltott: 403.
  */
 export function createAccessService(repo: AccessRepository) {
-  const requireBoard = (actor: PolicyActor, boardId: string, action: BoardAction): BoardAccess => {
-    const board = repo.findActiveBoard(boardId)
+  const resolveBoard = (
+    actor: PolicyActor,
+    boardId: string,
+    action: BoardAction,
+    archived: boolean,
+  ): BoardAccess => {
+    const board = archived ? repo.findArchivedBoard(boardId) : repo.findActiveBoard(boardId)
     if (!board?.workspaceId) throw notFound('Board')
     const resource: BoardResource = {
       type: 'board',
@@ -35,6 +40,9 @@ export function createAccessService(repo: AccessRepository) {
     if (!can(actor, action, resource)) throw forbidden()
     return { board, role, resource }
   }
+
+  const requireBoard = (actor: PolicyActor, boardId: string, action: BoardAction): BoardAccess =>
+    resolveBoard(actor, boardId, action, false)
 
   const viaBoardId = (
     actor: PolicyActor,
@@ -71,6 +79,12 @@ export function createAccessService(repo: AccessRepository) {
 
   return {
     requireBoard,
+    /** Az archivált táblára (visszaállítás); az aktívra 404. */
+    requireArchivedBoard: (actor: PolicyActor, boardId: string, action: BoardAction) =>
+      resolveBoard(actor, boardId, action, true),
+    /** Az archivált kártyára (visszaállítás); az aktívra 404. */
+    requireArchivedCard: (actor: PolicyActor, cardId: string, action: BoardAction) =>
+      viaBoardId(actor, repo.boardIdOfArchivedCard(cardId), action, 'Card'),
     participants,
     /** Pusztán lekérdezés (nem dob hibát): engedi-e a policy a műveletet az adott erőforráson. */
     can: (actor: PolicyActor, action: BoardAction, resource: BoardResource): boolean =>
@@ -93,6 +107,8 @@ export function createAccessService(repo: AccessRepository) {
       viaBoardId(actor, repo.boardIdOfColumn(columnId), action, 'Column'),
     requireCard: (actor: PolicyActor, cardId: string, action: BoardAction) =>
       viaBoardId(actor, repo.boardIdOfCard(cardId), action, 'Card'),
+    requireLabel: (actor: PolicyActor, labelId: string, action: BoardAction) =>
+      viaBoardId(actor, repo.boardIdOfLabel(labelId), action, 'Label'),
     requireChecklist: (actor: PolicyActor, checklistId: string, action: BoardAction) =>
       viaBoardId(actor, repo.boardIdOfChecklist(checklistId), action, 'Checklist'),
     requireChecklistItem: (actor: PolicyActor, itemId: string, action: BoardAction) =>

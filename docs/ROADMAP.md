@@ -299,17 +299,47 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 - archiválás és visszaállítás (kártya, oszlop, tábla);
 - billentyűparancsok, akadálymentesítés (drag & drop billentyűzettel is).
 
-### M7 – AI integráció és üzemeltetés (Sprint 12)
-- **MCP szerver** csomag (`apps/mcp`): eszközök: `list_boards`, `get_board`, `create_card`, `move_card`, `update_card`, `add_comment`;
+**Megvalósítás (kész):**
+- Archiválás: `POST /cards|columns/{id}/archive|restore`, `POST /boards/{id}/restore`, `GET /boards/{id}/archive` (az archivált kártyák és oszlopok), `GET /workspaces/{id}/boards?archived=true` (a visszaállítható táblák). Az archivált oszlop a kártyáival együtt eltűnik; kártya csak aktív oszlopba állítható vissza (`409 column_archived`). A tábla archiválása a meglévő `DELETE /boards/{id}`.
+- Címkék: `PATCH|DELETE /labels/{id}` (a név táblánként egyedi, `409 label_name_taken`; törléskor a kártyákról is lekerül). Címkekezelő ablak a táblán.
+- Több checklist: a backend eddig is támogatta, a szerkesztő és a mentés most kezeli (hozzáadás, törlés, átnevezés).
+- Csatolmányok: `attachments` tábla, `FileStore` felület (lokális fájltár: `UPLOAD_DIR`, `MAX_UPLOAD_MB`; S3-kompatibilis megvalósítás ugyanezen a felületen később). Feltöltés nyers törzzsel (`POST /cards/{id}/attachments?name=...`, a `Content-Type` a fájl típusa; nincs multipart függőség), letöltés `GET /attachments/{id}/file` (csak PNG/JPEG/GIF/WebP jelenik meg a böngészőben, minden más letöltés; `nosniff` + `sandbox` CSP). Borító: `coverAttachmentId` a kártyán.
+- Szűrés: a kártyalistán új `assigneeId` szűrő; a UI haladó szűrője (prioritás, címke, felelős, határidő-állapot) kliensoldali, tiszta függvényekkel (`packages/shared/src/boardFilter.ts`). Mentett szűrők felhasználónként és táblánként (`GET|POST /boards/{id}/filters`, `DELETE /filters/{id}`, csak session).
+- Nézetek: Lista (táblázat), Naptár (hónap, hétfői kezdéssel) és Idővonal (sáv a létrehozástól a határidőig; legfeljebb 120 napos tengely); a Kanban szűrői mindegyikre érvényesek.
+- Billentyűzet és akadálymentesség: gyorsbillentyűk (`N`, `/`, `F`, `?`, `1`-`4`), kártya és oszlop áthelyezése Alt + nyíllal (aria-live felolvasással), `Enter` a kártya megnyitása; a párbeszédablak `role="dialog"`, Escape zárja, fókuszcsapda és fókuszvisszaadás.
+
+### M7 – AI integráció (élő hangvezérlés) és üzemeltetés (Sprint 12)
+- **MCP szerver** csomag (`apps/mcp`): beszédbarát, összevont eszközök:
+  - `list_boards`;
+  - `get_board_overview`: egy hívásban a snapshot és a résztvevők (a korábbi `get_board` helyett);
+  - `create_card`: egy körben kezeli a felelősöket, a címkéket és a checklistet is;
+  - `search_cards`: szöveges keresés (hangalapú kereséshez);
+  - `move_card`, `update_card`, `add_comment`;
+  - az API-t hívó HTTP wrapper minden POST/PATCH/DELETE kéréshez automatikus `Idempotency-Key`-t (UUID) generál, és hálózati hiba esetén ugyanazzal a kulccsal újrapróbál;
+  - alapértelmezett átvitel: **stdio**. Így ugyanaz a csomag szolgálja ki a szerveren a beépített hangasszisztenst, és helyben futtatva bármilyen külső AI eszközt (Claude Desktop, Gemini CLI, OpenCode);
+- **Élő hangasszisztens backend (`apps/api`, `modules/voice/`):**
+  - `WS /api/v1/voice/live?boardId=...`: csak bejelentkezett sessionnel érhető el (API kulccsal nem); a Gemini API kulcs nem kerülhet a böngészőbe;
+  - Gemini Live híd: a végpont `ai.live.connect` munkamenetet nyit (`@google/genai`), az `@taskflow/mcp` szervert belső hálózaton (stdio vagy lokális HTTP) rákötve oda-vissza streameli a nyers PCM audiót, és továbbítja a tool hívásokat;
+  - kontextus injektálás: az aktuális dátumot és az éppen nézett `boardId`-t a szerver automatikusan beteszi a `systemInstruction`-be;
+  - az MCP hívások a belépett felhasználó jogaival futnak (a service-réteg policyja érvényes, nincs külön jogosultsági út);
+- **Élő hangasszisztens frontend (`apps/web`):**
+  - mikrofon gomb lebegő vagy a Topbar-ba épített vezérlőként, állapotjelzővel (hallgat / gondolkodik / beszél) és megszakítás/barge-in támogatással;
+  - Web Audio réteg: `AudioWorklet` a mikrofon 16 kHz-es PCM rögzítéséhez, pufferelt lejátszó a 24 kHz-es válaszokhoz;
+  - a tábla élő frissítését nem kell külön megírni: az M5-ös SSE és a TanStack Query automatikusan frissít, amint az MCP létrehoz vagy módosít egy kártyát;
+  - minden felirat és állapotszöveg i18n kulccsal;
 - webhookok HMAC-aláírással (opcionális);
 - Docker Compose véglegesítése:
+  - `GEMINI_API_KEY` felvétele a `.env.example`-be (érték nélkül) és az `api` konténerbe;
   - healthcheckek, `restart: unless-stopped`, log-rotáció;
   - napi SQLite-mentés sidecarral, rotációval (opcionálisan Litestream);
   - visszaállítási próba dokumentálva;
+- üzemeltetési teszt: a WebSocket átmegy-e a Cloudflare Tunnelen és az nginx proxyn (upgrade fejlécek, hosszú idejű kapcsolat);
 - opcionálisan Cloudflare Access a `/api/docs` elé;
 - E2E tesztcsomag (Playwright) a kritikus folyamatokra;
 - teljesítmény: indexek, N+1 ellenőrzés;
 - döntési pont: maradhat-e SQLite, vagy Postgres-re kell váltani (Drizzle miatt olcsó váltás).
+
+> **Új függőségek (egyeztetés kell a bevezetésük előtt, az `AGENTS.md` szerint):** `@google/genai`, az MCP SDK (`@modelcontextprotocol/sdk`) és egy WebSocket-támogatás az API-hoz (pl. `@fastify/websocket`).
 
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 
@@ -325,8 +355,9 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 | Téma | Megjegyzés |
 |---|---|
 | SQLite skálázhatóság | Egy szerverpéldány mellett jó; több példány vagy nagy írási terhelés esetén Postgres. Drizzle miatt alacsony váltási költség. |
+| Gemini Live | A Gemini API kulcs csak a szerveren élhet (`.env`); a hang-végpont session-only, és felhasználónként korlátozni kell az egyidejű munkameneteket. A Live API használata költséggel jár. |
 | Gmail SMTP | Napi ~500 levél limit; a Google bármikor szigoríthat. A `Mailer` interfész miatt a csere (pl. Brevo, Resend, SES) egy új implementáció + env-módosítás. Az app password kizárólag `.env`-ben lehet. |
 | Házi szerver | Áramszünet vagy hardverhiba esetén nincs redundancia: a mentést a szerveren kívülre is ki kell vinni (pl. másik gép vagy felhő). |
-| Cloudflare Tunnel | SSE-nél heartbeat kell; nagy fájlfeltöltésnél a Cloudflare free csomag 100 MB-os kéréslimitje érvényes. |
+| Cloudflare Tunnel | SSE-nél és a hangasszisztens WebSocketjénél heartbeat/ping kell (az nginx-nek upgrade fejléc és hosszú timeout); nagy fájlfeltöltésnél a Cloudflare free csomag 100 MB-os kéréslimitje érvényes. |
 
 **Lezárt döntések:** TypeScript; a stack függőségei jóváhagyva; Gmail app password; Docker Compose + cloudflared a házi szerveren, saját domainnel; egyelőre csak magyar, i18n-re felkészítve.

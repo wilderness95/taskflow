@@ -1,4 +1,5 @@
 import {
+  boardArchiveSchema,
   boardListSchema,
   boardMemberListSchema,
   boardParticipantListSchema,
@@ -7,6 +8,7 @@ import {
   boardSummarySchema,
   type CreateBoardRequest,
   boardSchema,
+  type BoardArchiveDto,
   type BoardDto,
   type BoardSummaryDto,
   type CardDto,
@@ -25,6 +27,7 @@ import {
   type UpdateCardInput,
   type UpdateChecklistItemInput,
   type UpdateColumnInput,
+  type UpdateLabelInput,
 } from '@taskflow/shared'
 import { apiFetch } from './client'
 
@@ -32,6 +35,25 @@ export const listBoards = async (workspaceId?: string): Promise<BoardSummaryDto[
   boardListSchema.parse(
     await apiFetch('GET', workspaceId ? `/workspaces/${workspaceId}/boards` : '/boards'),
   ).data
+
+/** A munkaterület archivált táblái (csak azok, amelyeket a felhasználó vissza is állíthat). */
+export const listArchivedBoards = async (workspaceId: string): Promise<BoardSummaryDto[]> =>
+  boardListSchema.parse(await apiFetch('GET', `/workspaces/${workspaceId}/boards?archived=true`))
+    .data
+
+export const archiveBoard = (boardId: string) => apiFetch('DELETE', `/boards/${boardId}`)
+export const restoreBoard = (boardId: string) =>
+  apiFetch<BoardSummaryDto>('POST', `/boards/${boardId}/restore`)
+
+export const getBoardArchive = async (boardId: string): Promise<BoardArchiveDto> =>
+  boardArchiveSchema.parse(await apiFetch('GET', `/boards/${boardId}/archive`))
+
+export const archiveColumn = (columnId: string) =>
+  apiFetch<ColumnDto>('POST', `/columns/${columnId}/archive`)
+export const restoreColumn = (columnId: string) =>
+  apiFetch<ColumnDto>('POST', `/columns/${columnId}/restore`)
+export const archiveCard = (cardId: string) => apiFetch<CardDto>('POST', `/cards/${cardId}/archive`)
+export const restoreCard = (cardId: string) => apiFetch<CardDto>('POST', `/cards/${cardId}/restore`)
 
 export const createBoard = async (
   workspaceId: string,
@@ -50,6 +72,11 @@ export const updateBoard = (boardId: string, input: UpdateBoardInput) =>
 
 export const createLabel = (boardId: string, input: CreateLabelInput) =>
   apiFetch<LabelDto>('POST', `/boards/${boardId}/labels`, input)
+
+export const updateLabel = (labelId: string, input: UpdateLabelInput) =>
+  apiFetch<LabelDto>('PATCH', `/labels/${labelId}`, input)
+
+export const deleteLabel = (labelId: string) => apiFetch('DELETE', `/labels/${labelId}`)
 
 export const createColumn = (boardId: string, input: CreateColumnRequest) =>
   apiFetch<ColumnDto>('POST', `/boards/${boardId}/columns`, input)
@@ -79,6 +106,9 @@ export const createChecklist = (cardId: string, input: CreateChecklistRequest) =
 
 export const updateChecklist = (checklistId: string, title: string) =>
   apiFetch<ChecklistDto>('PATCH', `/checklists/${checklistId}`, { title })
+
+export const deleteChecklist = (checklistId: string) =>
+  apiFetch('DELETE', `/checklists/${checklistId}`)
 
 export const createChecklistItem = (checklistId: string, input: CreateChecklistItemInput) =>
   apiFetch<ChecklistItemDto>('POST', `/checklists/${checklistId}/items`, input)

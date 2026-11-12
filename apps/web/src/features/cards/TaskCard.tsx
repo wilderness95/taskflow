@@ -1,9 +1,11 @@
-import { getChecklistProgress, getDueDateState } from '@taskflow/shared'
+import { getChecklistsProgress, getDueDateState } from '@taskflow/shared'
 import { useTranslation } from 'react-i18next'
 import { formatShortDate } from '../../i18n/format'
 import { classNames } from '../../shared/lib/classNames'
+import { attachmentFileUrl } from '../../api/attachments'
 import { AssigneeStack } from './AssigneeStack'
 import type { DragProps } from '../boards/useBoardDrag'
+import { directionFromKey, type MoveDirection } from '../boards/keyboardMove'
 import type { Task } from '../boards/types'
 import '../../shared/styles/buttons.css'
 import '../../shared/styles/tags.css'
@@ -16,6 +18,9 @@ type TaskCardProps = {
   isDropTarget: boolean
   onEdit: () => void
   onDelete: () => void
+  onArchive: () => void
+  /** Alt + nyíl: a kártya áthelyezése billentyűzettel. */
+  onKeyboardMove: (direction: MoveDirection) => void
   /** Olvasási jog: nincs szerkesztés és törlés. */
   readOnly?: boolean
 }
@@ -27,10 +32,12 @@ export function TaskCard({
   isDropTarget,
   onEdit,
   onDelete,
+  onArchive,
+  onKeyboardMove,
   readOnly = false,
 }: TaskCardProps) {
   const { t } = useTranslation('card')
-  const checklistProgress = getChecklistProgress(task.checklist)
+  const checklistProgress = getChecklistsProgress(task.checklists)
   const dueState = getDueDateState(task.dueDate)
 
   return (
@@ -40,27 +47,67 @@ export function TaskCard({
         isDragging && 'is-dragging',
         isDropTarget && 'is-over-target',
       )}
+      data-task-id={task.id}
+      tabIndex={0}
+      aria-keyshortcuts={
+        readOnly ? undefined : 'Enter Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight'
+      }
       onDoubleClick={readOnly ? undefined : onEdit}
+      onKeyDown={(event) => {
+        // A kártyán belüli gombok saját billentyűzet-kezelését nem írjuk felül.
+        if (readOnly || event.target !== event.currentTarget) return
+        const direction = event.altKey ? directionFromKey(event.key) : null
+        if (direction) {
+          event.preventDefault()
+          event.stopPropagation()
+          onKeyboardMove(direction)
+        } else if (event.key === 'Enter') {
+          event.preventDefault()
+          onEdit()
+        }
+      }}
       {...dragProps}
     >
       {isDropTarget && <div className="insert-indicator" aria-hidden="true" />}
+
+      {task.coverAttachmentId && (
+        <img
+          className="task-card-cover"
+          src={attachmentFileUrl(task.coverAttachmentId)}
+          alt=""
+          loading="lazy"
+        />
+      )}
 
       <div className="task-card-top">
         <span className={`priority-pill priority-${task.priority}`}>
           {t(`priority.${task.priority}`)}
         </span>
         {!readOnly && (
-          <button
-            type="button"
-            className="delete-button"
-            aria-label={t('deleteAria', { title: task.title })}
-            onClick={(event) => {
-              event.stopPropagation()
-              onDelete()
-            }}
-          >
-            ×
-          </button>
+          <div className="task-card-tools">
+            <button
+              type="button"
+              className="archive-button"
+              aria-label={t('archiveAria', { title: task.title })}
+              onClick={(event) => {
+                event.stopPropagation()
+                onArchive()
+              }}
+            >
+              🗄
+            </button>
+            <button
+              type="button"
+              className="delete-button"
+              aria-label={t('deleteAria', { title: task.title })}
+              onClick={(event) => {
+                event.stopPropagation()
+                onDelete()
+              }}
+            >
+              ×
+            </button>
+          </div>
         )}
       </div>
 
@@ -82,6 +129,16 @@ export function TaskCard({
         <div className={`task-due ${dueState}`}>
           <span className="task-due-label">{t('dueLabel')}</span>
           <strong>{formatShortDate(task.dueDate)}</strong>
+        </div>
+      )}
+
+      {task.attachmentCount > 0 && (
+        <div
+          className="task-attachments"
+          role="img"
+          aria-label={t('attachments.count', { count: task.attachmentCount })}
+        >
+          📎 {task.attachmentCount}
         </div>
       )}
 

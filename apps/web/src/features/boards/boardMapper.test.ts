@@ -37,6 +37,8 @@ const board: BoardDto = {
           priority: 'high',
           dueDate: null,
           coverImage: null,
+          coverAttachmentId: null,
+          attachmentCount: 0,
           position: 'a0',
           labelIds: ['l1', 'missing'],
           assigneeIds: ['u1'],
@@ -78,12 +80,15 @@ describe('toColumns', () => {
       description: 'Leírás',
       priority: 'high',
       tags: [{ label: 'UI', color: 'blue' }],
+      labelIds: ['l1'],
       assignees: [{ id: 'u1', name: 'Olga', avatarUrl: null }],
       dueDate: undefined,
       coverImage: undefined,
+      attachmentCount: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
       done: true,
       version: 1,
-      checklist: { title: 'Lista', items: [{ id: 'i1', text: 'Egy', done: true }] },
+      checklists: [{ id: 'cl', title: 'Lista', items: [{ id: 'i1', text: 'Egy', done: true }] }],
     })
   })
 })

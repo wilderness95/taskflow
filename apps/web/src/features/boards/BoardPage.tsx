@@ -1,16 +1,20 @@
+import { countActiveFilters, EMPTY_BOARD_FILTER, type BoardFilter } from '@taskflow/shared'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
 import { BoardDialogs } from './BoardDialogs'
 import { BoardHeader } from './BoardHeader'
+import { BoardAltView } from '../views/BoardAltView'
+import { BoardFilterPanel } from '../filters/BoardFilterPanel'
 import { BoardToolbar } from './BoardToolbar'
-import { countTasks, filterColumns } from './filterColumns'
+import { applyBoardFilter, countTasks, filterColumns } from './filterColumns'
 import { Topbar } from './Topbar'
 import { COLUMN_ACCENTS, type Dialog } from './types'
 import { useBoardDrag } from './useBoardDrag'
 import { useBoardData } from './useBoardData'
+import { useBoardKeyboard } from './useBoardKeyboard'
 import './BoardPage.css'
 
 const STATUS_KEYS = {
@@ -22,9 +26,23 @@ const STATUS_KEYS = {
 export function BoardPage() {
   const { t } = useTranslation(['card', 'column', 'board'])
   const { boardId = '' } = useParams()
-  const { status, retry, columns, participants, meta, actions, workspaceId } = useBoardData(boardId)
+  const { status, retry, columns, participants, meta, actions, workspaceId, labels } =
+    useBoardData(boardId)
   const [searchQuery, setSearchQuery] = useState('')
+  const [filter, setFilter] = useState<BoardFilter>(EMPTY_BOARD_FILTER)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [dialog, setDialog] = useState<Dialog | null>(null)
+
+  const keyboard = useBoardKeyboard({
+    columns,
+    canWrite: meta.permissions.write,
+    dialog,
+    setDialog,
+    setActiveView: meta.setActiveView,
+    toggleFilters: () => setFiltersOpen((open) => !open),
+    moveTask: actions.moveTask,
+    reorderColumns: actions.reorderColumns,
+  })
 
   const drag = useBoardDrag({
     onMoveTask: actions.moveTask,
@@ -48,8 +66,12 @@ export function BoardPage() {
   }, [requestedCardId, status, columns, meta.permissions.write, setSearchParams])
 
   const visibleColumns = useMemo(
-    () => filterColumns(columns, searchQuery, (priority) => t(`card:priority.${priority}`)),
-    [columns, searchQuery, t],
+    () =>
+      applyBoardFilter(
+        filterColumns(columns, searchQuery, (priority) => t(`card:priority.${priority}`)),
+        filter,
+      ),
+    [columns, searchQuery, filter, t],
   )
   const totalTasks = useMemo(() => countTasks(columns), [columns])
 
@@ -59,6 +81,11 @@ export function BoardPage() {
       t('column:defaultTitle', { number: index + 1 }),
       COLUMN_ACCENTS[index % COLUMN_ACCENTS.length] ?? 'blue',
     )
+  }
+
+  const navigate = useNavigate()
+  const handleArchiveBoard = () => {
+    actions.archiveBoard().then(() => navigate(workspaceId ? `/w/${workspaceId}` : '/'))
   }
 
   const handleDeleteColumn = (columnId: string) => {
@@ -98,6 +125,7 @@ export function BoardPage() {
           onSearchChange={setSearchQuery}
           totalTasks={totalTasks}
           workspaceId={workspaceId}
+          searchInputRef={keyboard.searchInputRef}
         />
 
         <div className="workspace-layout">
@@ -106,6 +134,9 @@ export function BoardPage() {
               meta={meta}
               onMembers={() => setDialog({ type: 'members' })}
               onActivity={() => setDialog({ type: 'activity' })}
+              onLabels={() => setDialog({ type: 'labels' })}
+              onArchive={() => setDialog({ type: 'archive' })}
+              onArchiveBoard={() => setDialog({ type: 'board-archive' })}
               onAddColumn={handleAddColumn}
             />
             {!meta.permissions.write && (
@@ -113,18 +144,50 @@ export function BoardPage() {
                 {t('board:readOnly')}
               </p>
             )}
-            <BoardToolbar meta={meta} searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-            <Board
-              columns={visibleColumns}
-              drag={drag}
-              onRenameColumn={(columnId) => setDialog({ type: 'column-rename', columnId })}
-              onDeleteColumn={handleDeleteColumn}
-              onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
-              onEditTask={(columnId, task) => setDialog({ type: 'card-edit', columnId, task })}
-              onDeleteTask={actions.deleteTask}
-              readOnly={!meta.permissions.write}
+            <BoardToolbar
+              activeFilterCount={countActiveFilters(filter)}
+              filtersOpen={filtersOpen}
+              onToggleFilters={() => setFiltersOpen((open) => !open)}
             />
+            {filtersOpen && (
+              <BoardFilterPanel
+                boardId={boardId}
+                filter={filter}
+                onChange={setFilter}
+                labels={labels}
+                participants={participants}
+              />
+            )}
+            {meta.activeView === 'kanban' ? (
+              <Board
+                columns={visibleColumns}
+                drag={drag}
+                onRenameColumn={(columnId) => setDialog({ type: 'column-rename', columnId })}
+                onDeleteColumn={handleDeleteColumn}
+                onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
+                onEditTask={(columnId, task) => setDialog({ type: 'card-edit', columnId, task })}
+                onDeleteTask={actions.deleteTask}
+                onArchiveColumn={actions.archiveColumn}
+                onArchiveTask={actions.archiveTask}
+                onKeyboardMoveTask={keyboard.moveTaskByKey}
+                onKeyboardMoveColumn={keyboard.moveColumnByKey}
+                readOnly={!meta.permissions.write}
+              />
+            ) : (
+              <BoardAltView
+                view={meta.activeView}
+                columns={visibleColumns}
+                onOpenTask={
+                  meta.permissions.write
+                    ? (columnId, task) => setDialog({ type: 'card-edit', columnId, task })
+                    : undefined
+                }
+              />
+            )}
           </main>
+          <div className="visually-hidden" role="status" aria-live="polite">
+            {keyboard.announcement}
+          </div>
         </div>
       </div>
 
@@ -136,9 +199,11 @@ export function BoardPage() {
         onSaveTask={actions.saveTask}
         onUpdateColumn={actions.updateColumn}
         onDeleteColumn={actions.deleteColumn}
+        onArchiveBoard={handleArchiveBoard}
         boardId={boardId}
         workspaceId={workspaceId ?? ''}
         canManageMembers={meta.permissions.manageMembers}
+        canWrite={meta.permissions.write}
         isBoardAdmin={meta.permissions.update}
       />
     </div>

@@ -9,12 +9,12 @@ const toTask = (
   done: boolean,
   participants: Map<string, Assignee>,
 ): Task => {
-  const checklist = card.checklists[0]
   return {
     id: card.id,
     title: card.title,
     description: card.description,
     priority: card.priority,
+    labelIds: card.labelIds.filter((id) => labels.some((label) => label.id === id)),
     tags: card.labelIds.flatMap((id) => {
       const label = labels.find((item) => item.id === id)
       return label ? [{ label: label.name, color: label.color }] : []
@@ -24,12 +24,16 @@ const toTask = (
     ),
     dueDate: card.dueDate ?? undefined,
     coverImage: card.coverImage ?? undefined,
+    coverAttachmentId: card.coverAttachmentId ?? undefined,
+    attachmentCount: card.attachmentCount,
+    createdAt: card.createdAt,
     done,
     version: card.version,
-    checklist: checklist && {
+    checklists: card.checklists.map((checklist) => ({
+      id: checklist.id,
       title: checklist.title,
       items: checklist.items.map(({ id, text, done: itemDone }) => ({ id, text, done: itemDone })),
-    },
+    })),
   }
 }
 

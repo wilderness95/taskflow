@@ -9,7 +9,10 @@ import {
   type TaskDraft,
 } from '../cards/taskDraft'
 import { RenameColumnModal } from '../columns/RenameColumnModal'
+import { LabelsModal } from '../labels/LabelsModal'
+import { BoardArchiveModal } from '../archive/BoardArchiveModal'
 import { BoardActivityModal } from '../activity/BoardActivityModal'
+import { ShortcutsModal } from './ShortcutsModal'
 import { BoardMembersModal } from './BoardMembersModal'
 import type { Assignee, ColumnAccent, Columns, Dialog, Task } from './types'
 
@@ -21,9 +24,11 @@ type BoardDialogsProps = {
   onSaveTask: (task: Task, columnId: string, originalColumnId?: string) => void
   onUpdateColumn: (columnId: string, title: string, accent: ColumnAccent) => void
   onDeleteColumn: (columnId: string) => void
+  onArchiveBoard: () => void
   boardId: string
   workspaceId: string
   canManageMembers: boolean
+  canWrite: boolean
   isBoardAdmin: boolean
 }
 
@@ -35,12 +40,14 @@ export function BoardDialogs({
   onSaveTask,
   onUpdateColumn,
   onDeleteColumn,
+  onArchiveBoard,
   boardId,
   workspaceId,
   canManageMembers,
+  canWrite,
   isBoardAdmin,
 }: BoardDialogsProps) {
-  const { t } = useTranslation(['card', 'column'])
+  const { t } = useTranslation(['card', 'column', 'archive'])
 
   if (!dialog) {
     return null
@@ -74,8 +81,8 @@ export function BoardDialogs({
           mode={isEdit ? 'edit' : 'create'}
           initialDraft={
             isEdit
-              ? createDraftFromTask(dialog.task, dialog.columnId, defaultChecklistTitle)
-              : createEmptyDraft(dialog.columnId, defaultChecklistTitle)
+              ? createDraftFromTask(dialog.task, dialog.columnId)
+              : createEmptyDraft(dialog.columnId)
           }
           columns={columns}
           participants={participants}
@@ -113,6 +120,30 @@ export function BoardDialogs({
           confirmLabel={t('column:delete.confirm')}
           onConfirm={() => {
             onDeleteColumn(dialog.columnId)
+            onClose()
+          }}
+          onClose={onClose}
+        />
+      )
+
+    case 'shortcuts':
+      return <ShortcutsModal onClose={onClose} />
+
+    case 'labels':
+      return <LabelsModal boardId={boardId} canEdit={canWrite} onClose={onClose} />
+
+    case 'archive':
+      return <BoardArchiveModal boardId={boardId} canRestore={canWrite} onClose={onClose} />
+
+    case 'board-archive':
+      return (
+        <ConfirmModal
+          eyebrow={t('archive:board.eyebrow')}
+          title={t('archive:board.title')}
+          message={t('archive:board.message')}
+          confirmLabel={t('archive:board.confirm')}
+          onConfirm={() => {
+            onArchiveBoard()
             onClose()
           }}
           onClose={onClose}

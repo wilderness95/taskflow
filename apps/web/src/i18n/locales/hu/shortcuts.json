@@ -1,0 +1,18 @@
+{
+  "eyebrow": "Súgó",
+  "title": "Billentyűparancsok",
+  "open": "Billentyűparancsok",
+  "items": {
+    "newCard": { "keys": "N", "label": "Új kártya az első oszlopban" },
+    "search": { "keys": "/", "label": "Ugrás a keresőre" },
+    "filters": { "keys": "F", "label": "Haladó szűrők megnyitása / bezárása" },
+    "views": { "keys": "1 – 4", "label": "Nézet váltása: Kanban, Lista, Naptár, Idővonal" },
+    "help": { "keys": "?", "label": "Ez a súgó" },
+    "openCard": { "keys": "Enter", "label": "A kiválasztott kártya megnyitása" },
+    "moveCard": {
+      "keys": "Alt + ↑ ↓ ← →",
+      "label": "A kiválasztott kártya áthelyezése (fel, le, másik oszlopba)"
+    },
+    "moveColumn": { "keys": "Alt + ← →", "label": "A kiválasztott oszlop áthelyezése" }
+  }
+}

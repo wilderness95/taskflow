@@ -21,11 +21,26 @@ export async function apiFetch<T = void>(
   path: string,
   body?: Body,
 ): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method,
+  return request<T>(method, path, {
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   })
+}
+
+/** Fájlfeltöltés: a nyers tartalom a törzs, a típus a `Content-Type` (a fájl neve a `path` lekérdezésében). */
+export function apiUpload<T>(path: string, file: File): Promise<T> {
+  return request<T>('POST', path, {
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file,
+  })
+}
+
+async function request<T>(
+  method: string,
+  path: string,
+  init: { headers?: Record<string, string>; body?: BodyInit },
+): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`, { method, ...init })
 
   if (response.status === 204) {
     return undefined as T

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, gte, inArray, isNull, lte, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, gte, inArray, isNotNull, isNull, lte, or, sql } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
 import { cardAssignees, cardLabels, cards, columns } from '../../db/schema.js'
 
@@ -7,6 +7,7 @@ export type CardFilter = {
   columnId?: string
   priority?: CardRow['priority']
   labelId?: string
+  assigneeId?: string
   dueBefore?: string
   dueAfter?: string
   q?: string
@@ -23,6 +24,18 @@ export function createCardsRepository(db: Db) {
         .from(cards)
         .where(and(eq(cards.id, id), isNull(cards.archivedAt)))
         .get(),
+    /** Archivált is (a visszaállításhoz és az archívum nézethez). */
+    findAnyById: (id: string): CardRow | undefined =>
+      db.select().from(cards).where(eq(cards.id, id)).get(),
+    listArchivedForBoard: (boardId: string): CardRow[] =>
+      db
+        .select({ card: cards })
+        .from(cards)
+        .innerJoin(columns, eq(columns.id, cards.columnId))
+        .where(and(eq(columns.boardId, boardId), isNotNull(cards.archivedAt)))
+        .orderBy(desc(cards.archivedAt))
+        .all()
+        .map((r) => r.card),
     listByColumnIds: (columnIds: string[]): CardRow[] =>
       columnIds.length === 0
         ? []
@@ -47,11 +60,15 @@ export function createCardsRepository(db: Db) {
           and(
             eq(columns.boardId, boardId),
             isNull(cards.archivedAt),
+            isNull(columns.archivedAt),
             afterId ? gt(cards.id, afterId) : undefined,
             filter.columnId ? eq(cards.columnId, filter.columnId) : undefined,
             filter.priority ? eq(cards.priority, filter.priority) : undefined,
             filter.labelId
               ? sql`exists (select 1 from ${cardLabels} where ${cardLabels.cardId} = ${cards.id} and ${cardLabels.labelId} = ${filter.labelId})`
+              : undefined,
+            filter.assigneeId
+              ? sql`exists (select 1 from ${cardAssignees} where ${cardAssignees.cardId} = ${cards.id} and ${cardAssignees.userId} = ${filter.assigneeId})`
               : undefined,
             filter.dueBefore ? lte(cards.dueDate, filter.dueBefore) : undefined,
             filter.dueAfter ? gte(cards.dueDate, filter.dueAfter) : undefined,

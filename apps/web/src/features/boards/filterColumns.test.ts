@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { countTasks, filterColumns } from './filterColumns'
+import { EMPTY_BOARD_FILTER } from '@taskflow/shared'
+import { applyBoardFilter, countTasks, filterColumns } from './filterColumns'
 import { makeColumn, makeTask, taskIdsOf } from './testUtils'
 import type { Columns } from './types'
 
@@ -45,5 +46,42 @@ describe('filterColumns', () => {
 describe('countTasks', () => {
   it('összeszámolja a kártyákat az összes oszlopban', () => {
     expect(countTasks(state())).toBe(3)
+  })
+})
+
+describe('applyBoardFilter', () => {
+  const columns = (): Columns => ({
+    todo: {
+      ...makeColumn([]),
+      tasks: [
+        makeTask('a', { priority: 'high', labelIds: ['l1'] }),
+        makeTask('b', { priority: 'low', labelIds: ['l1', 'l2'] }),
+        makeTask('c', {
+          priority: 'high',
+          assignees: [{ id: 'u1', name: 'Olga', avatarUrl: null }],
+        }),
+      ],
+    },
+    done: makeColumn([]),
+  })
+
+  it('üres szűrőnél ugyanazt az objektumot adja vissza', () => {
+    const state = columns()
+    expect(applyBoardFilter(state, EMPTY_BOARD_FILTER)).toBe(state)
+  })
+
+  it('prioritásra és címkére ÉS kapcsolattal szűr, az oszlopok megmaradnak', () => {
+    const result = applyBoardFilter(columns(), {
+      ...EMPTY_BOARD_FILTER,
+      priorities: ['high'],
+      labelIds: ['l1'],
+    })
+    expect(taskIdsOf(result, 'todo')).toEqual(['a'])
+    expect(Object.keys(result)).toEqual(['todo', 'done'])
+  })
+
+  it('felelősre szűr', () => {
+    const result = applyBoardFilter(columns(), { ...EMPTY_BOARD_FILTER, assigneeIds: ['u1'] })
+    expect(taskIdsOf(result, 'todo')).toEqual(['c'])
   })
 })

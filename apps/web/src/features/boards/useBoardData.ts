@@ -95,6 +95,12 @@ export function useBoardData(boardId: string) {
     (current, { columnId, beforeColumnId }) => moveColumnInBoard(current, columnId, beforeColumnId),
   )
   const saveTask = useWrite((input: SaveCardInput) => saveCard(board as BoardDto, input))
+  const archiveBoard = useMutation({
+    mutationFn: () => api.archiveBoard(boardId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['boards'] }),
+  })
+  const archiveTask = useWrite((taskId: string) => api.archiveCard(taskId))
+  const archiveColumn = useWrite((columnId: string) => api.archiveColumn(columnId))
   const deleteTask = useWrite((taskId: string) => api.deleteCard(taskId))
   const moveTask = useOptimisticWrite(
     ({
@@ -153,6 +159,7 @@ export function useBoardData(boardId: string) {
     workspaceId: board?.workspaceId,
     columns,
     participants,
+    labels: board?.labels ?? [],
     meta: {
       title: board?.title ?? '',
       setTitle: (title: string) => updateBoard.mutate({ title }),
@@ -169,6 +176,9 @@ export function useBoardData(boardId: string) {
       updateColumn: (columnId: string, title: string, accent: ColumnAccent) =>
         updateColumn.mutate({ columnId, title, accent }),
       deleteColumn: (columnId: string) => deleteColumn.mutate(columnId),
+      archiveColumn: (columnId: string) => archiveColumn.mutate(columnId),
+      archiveTask: (taskId: string) => archiveTask.mutate(taskId),
+      archiveBoard: () => archiveBoard.mutateAsync(),
       reorderColumns: (sourceId: string, targetId: string) => {
         const ids = Object.keys(columns)
         const source = ids.indexOf(sourceId)
