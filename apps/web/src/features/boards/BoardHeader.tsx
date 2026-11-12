@@ -13,6 +13,7 @@ type BoardHeaderProps = {
   onMembers: () => void
   onActivity: () => void
   onArchive: () => void
+  onLabels: () => void
   onArchiveBoard: () => void
   onAddColumn: () => void
 }
@@ -22,10 +23,11 @@ export function BoardHeader({
   onMembers,
   onActivity,
   onArchive,
+  onLabels,
   onArchiveBoard,
   onAddColumn,
 }: BoardHeaderProps) {
-  const { t } = useTranslation(['board', 'archive'])
+  const { t } = useTranslation(['board', 'archive', 'labels'])
 
   return (
     <section className="board-header">
@@ -60,6 +62,9 @@ export function BoardHeader({
         </button>
         <button type="button" className="secondary-button" onClick={onActivity}>
           {t('activity.open')}
+        </button>
+        <button type="button" className="secondary-button" onClick={onLabels}>
+          {t('labels:open')}
         </button>
         <button type="button" className="secondary-button" onClick={onArchive}>
           {t('archive:open')}

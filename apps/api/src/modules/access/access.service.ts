@@ -107,6 +107,8 @@ export function createAccessService(repo: AccessRepository) {
       viaBoardId(actor, repo.boardIdOfColumn(columnId), action, 'Column'),
     requireCard: (actor: PolicyActor, cardId: string, action: BoardAction) =>
       viaBoardId(actor, repo.boardIdOfCard(cardId), action, 'Card'),
+    requireLabel: (actor: PolicyActor, labelId: string, action: BoardAction) =>
+      viaBoardId(actor, repo.boardIdOfLabel(labelId), action, 'Label'),
     requireChecklist: (actor: PolicyActor, checklistId: string, action: BoardAction) =>
       viaBoardId(actor, repo.boardIdOfChecklist(checklistId), action, 'Checklist'),
     requireChecklistItem: (actor: PolicyActor, itemId: string, action: BoardAction) =>

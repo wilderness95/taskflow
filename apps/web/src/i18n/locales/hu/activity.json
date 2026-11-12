@@ -30,7 +30,9 @@
       "restored": "{{actor}} visszaállított egy oszlopot"
     },
     "label": {
-      "created": "{{actor}} létrehozta a(z) „{{name}}” címkét"
+      "created": "{{actor}} létrehozta a(z) „{{name}}” címkét",
+      "updated": "{{actor}} módosította a(z) „{{name}}” címkét",
+      "deleted": "{{actor}} törölte a(z) „{{name}}” címkét"
     },
     "card": {
       "created": "{{actor}} létrehozta a(z) „{{title}}” kártyát",

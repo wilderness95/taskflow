@@ -163,6 +163,13 @@ export function createBoardsRepository(db: Db) {
             .from(labels)
             .where(and(eq(labels.boardId, boardId), inArray(labels.id, ids)))
             .all(),
+    findLabel: (id: string): LabelRow | undefined =>
+      db.select().from(labels).where(eq(labels.id, id)).get(),
+    updateLabel: (id: string, values: Partial<typeof labels.$inferInsert>): LabelRow | undefined =>
+      db.update(labels).set(values).where(eq(labels.id, id)).returning().get(),
+    deleteLabel: (id: string): void => {
+      db.delete(labels).where(eq(labels.id, id)).run()
+    },
     insertLabel: (values: typeof labels.$inferInsert): LabelRow =>
       db.insert(labels).values(values).returning().get(),
     lastColumnPosition: (boardId: string): string | null =>

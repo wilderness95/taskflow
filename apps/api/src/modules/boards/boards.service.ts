@@ -19,6 +19,7 @@ import {
   type PolicyActor,
   type SetBoardMemberInput,
   type UpdateBoardInput,
+  type UpdateLabelInput,
 } from '@taskflow/shared'
 import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
@@ -242,6 +243,33 @@ export function createBoardsService(
       return { ...label }
     },
 
+    /** Címke átnevezése / átszínezése; a tábla címkenevei egyediek (kis-nagybetűtől függetlenül). */
+    updateLabel(actor: Actor, id: string, input: UpdateLabelInput): LabelDto {
+      const { board } = access.requireLabel(actor, id, 'board:write')
+      const label = repo.findLabel(id)!
+      if (
+        input.name &&
+        repo
+          .listLabels(board.id)
+          .some((l) => l.id !== id && l.name.toLowerCase() === input.name!.toLowerCase())
+      ) {
+        throw new AppError(409, 'label_name_taken', 'A label with this name already exists')
+      }
+      const updated = repo.updateLabel(id, input)!
+      log(actor, board.id, 'label.updated', 'label', id, {
+        name: updated.name,
+        previousName: label.name,
+        fields: Object.keys(input),
+      })
+      return { ...updated }
+    },
+    /** A címke törlése leveszi a kártyákról is. */
+    removeLabel(actor: Actor, id: string): void {
+      const { board } = access.requireLabel(actor, id, 'board:write')
+      const label = repo.findLabel(id)!
+      repo.deleteLabel(id)
+      log(actor, board.id, 'label.deleted', 'label', id, { name: label.name })
+    },
     /** A tábla résztvevői (hozzárendelhető és megemlíthető felhasználók). */
     listParticipants(actor: Actor, boardId: string): BoardMemberDto[] {
       const { board } = access.requireBoard(actor, boardId, 'board:read')

@@ -10,6 +10,7 @@ import {
   pageQuerySchema,
   setBoardMemberSchema,
   updateBoardSchema,
+  updateLabelSchema,
 } from '@taskflow/shared'
 import { requireActor } from '../../auth/auth.plugin.js'
 import type { BoardsService } from './boards.service.js'
@@ -87,6 +88,19 @@ export function boardsRoutes(service: BoardsService) {
         createLabelSchema.parse(req.body),
       )
       return reply.status(201).send(label)
+    })
+
+    app.patch('/api/v1/labels/:id', async (req) =>
+      service.updateLabel(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        updateLabelSchema.parse(req.body),
+      ),
+    )
+
+    app.delete('/api/v1/labels/:id', async (req, reply) => {
+      service.removeLabel(requireActor(req), idParamsSchema.parse(req.params).id)
+      return reply.status(204).send()
     })
 
     app.get('/api/v1/boards/:id/snapshot', async (req) =>

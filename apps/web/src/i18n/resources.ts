@@ -7,6 +7,7 @@ import card from './locales/hu/card.json'
 import column from './locales/hu/column.json'
 import comment from './locales/hu/comment.json'
 import common from './locales/hu/common.json'
+import labels from './locales/hu/labels.json'
 import notification from './locales/hu/notification.json'
 import workspace from './locales/hu/workspace.json'
 
@@ -25,6 +26,7 @@ export const resources = {
     card,
     column,
     comment,
+    labels,
     notification,
     workspace,
   },
