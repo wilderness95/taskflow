@@ -351,6 +351,37 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 
 > **Új függőségek (az M7-ben bevezetve):** `@google/genai`, `@modelcontextprotocol/sdk`, `@fastify/websocket`, és fejlesztői függőségként a `@playwright/test`.
 
+### M8 – Listák: teendő- és bevásárlólista (Sprint 13)
+
+Cél: egyszerű, kanban nélküli lista (teendő, bevásárlás), amely munkaterületen belül megosztható. Az Android-kliens (M9) előtt készül.
+
+**Döntések:** önálló `lists` modul (nem a tábla/kártya modell fölött); a megosztás a meglévő munkaterületi tagságon és szerepkörökön alapul (policy: `packages/shared/src/authz.ts`, új `list:*` műveletek); nincs új külső függőség.
+
+**Első verzió:**
+- Lista (`lists`: név, munkaterület, `archivedAt`), szakasz (`list_sections`: pl. zöldség, tejtermék; `position`) és tétel (`list_items`: szöveg, `done`, `position`, opcionális szakasz, `version`).
+- Tétel felvétele, szerkesztése, kipipálása, törlése; sorrend húzással és billentyűzettel (fractional indexing); szakaszok kezelése és tételek szakaszok közti mozgatása.
+- Ismétlődő tételek: a tétel `recurring` jelölést kap; a „Visszaállítás" művelet a kipipált ismétlődő tételeket újra nyitja (a nem ismétlődő kipipáltak törölhetők egy lépésben: „Kipipáltak törlése").
+- Archiválás (nem végleges törlés), visszaállítás külön végponttal; az archivált elem a listákból kimarad.
+- API: `/api/v1/workspaces/{id}/lists`, `/lists/{id}`, `/lists/{id}/sections`, `/lists/{id}/items`, `/items/{id}`; Zod sémák a `shared`-ben, OpenAPI, cursor-lapozás, `Idempotency-Key`; GET = `boards:read`, írás = `boards:write` scope (az `auth/scopes.ts`-ben ellenőrizve).
+- Naplózás: az írások az `ActivityService.record`-on át az `activity_log`-ba, valós idejű frissítés külön SSE csatornán (munkaterületi/listaszintű), hogy a közös lista élőben frissüljön.
+- Frontend: `features/lists/` (listaválasztó, listanézet, gyors tételfelvétel Enterrel, szakaszok, mobilbarát nagy érintési felületek), `lists` i18n névtér, hozzáférhetőség (billentyűzet, aria-live); TanStack Query hookok az `api/` kliensen át.
+- Migráció `drizzle-kit generate`-tel; tesztek: tiszta függvények (sorrend, ismétlődő visszaállítás) unit, integrációs és jogosultsági teszt (viewer nem írhat, nem tag nem lát), E2E egy forgatókönyvvel.
+- Becslés: kb. 3–5 nap.
+
+**Nincs az első verzióban:** határidő/emlékeztető, mennyiség/egység mezők, MCP-eszköz a listákhoz (később, a meglévő végpontokra épülve).
+
+### M9 – Android: PWA + TWA, GitHub Release (opcionális, még nem ütemezett)
+
+Cél: a webes kliens mobilon is használható, és telepíthető Android appként. Play Store **nem** cél; az APK terjesztése GitHub Releases-en át történik.
+
+- Mobil responsive UI (tábla, kártyamodal, navigáció) és touch drag & drop (hosszú nyomás, görgetés-ütközés kezelése).
+- PWA alapok: manifest, maskable ikonok, service worker (app shell cache, offline jelzés), SSE újracsatlakozás háttér/előtér váltáskor.
+- TWA csomagolás Bubblewrappel (dev-eszköz, nem repo-függőség), `/.well-known/assetlinks.json` kiszolgálása a `web` konténerből az aláírókulcs SHA-256 ujjlenyomatával.
+- GitHub Actions: tag-re (`v*`) aláírt APK build és csatolás a Releasehez; a keystore és a jelszavak csak GitHub Secretsben.
+- Frissítés: a webes tartalom a szerverről frissül; az APK-frissítéshez ajánlott az Obtainium.
+- Opcionális, később: Web Push (VAPID; új függőség és migráció, egyeztetést igényel), mikrofon/hangasszisztens teszt TWA-ban.
+- Becslés: kb. 2 hét.
+
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 
 - Minden új végpont: Zod séma a `shared`-ben, integrációs teszt, jogosultsági teszt és OpenAPI-leírás.
