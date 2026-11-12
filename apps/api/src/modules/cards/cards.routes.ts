@@ -32,6 +32,14 @@ export function cardsRoutes(service: CardsService, checklists: ChecklistsService
       ),
     )
 
+    app.post('/api/v1/cards/:id/archive', async (req) =>
+      service.archive(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
+    app.post('/api/v1/cards/:id/restore', async (req) =>
+      service.restore(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
     app.post('/api/v1/cards/:id/move', async (req) =>
       service.move(
         requireActor(req),

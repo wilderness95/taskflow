@@ -5,6 +5,7 @@
     "low": "Alacsony"
   },
   "noDescription": "Nincs hozzácsatolt leírás.",
+  "archiveAria": "Archiváld a {{title}} feladatot",
   "deleteAria": "Töröld a {{title}} feladatot",
   "dueLabel": "Határidő",
   "modal": {
@@ -26,6 +27,23 @@
     "tagsPlaceholder": "UI, UX, Marketing",
     "dueDate": "Határidő"
   },
+  "attachments": {
+    "count_one": "{{count, number}} csatolmány",
+    "count_other": "{{count, number}} csatolmány",
+    "title": "Csatolmányok",
+    "upload": "Fájl csatolása",
+    "uploading": "Feltöltés...",
+    "empty": "Nincs csatolmány.",
+    "download": "Letöltés: {{name}}",
+    "delete": "Törlés",
+    "deleteAria": "Csatolmány törlése: {{name}}",
+    "makeCover": "Legyen borító",
+    "removeCover": "Borító levétele",
+    "cover": "Borító",
+    "tooLarge": "A fájl túl nagy.",
+    "uploadError": "A feltöltés nem sikerült.",
+    "loadError": "A csatolmányok betöltése nem sikerült."
+  },
   "assignees": {
     "label": "Felelősök",
     "empty": "Nincs hozzárendelhető felhasználó.",
@@ -33,11 +51,14 @@
   },
   "checklist": {
     "defaultTitle": "Content Checklist",
-    "toggleAria": "Checklist bejelölése",
-    "delete": "Delete",
+    "sectionAria": "Checklistek",
+    "titleAria": "Checklist címe",
+    "add": "+ Checklist hozzáadása",
+    "delete": "Törlés",
+    "deleteItemAria": "Tétel törlése",
     "empty": "Nincs elem a listában.",
-    "itemPlaceholder": "Add an item",
-    "addItem": "Add an item",
+    "itemPlaceholder": "Új tétel",
+    "addItem": "+ Tétel hozzáadása",
     "check": "Kijelölés",
     "uncheck": "Kijelölés megszüntetése"
   }

@@ -8,6 +8,14 @@ import {
   cardListQuerySchema,
   cardListSchema,
   pageQuerySchema,
+  attachmentListSchema,
+  createSavedFilterSchema,
+  savedFilterListSchema,
+  savedFilterSchema,
+  attachmentSchema,
+  uploadAttachmentQuerySchema,
+  boardArchiveSchema,
+  boardListQuerySchema,
   boardListSchema,
   boardMemberListSchema,
   boardParticipantListSchema,
@@ -37,6 +45,7 @@ import {
   moveCardSchema,
   moveColumnSchema,
   updateBoardSchema,
+  updateLabelSchema,
   updateCardSchema,
   updateChecklistItemSchema,
   updateChecklistSchema,
@@ -79,12 +88,18 @@ export type Operation = {
   errors?: number[]
   /** A sikeres válasz nem JSON, hanem esemény-folyam (`text/event-stream`). */
   stream?: boolean
+  /** A kérés törzse a fájl nyers tartalma (`application/octet-stream`). */
+  upload?: boolean
+  /** A sikeres válasz a fájl nyers tartalma. */
+  download?: boolean
 }
 
 const board = { tag: 'Boards' }
 const column = { tag: 'Columns' }
 const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
+const attachment = { tag: 'Attachments' }
+const filter = { tag: 'Saved filters' }
 const comment = { tag: 'Comments' }
 const notification = { tag: 'Notifications' }
 const auth = { tag: 'Auth' }
@@ -327,7 +342,9 @@ export const operations: Operation[] = [
     ...board,
     method: 'get',
     path: '/workspaces/{id}/boards',
-    summary: 'List the boards I can read in a workspace',
+    summary:
+      'List the boards I can read in a workspace (`archived=true`: the archived boards I can restore)',
+    query: boardListQuerySchema,
     success: { status: 200, schema: boardListSchema },
   },
   {
@@ -418,6 +435,20 @@ export const operations: Operation[] = [
   {
     ...board,
     method: 'post',
+    path: '/boards/{id}/restore',
+    summary: 'Restore an archived board (board admin)',
+    success: { status: 200, schema: boardSummarySchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/archive',
+    summary: 'List the archived cards and columns of a board',
+    success: { status: 200, schema: boardArchiveSchema },
+  },
+  {
+    ...board,
+    method: 'post',
     path: '/boards/{id}/columns',
     summary: 'Create a column at the end of the board',
     body: createColumnSchema,
@@ -431,6 +462,22 @@ export const operations: Operation[] = [
     body: createLabelSchema,
     success: { status: 201, schema: labelSchema },
   },
+  {
+    ...board,
+    method: 'patch',
+    path: '/labels/{id}',
+    summary: 'Rename or recolor a label (names are unique per board)',
+    body: updateLabelSchema,
+    success: { status: 200, schema: labelSchema },
+    errors: [409],
+  },
+  {
+    ...board,
+    method: 'delete',
+    path: '/labels/{id}',
+    summary: 'Delete a label (it is removed from all cards)',
+    success: { status: 204 },
+  },
 
   {
     ...column,
@@ -438,6 +485,20 @@ export const operations: Operation[] = [
     path: '/columns/{id}',
     summary: 'Update a column',
     body: updateColumnSchema,
+    success: { status: 200, schema: columnSchema },
+  },
+  {
+    ...column,
+    method: 'post',
+    path: '/columns/{id}/archive',
+    summary: 'Archive a column together with its cards',
+    success: { status: 200, schema: columnSchema },
+  },
+  {
+    ...column,
+    method: 'post',
+    path: '/columns/{id}/restore',
+    summary: 'Restore an archived column',
     success: { status: 200, schema: columnSchema },
   },
   {
@@ -492,6 +553,77 @@ export const operations: Operation[] = [
     body: updateCardSchema,
     success: { status: 200, schema: cardSchema },
     errors: [409, 422],
+  },
+  {
+    ...filter,
+    method: 'get',
+    path: '/boards/{id}/filters',
+    summary: 'List my saved card filters on a board (session only)',
+    success: { status: 200, schema: savedFilterListSchema },
+  },
+  {
+    ...filter,
+    method: 'post',
+    path: '/boards/{id}/filters',
+    summary: 'Save a card filter on a board under a name (session only)',
+    body: createSavedFilterSchema,
+    success: { status: 201, schema: savedFilterSchema },
+    errors: [409, 422],
+  },
+  {
+    ...filter,
+    method: 'delete',
+    path: '/filters/{id}',
+    summary: 'Delete one of my saved filters (session only)',
+    success: { status: 204 },
+  },
+  {
+    ...attachment,
+    method: 'get',
+    path: '/cards/{id}/attachments',
+    summary: 'List the attachments of a card',
+    success: { status: 200, schema: attachmentListSchema },
+  },
+  {
+    ...attachment,
+    method: 'post',
+    path: '/cards/{id}/attachments',
+    summary:
+      'Attach a file: the raw file as the body (`Content-Type` = file type), the file name in `name`',
+    query: uploadAttachmentQuerySchema,
+    upload: true,
+    success: { status: 201, schema: attachmentSchema },
+    errors: [413, 415],
+  },
+  {
+    ...attachment,
+    method: 'get',
+    path: '/attachments/{id}/file',
+    summary: 'Download the file (images inline, everything else as a download)',
+    download: true,
+    success: { status: 200 },
+  },
+  {
+    ...attachment,
+    method: 'delete',
+    path: '/attachments/{id}',
+    summary: 'Delete an attachment (clears the card cover if it was the cover)',
+    success: { status: 204 },
+  },
+  {
+    ...card,
+    method: 'post',
+    path: '/cards/{id}/archive',
+    summary: 'Archive a card (hidden from the board, restorable)',
+    success: { status: 200, schema: cardSchema },
+  },
+  {
+    ...card,
+    method: 'post',
+    path: '/cards/{id}/restore',
+    summary: 'Restore an archived card to the end of its column',
+    success: { status: 200, schema: cardSchema },
+    errors: [409],
   },
   {
     ...card,

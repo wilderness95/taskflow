@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
+import { BoardMoreMenu } from './BoardMoreMenu'
 import { BoardTitle } from './BoardTitle'
 import type { BoardMeta } from './useBoardData'
 import { ViewSwitcher } from './ViewSwitcher'
@@ -12,11 +13,22 @@ type BoardHeaderProps = {
   meta: BoardMeta
   onMembers: () => void
   onActivity: () => void
+  onArchive: () => void
+  onLabels: () => void
+  onArchiveBoard: () => void
   onAddColumn: () => void
 }
 
-export function BoardHeader({ meta, onMembers, onActivity, onAddColumn }: BoardHeaderProps) {
-  const { t } = useTranslation('board')
+export function BoardHeader({
+  meta,
+  onMembers,
+  onActivity,
+  onArchive,
+  onLabels,
+  onArchiveBoard,
+  onAddColumn,
+}: BoardHeaderProps) {
+  const { t } = useTranslation(['board', 'archive', 'labels'])
 
   return (
     <section className="board-header">
@@ -46,12 +58,24 @@ export function BoardHeader({ meta, onMembers, onActivity, onAddColumn }: BoardH
         />
         <ViewSwitcher activeView={meta.activeView} onChange={meta.setActiveView} />
 
-        <button type="button" className="secondary-button" onClick={onMembers}>
-          {t('members.open')}
-        </button>
-        <button type="button" className="secondary-button" onClick={onActivity}>
-          {t('activity.open')}
-        </button>
+        <BoardMoreMenu
+          items={[
+            { key: 'members', label: t('members.open'), onSelect: onMembers },
+            { key: 'activity', label: t('activity.open'), onSelect: onActivity },
+            { key: 'labels', label: t('labels:open'), onSelect: onLabels },
+            { key: 'archive', label: t('archive:open'), onSelect: onArchive },
+            ...(meta.permissions.update
+              ? [
+                  {
+                    key: 'archive-board',
+                    label: t('archive:board.archive'),
+                    onSelect: onArchiveBoard,
+                    danger: true,
+                  },
+                ]
+              : []),
+          ]}
+        />
         {meta.permissions.write && (
           <button type="button" className="primary-button" onClick={onAddColumn}>
             {t('addColumn')}

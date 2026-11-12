@@ -1,0 +1,14 @@
+{
+  "open": "Címkék",
+  "eyebrow": "Tábla",
+  "title": "Címkék kezelése",
+  "empty": "Még nincs címke. Kártyán a címkék mezőben hozhatsz létre újat.",
+  "loadError": "A címkék betöltése nem sikerült.",
+  "nameAria": "Címke neve",
+  "colorAria": "Címke színe: {{name}}",
+  "save": "Mentés",
+  "delete": "Törlés",
+  "deleteAria": "Címke törlése: {{name}}",
+  "nameTaken": "Ilyen nevű címke már van ezen a táblán.",
+  "saveError": "A címke mentése nem sikerült."
+}

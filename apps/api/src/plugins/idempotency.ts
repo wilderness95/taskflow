@@ -37,7 +37,13 @@ export function registerIdempotency(app: FastifyInstance, repo: IdempotencyRepos
     }
     const userId = req.actor.id
     const fingerprint = createHash('sha256')
-      .update(`${req.method} ${req.url}\n${JSON.stringify(req.body ?? null)}`)
+      .update(
+        `${req.method} ${req.url}\n${
+          Buffer.isBuffer(req.body)
+            ? createHash('sha256').update(req.body).digest('hex')
+            : JSON.stringify(req.body ?? null)
+        }`,
+      )
       .digest('hex')
 
     repo.deleteOlderThan(new Date(Date.now() - TTL_MS))

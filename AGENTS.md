@@ -10,7 +10,7 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
   - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer, argon2 (megvan).
   - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k (megvan); hibakódok (tervezett).
 - Üzemeltetés: Docker Compose (`web` + `api` + `cloudflared`) a házi szerveren, Cloudflare Tunnelen, saját domainnel.
-- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) és az M4 (nyilvános API, API kulcsok) kész; az M5 (kollaboráció, valós idő) készül az `m5-collaboration` branchen. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
+- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) és az M4 (nyilvános API, API kulcsok) kész; az M5 (kollaboráció, valós idő) kész; az M6 (funkcióbővítés: archiválás, címkekezelés, csatolmányok, szűrők, nézetek, billentyűzet) az `m6-features` branchen készült. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
 
 ## Parancsok
 - Fejlesztés: `npm run dev`
@@ -41,7 +41,14 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 - Valós idő: az `ActivityService.record` egyben a tábla SSE csatornájára (`events/eventBus.ts`, `GET /boards/{id}/events`) is publikál, ezért minden író műveletet naplózz; az esemény csak jelzés, a kliens újraolvassa az adatot.
 - Optimista zárolás: kártya módosítása/mozgatása opcionális `version`-nel; eltérésnél `409 version_conflict`. A frontend a szerkesztő megnyitásakor látott verziót küldi.
 - Értesítés (`NotificationsService.notify`): hozzárendelés és említés után a service hívja; a kiváltó saját magát nem értesíti. Az `/notifications` végpontok session-only.
+- Archiválás: kártya, oszlop és tábla soha nem törlődik véglegesen archiváláskor (`archivedAt`); az archivált elem a listákból, a snapshotból és a keresésből kimarad, a visszaállítás külön végpont. Új lekérdezésnél ügyelj az `archivedAt` szűrésre (kártya, oszlop, tábla).
+- Csatolmány: a fájl a `FileStore`-on (`files/fileStore.ts`) át tárolódik, a kulcs szerveroldali ULID, a felhasználói fájlnév csak megjelenítendő adat; letöltésnél csak a biztonságos képtípus megy `inline`. Kártya törlésekor a fájlokat is töröld.
+- Mentett szűrő: személyes nézet-beállítás, session-only, nem kerül az `activity_log`-ba.
 - Hozzárendelhető és megemlíthető felhasználó csak a tábla résztvevője (`AccessService.participants`).
+
+## Hozzáférhetőség
+- Minden interaktív elem billentyűzettel is elérhető és látható fókuszú (`:focus-visible`); a modalok a `shared/ui/Modal`-t használják (dialog szerep, Escape, fókuszcsapda).
+- Új gyorsbillentyű a `useBoardKeyboard`-ban él, és kerüljön be a `shortcuts` névtérbe (súgó ablak).
 
 ## Többnyelvűség (i18n)
 Egyelőre csak magyar UI van, de a kódnak fordításra késznek kell lennie:

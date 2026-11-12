@@ -205,6 +205,7 @@ export const columns = sqliteTable('columns', {
   accent: text('accent', { enum: TAG_COLORS }).notNull(),
   isDone: integer('is_done', { mode: 'boolean' }).notNull().default(false),
   position: text('position').notNull(),
+  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
 })
 
 export const cards = sqliteTable('cards', {
@@ -217,6 +218,8 @@ export const cards = sqliteTable('cards', {
   priority: text('priority', { enum: PRIORITIES }).notNull().default('medium'),
   dueDate: text('due_date'),
   coverImage: text('cover_image'),
+  /** A borítóként beállított csatolmány (`attachments.id`); törléskor a service nullázza. */
+  coverAttachmentId: text('cover_attachment_id'),
   position: text('position').notNull(),
   createdBy: text('created_by')
     .notNull()
@@ -327,6 +330,45 @@ export const notifications = sqliteTable(
     index('notifications_user_idx').on(t.userId, t.id),
     uniqueIndex('notifications_dedupe_idx').on(t.userId, t.dedupeKey),
   ],
+)
+
+/** Kártyához csatolt fájl; a tartalom a `FileStore`-ban él a `storageKey` alatt. */
+export const attachments = sqliteTable(
+  'attachments',
+  {
+    id: id(),
+    cardId: text('card_id')
+      .notNull()
+      .references(() => cards.id, { onDelete: 'cascade' }),
+    fileName: text('file_name').notNull(),
+    mimeType: text('mime_type').notNull(),
+    size: integer('size').notNull(),
+    storageKey: text('storage_key').notNull().unique(),
+    uploadedBy: text('uploaded_by')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('attachments_card_idx').on(t.cardId)],
+)
+
+/** A felhasználó saját, mentett kártyaszűrői egy táblán. */
+export const savedFilters = sqliteTable(
+  'saved_filters',
+  {
+    id: id(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    /** JSON (`BoardFilter`). */
+    filter: text('filter').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('saved_filters_name_idx').on(t.boardId, t.userId, t.name)],
 )
 
 export const checklists = sqliteTable('checklists', {

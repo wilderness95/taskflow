@@ -12,6 +12,9 @@
   "taskCount_one": "{{count, number}} feladat",
   "taskCount_other": "{{count, number}} feladat",
   "settings": "Beállítások",
+  "settingsMenu": {
+    "workspaceMembers": "Munkaterület tagjai"
+  },
   "editTitleAria": "Táblacím szerkesztése",
   "star": {
     "add": "Kedvenc hozzáadása",
@@ -54,6 +57,13 @@
       "label": "Idővonal",
       "short": "Idővonal"
     }
+  },
+  "a11y": {
+    "taskMoved": "„{{title}}” áthelyezve: {{column}}, {{position}}. hely a(z) {{total}} közül.",
+    "columnMoved": "„{{title}}” oszlop áthelyezve: {{position}}. hely a(z) {{total}} közül."
+  },
+  "more": {
+    "open": "Több ▾"
   },
   "addColumn": "+ Új oszlop",
   "loading": "Tábla betöltése...",

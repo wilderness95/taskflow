@@ -1,7 +1,9 @@
+import type { RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { UserMenu } from '../auth/UserMenu'
+import { SettingsMenu } from './SettingsMenu'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
 import '../../shared/styles/base.css'
 import './Topbar.css'
@@ -11,9 +13,17 @@ type TopbarProps = {
   onSearchChange: (query: string) => void
   totalTasks: number
   workspaceId?: string
+  /** A `/` gyorsbillentyű ide viszi a fókuszt. */
+  searchInputRef?: RefObject<HTMLInputElement | null>
 }
 
-export function Topbar({ searchQuery, onSearchChange, totalTasks, workspaceId }: TopbarProps) {
+export function Topbar({
+  searchQuery,
+  onSearchChange,
+  totalTasks,
+  workspaceId,
+  searchInputRef,
+}: TopbarProps) {
   const { t } = useTranslation(['board', 'common'])
 
   return (
@@ -28,6 +38,8 @@ export function Topbar({ searchQuery, onSearchChange, totalTasks, workspaceId }:
       <div className="search-box">
         <span className="search-icon">⌕</span>
         <input
+          ref={searchInputRef}
+          aria-keyshortcuts="/"
           type="text"
           placeholder={t('board:search.placeholder')}
           aria-label={t('board:search.aria')}
@@ -39,9 +51,7 @@ export function Topbar({ searchQuery, onSearchChange, totalTasks, workspaceId }:
       <div className="topbar-actions">
         <div className="stat-pill">{t('board:taskCount', { count: totalTasks })}</div>
         <NotificationBell />
-        <button type="button" className="icon-button" aria-label={t('board:settings')}>
-          ⚙
-        </button>
+        <SettingsMenu workspaceId={workspaceId} />
         <UserMenu />
       </div>
     </header>

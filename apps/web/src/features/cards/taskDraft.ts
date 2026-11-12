@@ -1,6 +1,6 @@
-import { DEFAULT_PRIORITY, parseTags, type ChecklistItem, type Priority } from '@taskflow/shared'
+import { DEFAULT_PRIORITY, parseTags, type Priority } from '@taskflow/shared'
 import { createId } from '../../shared/lib/ids'
-import type { Assignee, Task } from '../boards/types'
+import type { Assignee, Task, TaskChecklist } from '../boards/types'
 
 /** A kártya szerkesztőűrlapjának állapota (a mezők még szövegként, nyers formában). */
 export type TaskDraft = {
@@ -12,12 +12,10 @@ export type TaskDraft = {
   /** Vesszővel elválasztott címkék. */
   tags: string
   assigneeIds: string[]
-  checklistTitle: string
-  checklistItems: ChecklistItem[]
+  checklists: TaskChecklist[]
 }
 
-// A checklist alapértelmezett címe fordítandó szöveg, ezért a hívó (UI) adja át `t()`-ből.
-export const createEmptyDraft = (columnId: string, defaultChecklistTitle: string): TaskDraft => ({
+export const createEmptyDraft = (columnId: string): TaskDraft => ({
   title: '',
   description: '',
   priority: DEFAULT_PRIORITY,
@@ -25,15 +23,10 @@ export const createEmptyDraft = (columnId: string, defaultChecklistTitle: string
   dueDate: '',
   tags: '',
   assigneeIds: [],
-  checklistTitle: defaultChecklistTitle,
-  checklistItems: [],
+  checklists: [],
 })
 
-export const createDraftFromTask = (
-  task: Task,
-  columnId: string,
-  defaultChecklistTitle: string,
-): TaskDraft => ({
+export const createDraftFromTask = (task: Task, columnId: string): TaskDraft => ({
   title: task.title,
   description: task.description,
   priority: task.priority,
@@ -41,8 +34,10 @@ export const createDraftFromTask = (
   dueDate: task.dueDate ?? '',
   tags: task.tags.map((tag) => tag.label).join(', '),
   assigneeIds: task.assignees.map((assignee) => assignee.id),
-  checklistTitle: task.checklist?.title ?? defaultChecklistTitle,
-  checklistItems: task.checklist?.items ?? [],
+  checklists: task.checklists.map((checklist) => ({
+    ...checklist,
+    items: checklist.items.map((item) => ({ ...item })),
+  })),
 })
 
 type BuildTaskOptions = {
@@ -65,8 +60,11 @@ export const buildTaskFromDraft = (
   description: draft.description.trim(),
   priority: draft.priority,
   done,
+  // A piszkozatból épülő feladat csak mentéshez kell; a csatolmányokat külön végpontok kezelik.
+  attachmentCount: 0,
   dueDate: draft.dueDate,
   tags: parseTags(draft.tags),
+  labelIds: [],
   assignees: draft.assigneeIds.map(
     (assigneeId) =>
       participants.find((p) => p.id === assigneeId) ?? {
@@ -75,14 +73,15 @@ export const buildTaskFromDraft = (
         avatarUrl: null,
       },
   ),
-  checklist: {
-    title: draft.checklistTitle.trim() || defaultChecklistTitle,
-    items: draft.checklistItems
+  checklists: draft.checklists.map((checklist) => ({
+    id: checklist.id,
+    title: checklist.title.trim() || defaultChecklistTitle,
+    items: checklist.items
       .filter((item) => item.text.trim())
       .map((item) => ({
         id: item.id ?? createId('item'),
         text: item.text.trim(),
         done: Boolean(item.done),
       })),
-  },
+  })),
 })

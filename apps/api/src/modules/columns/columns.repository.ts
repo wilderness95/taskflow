@@ -1,4 +1,4 @@
-import { asc, count, desc, eq } from 'drizzle-orm'
+import { and, asc, count, desc, eq, isNull } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
 import { cards, columns } from '../../db/schema.js'
 
@@ -17,7 +17,7 @@ export function createColumnsRepository(db: Db) {
       db
         .select({ id: columns.id, position: columns.position })
         .from(columns)
-        .where(eq(columns.boardId, boardId))
+        .where(and(eq(columns.boardId, boardId), isNull(columns.archivedAt)))
         .orderBy(asc(columns.position))
         .all(),
     countCards: (id: string): number =>

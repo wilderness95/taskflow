@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import {
+  boardListQuerySchema,
   boardMemberParamsSchema,
   cardListQuerySchema,
   createBoardSchema,
@@ -9,6 +10,7 @@ import {
   pageQuerySchema,
   setBoardMemberSchema,
   updateBoardSchema,
+  updateLabelSchema,
 } from '@taskflow/shared'
 import { requireActor } from '../../auth/auth.plugin.js'
 import type { BoardsService } from './boards.service.js'
@@ -18,7 +20,11 @@ export function boardsRoutes(service: BoardsService) {
     app.get('/api/v1/boards', async (req) => ({ data: service.list(requireActor(req)) }))
 
     app.get('/api/v1/workspaces/:id/boards', async (req) => ({
-      data: service.list(requireActor(req), idParamsSchema.parse(req.params).id),
+      data: service.list(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        boardListQuerySchema.parse(req.query).archived,
+      ),
     }))
 
     app.post('/api/v1/workspaces/:id/boards', async (req, reply) => {
@@ -48,6 +54,14 @@ export function boardsRoutes(service: BoardsService) {
       return reply.status(204).send()
     })
 
+    app.post('/api/v1/boards/:id/restore', async (req) =>
+      service.restore(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
+    app.get('/api/v1/boards/:id/archive', async (req) =>
+      service.archive(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
     app.put('/api/v1/boards/:id/star', async (req, reply) => {
       service.star(requireActor(req), idParamsSchema.parse(req.params).id)
       return reply.status(204).send()
@@ -74,6 +88,19 @@ export function boardsRoutes(service: BoardsService) {
         createLabelSchema.parse(req.body),
       )
       return reply.status(201).send(label)
+    })
+
+    app.patch('/api/v1/labels/:id', async (req) =>
+      service.updateLabel(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        updateLabelSchema.parse(req.body),
+      ),
+    )
+
+    app.delete('/api/v1/labels/:id', async (req, reply) => {
+      service.removeLabel(requireActor(req), idParamsSchema.parse(req.params).id)
+      return reply.status(204).send()
     })
 
     app.get('/api/v1/boards/:id/snapshot', async (req) =>

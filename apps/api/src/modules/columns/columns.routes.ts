@@ -20,6 +20,14 @@ export function columnsRoutes(service: ColumnsService, cards: CardsService) {
       ),
     )
 
+    app.post('/api/v1/columns/:id/archive', async (req) =>
+      service.archive(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
+    app.post('/api/v1/columns/:id/restore', async (req) =>
+      service.restore(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
     app.post('/api/v1/columns/:id/move', async (req) =>
       service.move(
         requireActor(req),

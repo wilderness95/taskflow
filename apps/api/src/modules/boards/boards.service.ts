@@ -1,8 +1,10 @@
 import { generateKeyBetween } from 'fractional-indexing'
 import {
+  boardRoleCan,
   effectiveBoardRole,
   getChecklistProgress,
   getDueDateState,
+  type BoardArchiveDto,
   type BoardSnapshotDto,
   type CardListQuery,
   type BoardDto,
@@ -17,6 +19,7 @@ import {
   type PolicyActor,
   type SetBoardMemberInput,
   type UpdateBoardInput,
+  type UpdateLabelInput,
 } from '@taskflow/shared'
 import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
@@ -57,14 +60,16 @@ export function createBoardsService(
 
   return {
     /** A felhasználó összes olvasható táblája (opcionálisan egy munkaterületre szűrve). */
-    list(actor: Actor, workspaceId?: string): BoardSummaryDto[] {
+    list(actor: Actor, workspaceId?: string, archived = false): BoardSummaryDto[] {
       if (workspaceId) access.requireWorkspace(actor, workspaceId, 'workspace:read')
-      return repo.listForUser(actor.id, workspaceId).flatMap((row) => {
+      return repo.listForUser(actor.id, workspaceId, archived).flatMap((row) => {
         const role = effectiveBoardRole(actor, {
           visibility: row.board.visibility,
           workspaceRole: row.workspaceRole,
           boardRole: row.boardRole,
         })
+        // Archivált táblát csak az látja, aki vissza is állíthatja (tábla-admin).
+        if (archived && !boardRoleCan(role, 'board:delete')) return []
         return role ? [toSummary(row.board, role, row.starred)] : []
       })
     },
@@ -185,6 +190,20 @@ export function createBoardsService(
       log(actor, id, 'board.archived', 'board', id)
     },
 
+    restore(actor: Actor, id: string): BoardSummaryDto {
+      const { role } = access.requireArchivedBoard(actor, id, 'board:delete')
+      const restored = repo.update(id, { archivedAt: null })!
+      log(actor, id, 'board.restored', 'board', id, { title: restored.title })
+      return toSummary(restored, role, repo.isStarred(id, actor.id))
+    },
+    /** A tábla archivált kártyái és oszlopai. */
+    archive(actor: Actor, id: string): BoardArchiveDto {
+      access.requireBoard(actor, id, 'board:read')
+      return {
+        cards: cards.listArchived(actor, id),
+        columns: repo.listArchivedColumns(id).map(toColumnDto),
+      }
+    },
     /** A tábla tevékenységnaplója (legújabb elöl), cursor-lapozással. */
     activity(actor: Actor, boardId: string, page: { limit: number; cursor?: string }) {
       access.requireBoard(actor, boardId, 'board:read')
@@ -224,6 +243,33 @@ export function createBoardsService(
       return { ...label }
     },
 
+    /** Címke átnevezése / átszínezése; a tábla címkenevei egyediek (kis-nagybetűtől függetlenül). */
+    updateLabel(actor: Actor, id: string, input: UpdateLabelInput): LabelDto {
+      const { board } = access.requireLabel(actor, id, 'board:write')
+      const label = repo.findLabel(id)!
+      if (
+        input.name &&
+        repo
+          .listLabels(board.id)
+          .some((l) => l.id !== id && l.name.toLowerCase() === input.name!.toLowerCase())
+      ) {
+        throw new AppError(409, 'label_name_taken', 'A label with this name already exists')
+      }
+      const updated = repo.updateLabel(id, input)!
+      log(actor, board.id, 'label.updated', 'label', id, {
+        name: updated.name,
+        previousName: label.name,
+        fields: Object.keys(input),
+      })
+      return { ...updated }
+    },
+    /** A címke törlése leveszi a kártyákról is. */
+    removeLabel(actor: Actor, id: string): void {
+      const { board } = access.requireLabel(actor, id, 'board:write')
+      const label = repo.findLabel(id)!
+      repo.deleteLabel(id)
+      log(actor, board.id, 'label.deleted', 'label', id, { name: label.name })
+    },
     /** A tábla résztvevői (hozzárendelhető és megemlíthető felhasználók). */
     listParticipants(actor: Actor, boardId: string): BoardMemberDto[] {
       const { board } = access.requireBoard(actor, boardId, 'board:read')

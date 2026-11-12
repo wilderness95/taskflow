@@ -22,6 +22,10 @@ export const createLabelSchema = z.object({
   color: tagColorSchema,
 })
 export type CreateLabelInput = z.infer<typeof createLabelSchema>
+export const updateLabelSchema = createLabelSchema
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, 'empty_update')
+export type UpdateLabelInput = z.infer<typeof updateLabelSchema>
 
 export const checklistItemSchema = z.object({
   id: idSchema,
@@ -56,6 +60,9 @@ export const cardSchema = z.object({
   priority: prioritySchema,
   dueDate: dateSchema.nullable(),
   coverImage: z.string().nullable(),
+  /** A borítóként használt csatolmány (kép); a `coverImage` URL mellett érvényes. */
+  coverAttachmentId: idSchema.nullable(),
+  attachmentCount: z.number().int(),
   position: z.string(),
   labelIds: z.array(idSchema),
   /** A kártyához rendelt felhasználók (a tábla résztvevői közül). */
@@ -139,6 +146,7 @@ export const updateCardSchema = z
     priority: prioritySchema,
     dueDate: dateSchema.nullable(),
     coverImage: httpUrlSchema.nullable(),
+    coverAttachmentId: idSchema.nullable(),
     labelIds: z.array(idSchema),
     assigneeIds: z.array(idSchema),
   })
@@ -170,6 +178,21 @@ export type MoveCardInput = z.infer<typeof moveCardSchema>
 /** Oszlop áthelyezése: a `beforeColumnId` elé kerül, ennek hiányában a végére. */
 export const moveColumnSchema = z.object({ beforeColumnId: idSchema.nullish() })
 export type MoveColumnInput = z.infer<typeof moveColumnSchema>
+
+/** Egy tábla archivált elemei (visszaállításhoz): a kártyák és az oszlopok. */
+export const boardArchiveSchema = z.object({
+  cards: z.array(cardSchema),
+  columns: z.array(columnSchema),
+})
+export type BoardArchiveDto = z.infer<typeof boardArchiveSchema>
+
+/** A táblák listázása: `archived=true` az archivált táblákat adja (visszaállításhoz). */
+export const boardListQuerySchema = z.object({
+  archived: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+})
 
 export const boardListSchema = z.object({ data: z.array(boardSummarySchema) })
 
