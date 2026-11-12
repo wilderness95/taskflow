@@ -2,6 +2,9 @@ import rateLimit from '@fastify/rate-limit'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { clientIp, registerAuth } from './auth/auth.plugin.js'
 import { createActivityRepository } from './modules/activity/activity.repository.js'
+import { createAdminRepository } from './modules/admin/admin.repository.js'
+import { adminRoutes } from './modules/admin/admin.routes.js'
+import { createAdminService } from './modules/admin/admin.service.js'
 import { createAuditRepository } from './modules/audit/audit.repository.js'
 import { createAuditService } from './modules/audit/audit.service.js'
 import { createActivityService } from './modules/activity/activity.service.js'
@@ -202,6 +205,7 @@ export function buildApp(
     logger: app.log,
   })
   app.register(authRoutes(auth, config))
+  app.register(adminRoutes(createAdminService({ repo: createAdminRepository(db), audit, auth })))
   app.register(apiKeysRoutes(apiKeys))
   app.register(workspacesRoutes(workspaces, config))
   app.register(boardsRoutes(boards))

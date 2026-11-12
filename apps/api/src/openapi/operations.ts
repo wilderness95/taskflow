@@ -1,5 +1,9 @@
 import { z } from 'zod'
 import {
+  adminUserDetailSchema,
+  adminUserListSchema,
+  adminUsersQuerySchema,
+  setAdminRoleSchema,
   apiKeyListSchema,
   createApiKeySchema,
   createdApiKeySchema,
@@ -131,6 +135,7 @@ const apiKey = { tag: 'API keys' }
 const voice = { tag: 'Voice' }
 const webhook = { tag: 'Webhooks' }
 const list = { tag: 'Lists' }
+const admin = { tag: 'Admin' }
 
 export const operations: Operation[] = [
   {
@@ -268,7 +273,7 @@ export const operations: Operation[] = [
     summary: 'Move an item into a section (or none) before another item, or to the end',
     body: moveListItemSchema,
     success: { status: 200, schema: listItemSchema },
-    errors: [403, 409, 422],
+    errors: [403, 409],
   },
   {
     ...list,
@@ -964,5 +969,67 @@ export const operations: Operation[] = [
     path: '/checklist-items/{id}',
     summary: 'Delete a checklist item',
     success: { status: 204 },
+  },
+  {
+    ...admin,
+    method: 'get',
+    path: '/admin/users',
+    summary: 'List users, newest first; `q` searches name and email (platform admin, session only)',
+    query: adminUsersQuerySchema,
+    success: { status: 200, schema: adminUserListSchema },
+    errors: [403],
+  },
+  {
+    ...admin,
+    method: 'get',
+    path: '/admin/users/{id}',
+    summary: 'A user with workspace memberships and session count (platform admin, session only)',
+    success: { status: 200, schema: adminUserDetailSchema },
+    errors: [403],
+  },
+  {
+    ...admin,
+    method: 'post',
+    path: '/admin/users/{id}/suspend',
+    summary:
+      'Suspend an account: sign-in, sessions and API keys stop working; 409 `cannot_suspend_self` / `last_admin` (platform admin, session only)',
+    success: { status: 200, schema: adminUserDetailSchema },
+    errors: [403, 409],
+  },
+  {
+    ...admin,
+    method: 'post',
+    path: '/admin/users/{id}/restore',
+    summary: 'Restore a suspended account (platform admin, session only)',
+    success: { status: 200, schema: adminUserDetailSchema },
+    errors: [403],
+  },
+  {
+    ...admin,
+    method: 'post',
+    path: '/admin/users/{id}/revoke-sessions',
+    summary:
+      'Sign the user out everywhere by deleting all their sessions (platform admin, session only)',
+    success: { status: 200, schema: adminUserDetailSchema },
+    errors: [403],
+  },
+  {
+    ...admin,
+    method: 'post',
+    path: '/admin/users/{id}/resend-verification',
+    summary:
+      'Resend the email confirmation message; 409 `already_verified` (platform admin, session only)',
+    success: { status: 200, schema: adminUserDetailSchema },
+    errors: [403, 409],
+  },
+  {
+    ...admin,
+    method: 'put',
+    path: '/admin/users/{id}/admin',
+    summary:
+      'Grant or revoke the platform admin role; only confirmed, active accounts can be granted; 409 `last_admin` (platform admin, session only)',
+    body: setAdminRoleSchema,
+    success: { status: 200, schema: adminUserDetailSchema },
+    errors: [403, 409],
   },
 ]
