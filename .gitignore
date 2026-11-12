@@ -34,3 +34,4 @@ data/
 
 # TypeScript
 *.tsbuildinfo
+backups/
