@@ -115,6 +115,7 @@ api_keys         (id, owner_user_id, workspace_id, name, prefix, key_hash, scope
 - **Szereplők:** bejelentkezett felhasználó (session cookie) vagy API kulcs. Mindkettő ugyanarra az `Actor` objektumra képződik le, így a service réteg nem tudja (és nem is kell tudnia), honnan jön a kérés.
 - **Szerepkörök:**
   - Munkaterület: `owner` > `admin` > `member` > `viewer`.
+  - Platform-admin (`users.is_admin`) külön, rendszerszintű jogosultság; nem azonos a munkaterületi `admin` szereppel. A platform-admin felülete és API-ja kizárólag ezzel a jogosultsággal érhető el.
   - Tábla: privát táblán `board_members` szerepkör; a `public` tábla anonim módon olvasható.
 - **Policy-mátrix** (`core/authz/policies.ts`) egy helyen, unit tesztekkel lefedve.
 - **API kulcs:**
@@ -396,6 +397,29 @@ Cél: a webes kliens mobilon is használható, és telepíthető Android appkén
 - Frissítés: a webes tartalom a szerverről frissül; az APK-frissítéshez ajánlott az Obtainium.
 - Opcionális, később: Web Push (VAPID; új függőség és migráció, egyeztetést igényel), mikrofon/hangasszisztens teszt TWA-ban.
 - Becslés: kb. 2 hét.
+
+### M10 – Platform-adminisztráció (ütemezendő)
+
+Cél: a rendszerszintű felhasználó- és meghívókezelés, valamint a biztonsági események áttekintése egy kizárólag platform-adminok számára látható felületen. Ez nem munkaterületi beállítás: a munkaterületi `owner` és `admin` szerepkör önmagában nem ad platform-admin jogosultságot.
+
+**Elérés és jogosultság:**
+- A felhasználói avatar menüjében csak `isAdmin` felhasználónak jelenjen meg az „Adminisztráció” menüpont; az oldal külön `/admin` útvonalon legyen.
+- A frontend útvonalvédelme csak kényelmi réteg: minden admin API-végpont sessionnel és szerveroldali platform-admin ellenőrzéssel védett. API-kulcs adminisztrációra nem használható.
+- A platform-admin jogosultság nem kerül a munkaterületi szerepkörök közé, és a munkaterületi policy nem terjeszti ki automatikusan.
+
+**Első verzió:**
+- Áttekintő: felhasználók és függő meghívók száma, legutóbbi fontos admin-/biztonsági események, valamint az API, az adatbázis és az e-mail-küldés alapvető állapota.
+- Felhasználókezelés: név és e-mail szerinti keresés; fiókadatlap a regisztráció idejével, e-mail-megerősítési állapottal és munkaterületi tagságokkal; megerősítő e-mail újraküldése; fiók felfüggesztése és visszaállítása; a felhasználó munkameneteinek visszavonása.
+- Platform-admin szerep kiosztása és visszavonása csak platform-admin által, külön megerősítéssel és auditnapló-bejegyzéssel. A rendszer védje ki, hogy az utolsó platform-admin véletlenül elveszítse a hozzáférését.
+- Meghívókezelés: a meglévő munkaterületi meghívási folyamat felületre emelése; meghívó küldése e-mail-címmel, munkaterülettel és szerepkörrel; függő, elfogadott, lejárt és visszavont meghívók listázása; újraküldés és visszavonás. A meghívó továbbra is munkaterülethez kötött, a kiosztható szerepkörök és a meglévő szabályok érvényesek.
+- Platformszintű auditnapló: adminműveletek és fontos hitelesítési/biztonsági események rögzítése; időszak, eseménytípus, végrehajtó és érintett felhasználó szerinti szűrés. Az esemény legalább a végrehajtót, az időpontot, a műveletet és az érintett erőforrást azonosítsa.
+- A meglévő `activity_log` táblához és listához kötött üzleti tevékenységeket naplóz, nem teljes platform-auditnapló; az adminfelülethez külön, célzott auditálás szükséges. Jelszó, session token, meghívótoken, API-kulcs vagy más titok nem kerülhet a naplóba.
+- Minden új admin API-szerződéshez közös Zod-séma, OpenAPI-leírás, integrációs teszt és engedélyezett/tiltott jogosultsági teszt szükséges. A módosító adminműveletek idempotencia- és naplózási szabályai is érvényesek.
+- Frontend: adminoldal az avatar menüből, felhasználólista/adatlap, meghívólista és auditnapló; minden felirat i18n-kulccsal, a műveletek visszajelzése toasttal, a visszafordíthatatlan vagy érzékeny változtatások külön megerősítéssel.
+
+**Nem része az első verziónak:** részletes analitika, tömeges felhasználókezelés, felhasználóként való belépés (impersonáció), illetve admin által végzett jelszóbeállítás vagy jelszómegtekintés. A felhasználói fiók törlése helyett első körben a felfüggesztés és a munkamenetek visszavonása használandó.
+
+**Kész, ha:** nem-admin felhasználó sem az admin UI-t, sem az admin API-t nem érheti el; a platform-admin kezelni tudja a felhasználók fiókállapotát, munkameneteit és a munkaterületi meghívókat; minden adminmódosítás és fontos biztonsági esemény visszakereshető, érzékeny hitelesítési titok naplózása nélkül.
 
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 
