@@ -30,6 +30,11 @@ services:
       AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-20}
       API_KEY_RATE_LIMIT_MAX: ${API_KEY_RATE_LIMIT_MAX:-120}
       LOGIN_MAX_FAILURES: ${LOGIN_MAX_FAILURES:-10}
+      # Hangasszisztens (opcionális): kulcs nélkül a hangvégpont 503 voice_unavailable.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_LIVE_MODEL: ${GEMINI_LIVE_MODEL:-gemini-2.5-flash-native-audio-preview-12-2025}
+      VOICE_MAX_SESSIONS_PER_USER: ${VOICE_MAX_SESSIONS_PER_USER:-2}
+      VOICE_MAX_MINUTES: ${VOICE_MAX_MINUTES:-15}
     volumes:
       - ./data:/data
     healthcheck:

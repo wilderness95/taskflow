@@ -39,6 +39,12 @@ import { createEventsService } from './modules/events/events.service.js'
 import { notificationsRoutes } from './modules/notifications/notifications.routes.js'
 import { createNotificationsRepository } from './modules/notifications/notifications.repository.js'
 import { createNotificationsService } from './modules/notifications/notifications.service.js'
+import websocket from '@fastify/websocket'
+import { createGeminiLiveConnector } from './modules/voice/liveConnector.js'
+import { createToolHost } from './modules/voice/toolHost.js'
+import { MAX_FRAME_BYTES, voiceRoutes } from './modules/voice/voice.routes.js'
+import { createVoiceService } from './modules/voice/voice.service.js'
+import type { LiveConnector } from './modules/voice/liveConnector.js'
 import { AppError } from './errors.js'
 import { filtersRoutes } from './modules/filters/filters.routes.js'
 import { createFiltersRepository } from './modules/filters/filters.repository.js'
@@ -63,7 +69,7 @@ declare module 'fastify' {
 export function buildApp(
   config: Config,
   db: Db,
-  deps: { mailer?: Mailer; fileStore?: FileStore } = {},
+  deps: { mailer?: Mailer; fileStore?: FileStore; liveConnector?: LiveConnector | null } = {},
 ): FastifyInstance {
   const app = Fastify({
     logger:
@@ -201,5 +207,24 @@ export function buildApp(
   app.register(commentsRoutes(comments))
   app.register(notificationsRoutes(notifications))
   app.register(eventsRoutes(createEventsService(bus, access)))
+  const voice = createVoiceService({
+    access,
+    connector:
+      deps.liveConnector !== undefined
+        ? deps.liveConnector
+        : config.GEMINI_API_KEY
+          ? createGeminiLiveConnector({
+              apiKey: config.GEMINI_API_KEY,
+              model: config.GEMINI_LIVE_MODEL,
+            })
+          : null,
+    createToolHost: (o) =>
+      createToolHost(app, { cookie: o.cookie, clientIp: o.clientIp, defaultBoardId: o.boardId }),
+    maxSessionsPerUser: config.VOICE_MAX_SESSIONS_PER_USER,
+    maxMinutes: config.VOICE_MAX_MINUTES,
+    logger: app.log,
+  })
+  app.register(websocket, { options: { maxPayload: MAX_FRAME_BYTES } })
+  app.register(voiceRoutes(voice, { allowedOrigin: new URL(config.APP_URL).origin }))
   return app
 }
