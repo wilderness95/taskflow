@@ -61,7 +61,13 @@
   color: rgb(var(--ink) / 0.72);
 }
 
+/* Üres állapot: a lista, a tábla és a szakasz üres üzenete egységesen. */
 .workspace-empty {
+  margin: 0;
+  padding: var(--space-5) var(--space-4);
+  border: 1px dashed rgb(var(--slate) / 0.3);
+  border-radius: var(--radius-lg);
+  text-align: center;
   color: rgb(var(--ink) / 0.72);
 }
 
