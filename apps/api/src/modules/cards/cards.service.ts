@@ -1,9 +1,16 @@
 import { generateKeyBetween } from 'fractional-indexing'
-import type { CardDto, CreateCardInput, MoveCardInput, UpdateCardInput } from '@taskflow/shared'
+import type {
+  CardDto,
+  CardListQuery,
+  CreateCardInput,
+  MoveCardInput,
+  UpdateCardInput,
+} from '@taskflow/shared'
 import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
 import { positionBefore } from '../../lib/position.js'
 import { AppError, notFound, orNotFound } from '../../errors.js'
+import type { ActivityService } from '../activity/activity.service.js'
 import type { AccessService } from '../access/access.service.js'
 import type { BoardsRepository } from '../boards/boards.repository.js'
 import type { ChecklistsRepository } from '../checklists/checklists.repository.js'
@@ -17,8 +24,9 @@ export function createCardsService(deps: {
   boards: BoardsRepository
   checklists: ChecklistsRepository
   access: AccessService
+  activity: ActivityService
 }) {
-  const { cards, columns, boards, checklists, access } = deps
+  const { cards, columns, boards, checklists, access, activity } = deps
 
   const hydrate = (rows: CardRow[]): CardDto[] => {
     const ids = rows.map((r) => r.id)
@@ -54,13 +62,28 @@ export function createCardsService(deps: {
   return {
     listForColumns: (columnIds: string[]): CardDto[] => hydrate(cards.listByColumnIds(columnIds)),
 
+    /** Egy tábla kártyái szűrőkkel és cursor-lapozással (ID szerint növekvő sorrend). */
+    listForBoard(actor: Actor, boardId: string, query: CardListQuery) {
+      access.requireBoard(actor, boardId, 'board:read')
+      const { limit, cursor, ...filter } = query
+      if (filter.columnId && columns.findById(filter.columnId)?.boardId !== boardId) {
+        throw notFound('Column')
+      }
+      const rows = cards.listForBoard(boardId, filter, limit + 1, cursor)
+      const page = rows.slice(0, limit)
+      return {
+        data: hydrate(page),
+        nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+      }
+    },
+
     get(actor: Actor, id: string): CardDto {
       access.requireCard(actor, id, 'board:read')
       return hydrate([require(id)])[0]!
     },
 
     create(actor: Actor, columnId: string, input: CreateCardInput): CardDto {
-      access.requireColumn(actor, columnId, 'board:write')
+      const { board } = access.requireColumn(actor, columnId, 'board:write')
       const column = columns.findById(columnId)
       if (!column) throw notFound('Column')
       const labelIds = assertLabels(column.boardId, input.labelIds)
@@ -79,11 +102,18 @@ export function createCardsService(deps: {
         cards.setLabels(row.id, labelIds)
         return row.id
       })
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'card.created',
+        entityType: 'card',
+        entityId: id,
+        meta: { title: input.title, columnId },
+      })
       return hydrate([require(id)])[0]!
     },
 
     update(actor: Actor, id: string, input: UpdateCardInput): CardDto {
-      access.requireCard(actor, id, 'board:write')
+      const { board } = access.requireCard(actor, id, 'board:write')
       const card = require(id)
       const { labelIds, ...fields } = input
       cards.transaction(() => {
@@ -93,12 +123,19 @@ export function createCardsService(deps: {
         }
         cards.update(id, { ...fields, updatedAt: new Date(), version: card.version + 1 })
       })
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'card.updated',
+        entityType: 'card',
+        entityId: id,
+        meta: { title: card.title, fields: Object.keys(input) },
+      })
       return hydrate([require(id)])[0]!
     },
 
     /** Egyetlen sor frissítése: az új `position` a szomszédok közé esik. */
     move(actor: Actor, id: string, input: MoveCardInput): CardDto {
-      access.requireCard(actor, id, 'board:write')
+      const { board } = access.requireCard(actor, id, 'board:write')
       const card = require(id)
       const target = columns.findById(input.columnId)
       const source = columns.findById(card.columnId)!
@@ -110,13 +147,27 @@ export function createCardsService(deps: {
         updatedAt: new Date(),
         version: card.version + 1,
       })
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'card.moved',
+        entityType: 'card',
+        entityId: id,
+        meta: { title: card.title, fromColumnId: card.columnId, toColumnId: target.id },
+      })
       return hydrate([require(id)])[0]!
     },
 
     remove(actor: Actor, id: string): void {
-      access.requireCard(actor, id, 'board:write')
-      require(id)
+      const { board } = access.requireCard(actor, id, 'board:write')
+      const card = require(id)
       cards.delete(id)
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'card.deleted',
+        entityType: 'card',
+        entityId: id,
+        meta: { title: card.title },
+      })
     },
   }
 }

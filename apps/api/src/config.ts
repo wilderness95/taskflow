@@ -18,6 +18,8 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(300),
   /** Kérés/perc IP-nként a érzékeny auth végpontokra (login, regisztráció, jelszó-visszaállítás...). */
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(20),
+  /** Kérés/perc API kulcsonként. */
+  API_KEY_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(120),
   /** Ennyi sikertelen belépés után a fiók 15 percre zárolódik. */
   LOGIN_MAX_FAILURES: z.coerce.number().int().min(1).default(10),
   MAIL_TRANSPORT: z.enum(['console', 'smtp']).default('console'),
