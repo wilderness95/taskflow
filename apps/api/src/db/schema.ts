@@ -1,9 +1,10 @@
 import { relations } from 'drizzle-orm'
-import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import {
   BOARD_ROLES,
   BOARD_VISIBILITIES,
   INVITABLE_ROLES,
+  NOTIFICATION_TYPES,
   PRIORITIES,
   TAG_COLORS,
   WORKSPACE_ROLES,
@@ -298,6 +299,34 @@ export const commentMentions = sqliteTable(
       .references(() => users.id, { onDelete: 'cascade' }),
   },
   (t) => [primaryKey({ columns: [t.commentId, t.userId] })],
+)
+
+/** Felhasználói értesítés (harang): hozzárendelés, említés, közelgő határidő. */
+export const notifications = sqliteTable(
+  'notifications',
+  {
+    id: id(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: text('type', { enum: NOTIFICATION_TYPES }).notNull(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    cardId: text('card_id')
+      .notNull()
+      .references(() => cards.id, { onDelete: 'cascade' }),
+    actorId: text('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    dueDate: text('due_date'),
+    /** Az ismétlődő értesítések (pl. határidő) duplikációjának kizárására; `null`: nincs ilyen. */
+    dedupeKey: text('dedupe_key'),
+    readAt: integer('read_at', { mode: 'timestamp_ms' }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('notifications_user_idx').on(t.userId, t.id),
+    uniqueIndex('notifications_dedupe_idx').on(t.userId, t.dedupeKey),
+  ],
 )
 
 export const checklists = sqliteTable('checklists', {

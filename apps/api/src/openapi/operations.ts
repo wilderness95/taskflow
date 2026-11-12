@@ -19,6 +19,9 @@ import {
   checklistItemSchema,
   checklistSchema,
   columnSchema,
+  notificationListSchema,
+  notificationQuerySchema,
+  notificationSchema,
   commentListSchema,
   commentSchema,
   createCommentSchema,
@@ -83,6 +86,7 @@ const column = { tag: 'Columns' }
 const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
 const comment = { tag: 'Comments' }
+const notification = { tag: 'Notifications' }
 const auth = { tag: 'Auth' }
 const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
@@ -515,6 +519,29 @@ export const operations: Operation[] = [
     success: { status: 201, schema: checklistSchema },
   },
 
+  {
+    ...notification,
+    method: 'get',
+    path: '/notifications',
+    summary:
+      'Notifications of the current user (assigned, mentioned, due soon), newest first; session only',
+    query: notificationQuerySchema,
+    success: { status: 200, schema: notificationListSchema },
+  },
+  {
+    ...notification,
+    method: 'post',
+    path: '/notifications/read-all',
+    summary: 'Mark all notifications as read; session only',
+    success: { status: 204 },
+  },
+  {
+    ...notification,
+    method: 'post',
+    path: '/notifications/{id}/read',
+    summary: 'Mark a notification as read; session only',
+    success: { status: 200, schema: notificationSchema },
+  },
   {
     ...comment,
     method: 'get',

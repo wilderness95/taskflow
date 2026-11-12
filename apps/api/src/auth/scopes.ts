@@ -13,6 +13,7 @@ const BOARD_MEMBERS = /^\/api\/v1\/boards\/[^/]+\/members$/
 const SESSION_ONLY = [
   /^\/api\/v1\/auth\//,
   /^\/api\/v1\/api-keys(\/|$)/,
+  /^\/api\/v1\/notifications(\/|$)/,
   /^\/api\/v1\/invitations(\/|$)/,
   /^\/api\/v1\/workspaces\/[^/]+\/(members|invitations)\/.+/,
   /^\/api\/v1\/workspaces\/[^/]+\/invitations$/,

@@ -6,6 +6,7 @@ import card from './locales/hu/card.json'
 import column from './locales/hu/column.json'
 import comment from './locales/hu/comment.json'
 import common from './locales/hu/common.json'
+import notification from './locales/hu/notification.json'
 import workspace from './locales/hu/workspace.json'
 
 /**
@@ -13,7 +14,7 @@ import workspace from './locales/hu/workspace.json'
  * Új nyelv: `locales/<lang>/*.json` fájlok + egy bejegyzés ide és a `SUPPORTED_LANGUAGES`-be.
  */
 export const resources = {
-  hu: { common, activity, auth, apikeys, board, card, column, comment, workspace },
+  hu: { common, activity, auth, apikeys, board, card, column, comment, notification, workspace },
 } as const
 
 export const defaultNS = 'common'

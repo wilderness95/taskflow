@@ -11,6 +11,7 @@ import type { AccessService } from '../access/access.service.js'
 import type { BoardRow } from '../access/access.repository.js'
 import type { ActivityService } from '../activity/activity.service.js'
 import type { CardsRepository } from '../cards/cards.repository.js'
+import type { NotificationsService } from '../notifications/notifications.service.js'
 import type { CommentRow, CommentsRepository } from './comments.repository.js'
 
 export function createCommentsService(deps: {
@@ -18,8 +19,9 @@ export function createCommentsService(deps: {
   cards: CardsRepository
   access: AccessService
   activity: ActivityService
+  notifications: NotificationsService
 }) {
-  const { repo, cards, access, activity } = deps
+  const { repo, cards, access, activity, notifications } = deps
 
   const hydrate = (rows: CommentRow[]): CommentDto[] => {
     const mentions = repo.mentionIdsByComment(rows.map((r) => r.id))
@@ -91,6 +93,12 @@ export function createCommentsService(deps: {
         entityId: id,
         meta: { cardId, title: card.title, mentionedIds: mentionIds },
       })
+      notifications.notify(actor, {
+        type: 'mentioned',
+        userIds: mentionIds,
+        boardId: board.id,
+        cardId,
+      })
       return hydrate([requireComment(id)])[0]!
     },
 
@@ -117,6 +125,14 @@ export function createCommentsService(deps: {
           mentionedIds: mentionIds ? mentionIds.filter((u) => !before.includes(u)) : [],
         },
       })
+      if (mentionIds) {
+        notifications.notify(actor, {
+          type: 'mentioned',
+          userIds: mentionIds.filter((u) => !before.includes(u)),
+          boardId: board.id,
+          cardId: comment.cardId,
+        })
+      }
       return hydrate([requireComment(id)])[0]!
     },
 
