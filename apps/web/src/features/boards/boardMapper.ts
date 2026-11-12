@@ -23,6 +23,8 @@ const toTask = (
     ),
     dueDate: card.dueDate ?? undefined,
     coverImage: card.coverImage ?? undefined,
+    coverAttachmentId: card.coverAttachmentId ?? undefined,
+    attachmentCount: card.attachmentCount,
     done,
     version: card.version,
     checklists: card.checklists.map((checklist) => ({

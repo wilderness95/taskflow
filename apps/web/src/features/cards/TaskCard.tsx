@@ -2,6 +2,7 @@ import { getChecklistsProgress, getDueDateState } from '@taskflow/shared'
 import { useTranslation } from 'react-i18next'
 import { formatShortDate } from '../../i18n/format'
 import { classNames } from '../../shared/lib/classNames'
+import { attachmentFileUrl } from '../../api/attachments'
 import { AssigneeStack } from './AssigneeStack'
 import type { DragProps } from '../boards/useBoardDrag'
 import type { Task } from '../boards/types'
@@ -46,6 +47,15 @@ export function TaskCard({
       {...dragProps}
     >
       {isDropTarget && <div className="insert-indicator" aria-hidden="true" />}
+
+      {task.coverAttachmentId && (
+        <img
+          className="task-card-cover"
+          src={attachmentFileUrl(task.coverAttachmentId)}
+          alt=""
+          loading="lazy"
+        />
+      )}
 
       <div className="task-card-top">
         <span className={`priority-pill priority-${task.priority}`}>
@@ -97,6 +107,16 @@ export function TaskCard({
         <div className={`task-due ${dueState}`}>
           <span className="task-due-label">{t('dueLabel')}</span>
           <strong>{formatShortDate(task.dueDate)}</strong>
+        </div>
+      )}
+
+      {task.attachmentCount > 0 && (
+        <div
+          className="task-attachments"
+          role="img"
+          aria-label={t('attachments.count', { count: task.attachmentCount })}
+        >
+          📎 {task.attachmentCount}
         </div>
       )}
 

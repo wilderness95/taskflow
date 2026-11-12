@@ -22,3 +22,10 @@ export const formatDateTime = (isoTimestamp: string): string =>
 
 export const formatNumber = (value: number, options?: Intl.NumberFormatOptions): string =>
   new Intl.NumberFormat(locale(), options).format(value)
+
+/** Bájtok olvasható mérete (B / KB / MB); a mértékegység-jelek nyelvfüggetlenek. */
+export const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${formatNumber(bytes)} B`
+  if (bytes < 1024 * 1024) return `${formatNumber(bytes / 1024, { maximumFractionDigits: 1 })} KB`
+  return `${formatNumber(bytes / (1024 * 1024), { maximumFractionDigits: 1 })} MB`
+}

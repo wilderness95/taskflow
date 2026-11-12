@@ -12,7 +12,15 @@ const jsonSchema = (schema: z.ZodType, io: 'input' | 'output'): Json => {
   return rest
 }
 
-const WRITE_TAGS = new Set(['Boards', 'Columns', 'Cards', 'Checklists', 'Comments', 'API keys'])
+const WRITE_TAGS = new Set([
+  'Boards',
+  'Columns',
+  'Cards',
+  'Checklists',
+  'Comments',
+  'Attachments',
+  'API keys',
+])
 
 const ERROR_DESCRIPTIONS: Record<number, string> = {
   400: 'Validation error or invalid token',
@@ -20,6 +28,8 @@ const ERROR_DESCRIPTIONS: Record<number, string> = {
   403: 'Forbidden',
   404: 'Not found',
   409: 'Conflict',
+  413: 'File too large',
+  415: 'Unsupported media type',
   422: 'Unprocessable',
   429: 'Too many requests',
 }
@@ -76,6 +86,9 @@ const operationObject = (op: Operation): Json => {
       ...(op.success.schema && {
         content: { 'application/json': { schema: jsonSchema(op.success.schema, 'output') } },
       }),
+      ...(op.download && {
+        content: { '*/*': { schema: { type: 'string', format: 'binary' } } },
+      }),
       ...(op.stream && {
         content: {
           'text/event-stream': { schema: jsonSchema(boardEventSchema, 'output') },
@@ -92,6 +105,14 @@ const operationObject = (op: Operation): Json => {
     summary: op.summary,
     operationId: `${op.method}_${op.path.replace(/[{}]/g, '').replace(/\W+/g, '_').replace(/^_|_$/g, '')}`,
     ...(allParams.length > 0 && { parameters: allParams }),
+    ...(op.upload && {
+      requestBody: {
+        required: true,
+        description:
+          'The raw file content; the `Content-Type` header is the file type, the file name goes into the `name` query parameter.',
+        content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } },
+      },
+    }),
     ...(op.body && {
       requestBody: {
         required: true,

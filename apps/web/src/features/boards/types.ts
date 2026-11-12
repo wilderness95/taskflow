@@ -24,6 +24,9 @@ export type Task = {
   tags: Tag[]
   dueDate?: string
   coverImage?: string
+  /** A borítóként használt csatolmány (kép) azonosítója. */
+  coverAttachmentId?: string
+  attachmentCount: number
   done?: boolean
   /** A kártya checklistjei (több is lehet). */
   checklists: TaskChecklist[]

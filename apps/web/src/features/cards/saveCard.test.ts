@@ -14,6 +14,8 @@ const card = (over: Partial<CardDto> = {}): CardDto => ({
   priority: 'medium',
   dueDate: null,
   coverImage: null,
+  coverAttachmentId: null,
+  attachmentCount: 0,
   position: 'a0',
   labelIds: [],
   assigneeIds: [],

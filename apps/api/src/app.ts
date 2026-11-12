@@ -40,6 +40,10 @@ import { notificationsRoutes } from './modules/notifications/notifications.route
 import { createNotificationsRepository } from './modules/notifications/notifications.repository.js'
 import { createNotificationsService } from './modules/notifications/notifications.service.js'
 import { AppError } from './errors.js'
+import { createLocalFileStore, type FileStore } from './files/fileStore.js'
+import { attachmentsRoutes } from './modules/attachments/attachments.routes.js'
+import { createAttachmentsRepository } from './modules/attachments/attachments.repository.js'
+import { createAttachmentsService } from './modules/attachments/attachments.service.js'
 import { openApiPlugin } from './openapi/openapi.plugin.js'
 import { createIdempotencyRepository } from './modules/idempotency/idempotency.repository.js'
 import { registerIdempotency } from './plugins/idempotency.js'
@@ -53,7 +57,11 @@ declare module 'fastify' {
   }
 }
 
-export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {}): FastifyInstance {
+export function buildApp(
+  config: Config,
+  db: Db,
+  deps: { mailer?: Mailer; fileStore?: FileStore } = {},
+): FastifyInstance {
   const app = Fastify({
     logger:
       config.NODE_ENV === 'test'
@@ -108,7 +116,11 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     access,
     findBoard: accessRepo.findActiveBoard,
   })
+  const files = deps.fileStore ?? createLocalFileStore(config.UPLOAD_DIR)
+  const attachmentsRepo = createAttachmentsRepository(db)
   const cards = createCardsService({
+    attachments: attachmentsRepo,
+    files,
     cards: cardsRepo,
     columns: columnsRepo,
     boards: boardsRepo,
@@ -170,6 +182,18 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
   app.register(columnsRoutes(columns, cards))
   app.register(cardsRoutes(cards, checklists))
   app.register(checklistsRoutes(checklists))
+  app.register(
+    attachmentsRoutes(
+      createAttachmentsService({
+        repo: attachmentsRepo,
+        cards: cardsRepo,
+        files,
+        access,
+        activity,
+      }),
+      config.MAX_UPLOAD_MB * 1024 * 1024,
+    ),
+  )
   app.register(commentsRoutes(comments))
   app.register(notificationsRoutes(notifications))
   app.register(eventsRoutes(createEventsService(bus, access)))
