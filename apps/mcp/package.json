@@ -1,0 +1,23 @@
+{
+  "name": "@taskflow/mcp",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "taskflow-mcp": "./src/stdio.ts"
+  },
+  "scripts": {
+    "start": "tsx src/stdio.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7",
+    "@taskflow/shared": "*"
+  }
+}

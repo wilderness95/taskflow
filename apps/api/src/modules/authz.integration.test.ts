@@ -233,11 +233,22 @@ describe('board lists and creation', () => {
     expect((await people.admin.api.get(`/boards/${mine.id}`)).status).toBe(200)
   })
 
-  it('a non-empty workspace cannot be deleted', async () => {
+  it('a workspace with an active board cannot be deleted', async () => {
     await createBoard('workspace')
     const res = await owner.api.delete(`/workspaces/${ws.id}`)
     expect(res.status).toBe(409)
     expect(res.body.error.code).toBe('workspace_not_empty')
+  })
+
+  it('a workspace with only archived boards can be deleted, together with their content', async () => {
+    const board = await createBoard('workspace')
+    const col = (await owner.api.post(`/boards/${board.id}/columns`, { title: 'Todo' })).body
+    const card = (await owner.api.post(`/columns/${col.id}/cards`, { title: 'Régi' })).body
+    expect((await owner.api.delete(`/boards/${board.id}`)).status).toBe(204) // archiválás
+    const res = await owner.api.delete(`/workspaces/${ws.id}`)
+    expect(res.status).toBe(204)
+    expect((await owner.api.get(`/workspaces/${ws.id}`)).status).toBe(404)
+    expect((await owner.api.get(`/cards/${card.id}`)).status).toBe(404)
   })
 
   it('reports the effective role and visibility changes take effect immediately', async () => {

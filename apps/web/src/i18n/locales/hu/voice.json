@@ -1,0 +1,22 @@
+{
+  "start": "Hangvezérlés indítása",
+  "stop": "Hangvezérlés leállítása",
+  "interrupt": "Válasz megszakítása",
+  "status": {
+    "connecting": "Csatlakozás a hangasszisztenshez...",
+    "listening": "Hallgatlak",
+    "thinking": "Gondolkodom",
+    "speaking": "Beszélek"
+  },
+  "errors": {
+    "unsupported": "A böngésződ nem támogatja a hangvezérlést.",
+    "mic_denied": "A mikrofon nem érhető el. Engedélyezd a böngészőben.",
+    "connection_failed": "A hangasszisztens nem érhető el.",
+    "connection_lost": "A kapcsolat megszakadt.",
+    "voice_unavailable": "A hangasszisztens nincs beállítva a szerveren.",
+    "too_many_sessions": "Túl sok párhuzamos hangmunkamenet fut.",
+    "session_expired": "A hangmunkamenet lejárt, indítsd újra.",
+    "upstream_error": "A hangasszisztens hibába ütközött.",
+    "unknown": "Hiba történt a hangasszisztensben."
+  }
+}

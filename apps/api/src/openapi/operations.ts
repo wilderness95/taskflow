@@ -57,6 +57,11 @@ import {
   memberSchema,
   updateMemberSchema,
   updateWorkspaceSchema,
+  createWebhookSchema,
+  createdWebhookSchema,
+  updateWebhookSchema,
+  webhookListSchema,
+  webhookSchema,
   workspaceInvitationListSchema,
   workspaceInvitationSchema,
   workspaceListSchema,
@@ -69,6 +74,7 @@ import {
   resetPasswordSchema,
   updateProfileSchema,
   userSchema,
+  voiceQuerySchema,
   verifyEmailSchema,
 } from '@taskflow/shared'
 
@@ -81,7 +87,7 @@ export type Operation = {
   query?: z.ZodObject
   body?: z.ZodType
   /** Sikeres státusz és válasz; séma nélkül nincs törzs (204). */
-  success: { status: 200 | 201 | 202 | 204; schema?: z.ZodType }
+  success: { status: 101 | 200 | 201 | 202 | 204; schema?: z.ZodType }
   /** Nyilvános végpont: nem kell hozzá bejelentkezés. */
   public?: boolean
   /** A műveletre jellemző hibakódok a 400/404 mellett. */
@@ -92,6 +98,8 @@ export type Operation = {
   upload?: boolean
   /** A sikeres válasz a fájl nyers tartalma. */
   download?: boolean
+  /** Hosszabb leírás (pl. a WebSocket protokoll; ilyenkor a sikeres válasz a 101). */
+  description?: string
 }
 
 const board = { tag: 'Boards' }
@@ -105,8 +113,57 @@ const notification = { tag: 'Notifications' }
 const auth = { tag: 'Auth' }
 const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
+const voice = { tag: 'Voice' }
+const webhook = { tag: 'Webhooks' }
 
 export const operations: Operation[] = [
+  {
+    ...webhook,
+    method: 'get',
+    path: '/boards/{id}/webhooks',
+    summary: 'List the outgoing webhooks of a board (board admin, session only)',
+    success: { status: 200, schema: webhookListSchema },
+    errors: [403],
+  },
+  {
+    ...webhook,
+    method: 'post',
+    path: '/boards/{id}/webhooks',
+    summary:
+      'Create a webhook; the signing `secret` is returned only once. Deliveries are POSTs of a WebhookPayload with `X-TaskFlow-Signature: t=<unix>,v1=<hex HMAC-SHA256 of "<t>.<body>">` (board admin, session only)',
+    body: createWebhookSchema,
+    success: { status: 201, schema: createdWebhookSchema },
+    errors: [403, 422],
+  },
+  {
+    ...webhook,
+    method: 'patch',
+    path: '/webhooks/{id}',
+    summary: 'Change the URL, events or active flag (enabling resets the failure counter)',
+    body: updateWebhookSchema,
+    success: { status: 200, schema: webhookSchema },
+    errors: [403, 422],
+  },
+  {
+    ...webhook,
+    method: 'delete',
+    path: '/webhooks/{id}',
+    summary: 'Delete a webhook',
+    success: { status: 204 },
+    errors: [403],
+  },
+  {
+    ...voice,
+    method: 'get',
+    path: '/voice/live',
+    summary:
+      'Live voice assistant over WebSocket (session only; Origin must match the app). Binary frames: raw PCM, 16-bit LE mono (client -> server 16 kHz, server -> client 24 kHz). Text frames: JSON VoiceServerMessage / VoiceClientMessage',
+    description:
+      'Upgrade to WebSocket. Server text frames: `ready`, `state` (listening|thinking|speaking), `interrupted`, `tool`, `transcript`, `error` (code). Client text frame: `{"type":"audio_end"}`. 503 `voice_unavailable` when GEMINI_API_KEY is not configured, 429 `too_many_sessions` over the per-user limit.',
+    query: voiceQuerySchema,
+    success: { status: 101 },
+    errors: [403, 429, 503],
+  },
   {
     ...board,
     method: 'get',
@@ -188,7 +245,8 @@ export const operations: Operation[] = [
     ...workspace,
     method: 'delete',
     path: '/workspaces/{id}',
-    summary: 'Delete an empty workspace (owner)',
+    summary:
+      'Delete a workspace (owner); 409 while it has active boards. Archived boards are deleted with it, permanently',
     success: { status: 204 },
     errors: [403, 409],
   },

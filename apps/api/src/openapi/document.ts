@@ -32,6 +32,7 @@ const ERROR_DESCRIPTIONS: Record<number, string> = {
   415: 'Unsupported media type',
   422: 'Unprocessable',
   429: 'Too many requests',
+  503: 'Service unavailable',
 }
 
 const parameters = (schema: z.ZodObject, location: 'path' | 'query'): Json[] => {
@@ -82,7 +83,7 @@ const operationObject = (op: Operation): Json => {
   ])
   const responses: Json = {
     [op.success.status]: {
-      description: 'Success',
+      description: op.success.status === 101 ? 'Switching Protocols' : 'Success',
       ...(op.success.schema && {
         content: { 'application/json': { schema: jsonSchema(op.success.schema, 'output') } },
       }),
@@ -103,6 +104,7 @@ const operationObject = (op: Operation): Json => {
     tags: [op.tag],
     ...(op.public ? { security: [] } : {}),
     summary: op.summary,
+    ...(op.description && { description: op.description }),
     operationId: `${op.method}_${op.path.replace(/[{}]/g, '').replace(/\W+/g, '_').replace(/^_|_$/g, '')}`,
     ...(allParams.length > 0 && { parameters: allParams }),
     ...(op.upload && {
