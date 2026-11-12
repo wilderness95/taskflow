@@ -180,10 +180,14 @@ Külső AI eszközhöz (Claude Desktop, Gemini CLI, OpenCode) stdio MCP szerver 
 }
 ```
 
-Eszközök: `list_boards`, `get_board_overview`, `create_card` (felelősök, címkék, checklist egy körben),
-`search_cards`, `move_card`, `update_card`, `add_comment`. Az oszlopok, címkék és személyek névvel is megadhatók
-(kis- és nagybetű, ékezet nem számít). Minden író hívás automatikus `Idempotency-Key`-t kap, hálózati hibánál
-ugyanazzal a kulccsal újrapróbál.
+Eszközök (táblák: `list_workspaces`, `list_boards`, `get_board_overview`, `create_board`, `update_board`, `archive_board`,
+`restore_board`, `list_archived_boards`, `list_board_archive`; oszlopok: `create_column`, `update_column`, `move_column`,
+`archive_column`, `restore_column`, `delete_column`; kártyák: `get_card`, `create_card`, `search_cards`, `update_card`
+(minden mező), `move_card`, `archive_card`, `restore_card`, `delete_card`; checklist: `add_checklist_items`,
+`update_checklist_item`, `update_checklist`; címkék: `create_label`, `update_label`, `delete_label`; hozzászólások:
+`add_comment`, `list_comments`, `update_comment`, `delete_comment`). A kártya azonosítóval vagy címmel, az oszlopok,
+címkék és személyek névvel is megadhatók (kis- és nagybetű, ékezet nem számít). Minden író hívás automatikus
+`Idempotency-Key`-t kap, hálózati hibánál ugyanazzal a kulccsal újrapróbál.
 
 ## Webhookok (opcionális, csak session)
 
