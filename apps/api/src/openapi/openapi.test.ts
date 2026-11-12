@@ -1,7 +1,9 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { buildApp } from '../app.js'
 import { loadConfig } from '../config.js'
 import { createDb, runMigrations } from '../db/client.js'
+import { OPENAPI_FILE, serializeOpenApi } from './export.js'
 import { operations } from './operations.js'
 
 const makeApp = () => {
@@ -17,9 +19,13 @@ describe('openapi', () => {
     const doc = res.json()
     expect(doc.openapi).toBe('3.1.0')
     expect(doc.paths['/cards/{id}/move'].post.requestBody).toBeDefined()
-    expect(
-      doc.paths['/columns/{id}'].delete.parameters.map((p: { name: string }) => p.name),
-    ).toEqual(['id', 'moveCardsTo'])
+    const params = doc.paths['/columns/{id}'].delete.parameters as { name: string; in: string }[]
+    expect(params.filter((p) => p.in !== 'header').map((p) => p.name)).toEqual([
+      'id',
+      'moveCardsTo',
+    ])
+    expect(params.map((p) => p.name)).toContain('Idempotency-Key')
+    expect(doc.paths['/boards'].get.parameters).toBeUndefined()
     expect(doc.paths['/boards'].get.responses['200']).toBeDefined()
     expect(doc.components.schemas.ErrorResponse).toBeDefined()
   })
@@ -40,5 +46,9 @@ describe('openapi', () => {
       .sort()
     const documented = operations.map((o) => `${o.method.toUpperCase()} /api/v1${o.path}`).sort()
     expect(documented).toEqual(actual)
+  })
+
+  it('keeps docs/openapi.json up to date (run `npm run openapi:export -w @taskflow/api`)', () => {
+    expect(readFileSync(OPENAPI_FILE, 'utf8')).toBe(serializeOpenApi())
   })
 })

@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router'
+import { ApiKeysPage } from '../features/apikeys/ApiKeysPage'
 import { ForgotPasswordPage } from '../features/auth/ForgotPasswordPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/" element={<RootRedirect />} />
             <Route path="/w/:workspaceId" element={<WorkspacePage />} />
             <Route path="/w/:workspaceId/members" element={<WorkspaceMembersPage />} />
+            <Route path="/settings/api-keys" element={<ApiKeysPage />} />
             <Route path="/b/:boardId" element={<BoardPage />} />
           </Route>
         </Routes>

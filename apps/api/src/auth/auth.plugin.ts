@@ -1,9 +1,13 @@
 import fastifyCookie from '@fastify/cookie'
+import { scopeAllows } from '@taskflow/shared'
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import type { Config } from '../config.js'
 import { AppError } from '../errors.js'
+import { createFixedWindowLimiter } from '../lib/fixedWindowLimiter.js'
+import type { ApiKeysService } from '../modules/apikeys/apikeys.service.js'
 import type { AuthService } from '../modules/auth/auth.service.js'
 import type { Actor } from './actor.js'
+import { requiredScope } from './scopes.js'
 
 export const SESSION_COOKIE = 'tf_session'
 
@@ -69,7 +73,14 @@ function checkOrigin(req: FastifyRequest, allowedOrigin: string) {
   }
 }
 
-export function registerAuth(app: FastifyInstance, config: Config, auth: AuthService): void {
+const BEARER = /^Bearer\s+(\S+)$/i
+
+export function registerAuth(
+  app: FastifyInstance,
+  config: Config,
+  auth: AuthService,
+  apiKeys: ApiKeysService,
+): void {
   app.register(fastifyCookie, { secret: config.SESSION_SECRET })
   app.decorateRequest('actor', null)
   app.decorateRequest('sessionToken', null)
@@ -77,9 +88,42 @@ export function registerAuth(app: FastifyInstance, config: Config, auth: AuthSer
   const allowedOrigin = new URL(config.APP_URL).origin
 
   // A `preValidation` már a cookie-plugin `onRequest` hookja után fut, így a `req.cookies` kész.
-  app.addHook('preValidation', async (req) => {
+  // Kulcsonkénti rate limit (az IP-alapú globális limit mellett).
+  const keyLimiter = createFixedWindowLimiter(config.API_KEY_RATE_LIMIT_MAX, 60_000)
+
+  app.addHook('preValidation', async (req, reply) => {
     const path = req.url.split('?')[0] ?? req.url
     if (!path.startsWith('/api/')) return
+
+    const authorization = req.headers.authorization
+    if (authorization) {
+      // API kulcs: nem böngészős kliens, ezért nincs Origin-ellenőrzés és cookie sem számít.
+      const token = BEARER.exec(authorization)?.[1]
+      const actor = token ? apiKeys.authenticate(token) : null
+      if (!actor || actor.type !== 'api_key') {
+        throw new AppError(401, 'invalid_api_key', 'Invalid, revoked or expired API key')
+      }
+      req.actor = actor
+      const required = requiredScope(req.method, path)
+      if (required === 'session') {
+        throw new AppError(403, 'session_required', 'This endpoint is not available with API keys')
+      }
+      if (required && !scopeAllows(actor.scopes, required)) {
+        throw new AppError(403, 'insufficient_scope', 'The API key lacks the required scope', {
+          required,
+        })
+      }
+      const hit = keyLimiter.hit(actor.keyId)
+      reply.header('X-RateLimit-Limit', config.API_KEY_RATE_LIMIT_MAX)
+      reply.header('X-RateLimit-Remaining', hit.remaining)
+      if (!hit.allowed) {
+        reply.header('Retry-After', hit.retryAfterSeconds)
+        throw new AppError(429, 'rate_limited', 'Too many requests', {
+          retryAfterSeconds: hit.retryAfterSeconds,
+        })
+      }
+      return
+    }
 
     if (UNSAFE_METHODS.has(req.method)) checkOrigin(req, allowedOrigin)
 

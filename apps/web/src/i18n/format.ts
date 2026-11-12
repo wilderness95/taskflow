@@ -14,5 +14,11 @@ export const formatShortDate = (isoDate: string): string =>
     parseIsoDate(isoDate),
   )
 
+/** ISO időbélyeg -> dátum és idő (pl. "2026. nov. 14. 10:30"). */
+export const formatDateTime = (isoTimestamp: string): string =>
+  new Intl.DateTimeFormat(locale(), { dateStyle: 'medium', timeStyle: 'short' }).format(
+    new Date(isoTimestamp),
+  )
+
 export const formatNumber = (value: number, options?: Intl.NumberFormatOptions): string =>
   new Intl.NumberFormat(locale(), options).format(value)

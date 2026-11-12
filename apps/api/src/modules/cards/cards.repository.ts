@@ -1,8 +1,19 @@
-import { and, asc, desc, eq, inArray, isNull } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lte, or, sql } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
-import { cardLabels, cards } from '../../db/schema.js'
+import { cardLabels, cards, columns } from '../../db/schema.js'
 
 export type CardRow = typeof cards.$inferSelect
+export type CardFilter = {
+  columnId?: string
+  priority?: CardRow['priority']
+  labelId?: string
+  dueBefore?: string
+  dueAfter?: string
+  q?: string
+}
+
+/** LIKE-minta a részszövegkereséshez (a `%`, `_` és `!` jelentése kikapcsolva; `ESCAPE '!'`). */
+const likePattern = (q: string) => `%${q.replace(/[!%_]/g, '!$&')}%`
 
 export function createCardsRepository(db: Db) {
   return {
@@ -21,6 +32,41 @@ export function createCardsRepository(db: Db) {
             .where(and(inArray(cards.columnId, columnIds), isNull(cards.archivedAt)))
             .orderBy(asc(cards.position))
             .all(),
+    /** Egy tábla kártyái szűrve, ID szerint növekvő sorrendben (`afterId`: a lapozás kurzora). */
+    listForBoard: (
+      boardId: string,
+      filter: CardFilter,
+      limit: number,
+      afterId?: string,
+    ): CardRow[] =>
+      db
+        .select({ card: cards })
+        .from(cards)
+        .innerJoin(columns, eq(columns.id, cards.columnId))
+        .where(
+          and(
+            eq(columns.boardId, boardId),
+            isNull(cards.archivedAt),
+            afterId ? gt(cards.id, afterId) : undefined,
+            filter.columnId ? eq(cards.columnId, filter.columnId) : undefined,
+            filter.priority ? eq(cards.priority, filter.priority) : undefined,
+            filter.labelId
+              ? sql`exists (select 1 from ${cardLabels} where ${cardLabels.cardId} = ${cards.id} and ${cardLabels.labelId} = ${filter.labelId})`
+              : undefined,
+            filter.dueBefore ? lte(cards.dueDate, filter.dueBefore) : undefined,
+            filter.dueAfter ? gte(cards.dueDate, filter.dueAfter) : undefined,
+            filter.q
+              ? or(
+                  sql`${cards.title} like ${likePattern(filter.q)} escape '!'`,
+                  sql`${cards.description} like ${likePattern(filter.q)} escape '!'`,
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(asc(cards.id))
+        .limit(limit)
+        .all()
+        .map((r) => r.card),
     labelIdsByCard: (cardIds: string[]): Map<string, string[]> => {
       const map = new Map<string, string[]>()
       if (cardIds.length === 0) return map

@@ -1,6 +1,10 @@
 import { generateKeyBetween } from 'fractional-indexing'
 import {
   effectiveBoardRole,
+  getChecklistProgress,
+  getDueDateState,
+  type BoardSnapshotDto,
+  type CardListQuery,
   type BoardDto,
   type BoardMemberDto,
   type BoardRole,
@@ -18,6 +22,7 @@ import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
 import { AppError, notFound } from '../../errors.js'
 import type { AccessService } from '../access/access.service.js'
+import type { ActivityService } from '../activity/activity.service.js'
 import type { CardsService } from '../cards/cards.service.js'
 import { toColumnDto } from '../columns/columns.service.js'
 import type { BoardRow, BoardsRepository } from './boards.repository.js'
@@ -32,11 +37,24 @@ const toSummary = (r: BoardRow, myRole: BoardRole, starred: boolean): BoardSumma
   starred,
 })
 
+const SNAPSHOT_EXCERPT_LENGTH = 200
+const SNAPSHOT_ACTIVITY_LIMIT = 10
+
 export function createBoardsService(
   repo: BoardsRepository,
   cards: CardsService,
   access: AccessService,
+  activity: ActivityService,
 ) {
+  const log = (
+    actor: Actor,
+    boardId: string,
+    action: string,
+    entityType: string,
+    entityId: string,
+    meta: Record<string, unknown> = {},
+  ) => activity.record(actor, { boardId, action, entityType, entityId, meta })
+
   return {
     /** A felhasználó összes olvasható táblája (opcionálisan egy munkaterületre szűrve). */
     list(actor: Actor, workspaceId?: string): BoardSummaryDto[] {
@@ -66,6 +84,74 @@ export function createBoardsService(
       }
     },
 
+    /** Kártyák szűrőkkel és cursor-lapozással (agenteknek: nem kell a teljes táblát letölteni). */
+    listCards: (actor: Actor, boardId: string, query: CardListQuery) =>
+      cards.listForBoard(actor, boardId, query),
+
+    /** Tömör, agent-barát összefoglaló: oszlopok, kártyák, határidők, statisztika és friss tevékenység. */
+    snapshot(actor: Actor, id: string): BoardSnapshotDto {
+      const { board, role } = access.requireBoard(actor, id, 'board:read')
+      const columns = repo.listColumns(id)
+      const labels = repo.listLabels(id)
+      const labelNames = new Map(labels.map((l) => [l.id, l.name]))
+      const allCards = cards.listForColumns(columns.map((c) => c.id))
+      const byPriority: Record<string, number> = { high: 0, medium: 0, low: 0 }
+      let doneCount = 0
+      let overdueCount = 0
+
+      const snapshotColumns = columns.map((column) => {
+        const inColumn = allCards.filter((card) => card.columnId === column.id)
+        return {
+          id: column.id,
+          title: column.title,
+          isDone: column.isDone,
+          cardCount: inColumn.length,
+          cards: inColumn.map((card) => {
+            const overdue = !column.isDone && getDueDateState(card.dueDate) === 'overdue'
+            byPriority[card.priority] = (byPriority[card.priority] ?? 0) + 1
+            if (column.isDone) doneCount += 1
+            if (overdue) overdueCount += 1
+            const progress = card.checklists.map((c) => getChecklistProgress(c))
+            return {
+              id: card.id,
+              title: card.title,
+              priority: card.priority,
+              dueDate: card.dueDate,
+              overdue,
+              labels: card.labelIds.flatMap((labelId) => labelNames.get(labelId) ?? []),
+              checklist: {
+                done: progress.reduce((sum, p) => sum + p.done, 0),
+                total: progress.reduce((sum, p) => sum + p.total, 0),
+              },
+              descriptionExcerpt: card.description.slice(0, SNAPSHOT_EXCERPT_LENGTH),
+              updatedAt: card.updatedAt,
+            }
+          }),
+        }
+      })
+
+      return {
+        generatedAt: new Date().toISOString(),
+        board: {
+          id: board.id,
+          workspaceId: board.workspaceId!,
+          title: board.title,
+          visibility: board.visibility,
+          myRole: role,
+        },
+        summary: {
+          columnCount: columns.length,
+          cardCount: allCards.length,
+          doneCount,
+          overdueCount,
+          byPriority,
+        },
+        labels: labels.map((l) => ({ ...l })),
+        columns: snapshotColumns,
+        recentActivity: activity.listForBoard(id, SNAPSHOT_ACTIVITY_LIMIT).data,
+      }
+    },
+
     create(actor: Actor, workspaceId: string, input: CreateBoardInput): BoardSummaryDto {
       access.requireWorkspace(actor, workspaceId, 'board:create')
       const board = repo.transaction(() => {
@@ -80,18 +166,28 @@ export function createBoardsService(
         repo.setBoardMember(row.id, actor.id, 'admin')
         return row
       })
+      log(actor, board.id, 'board.created', 'board', board.id, { title: board.title })
       return toSummary(board, 'admin', false)
     },
 
     update(actor: Actor, id: string, input: UpdateBoardInput): BoardSummaryDto {
       const { role } = access.requireBoard(actor, id, 'board:update')
-      return toSummary(repo.update(id, input)!, role, repo.isStarred(id, actor.id))
+      const updated = repo.update(id, input)!
+      log(actor, id, 'board.updated', 'board', id, { fields: Object.keys(input) })
+      return toSummary(updated, role, repo.isStarred(id, actor.id))
     },
 
     /** Archiválás: a tábla eltűnik a listából, az adat megmarad. */
     remove(actor: Actor, id: string): void {
       access.requireBoard(actor, id, 'board:delete')
       repo.update(id, { archivedAt: new Date() })
+      log(actor, id, 'board.archived', 'board', id)
+    },
+
+    /** A tábla tevékenységnaplója (legújabb elöl), cursor-lapozással. */
+    activity(actor: Actor, boardId: string, page: { limit: number; cursor?: string }) {
+      access.requireBoard(actor, boardId, 'board:read')
+      return activity.listForBoard(boardId, page.limit, page.cursor)
     },
 
     star(actor: Actor, id: string): void {
@@ -106,7 +202,7 @@ export function createBoardsService(
 
     createColumn(actor: Actor, boardId: string, input: CreateColumnInput): ColumnDto {
       access.requireBoard(actor, boardId, 'board:write')
-      return toColumnDto(
+      const column = toColumnDto(
         repo.insertColumn({
           id: newId(),
           boardId,
@@ -116,11 +212,15 @@ export function createBoardsService(
           position: generateKeyBetween(repo.lastColumnPosition(boardId), null),
         }),
       )
+      log(actor, boardId, 'column.created', 'column', column.id, { title: column.title })
+      return column
     },
 
     createLabel(actor: Actor, boardId: string, input: CreateLabelInput): LabelDto {
       access.requireBoard(actor, boardId, 'board:write')
-      return { ...repo.insertLabel({ id: newId(), boardId, ...input }) }
+      const label = repo.insertLabel({ id: newId(), boardId, ...input })
+      log(actor, boardId, 'label.created', 'label', label.id, { name: label.name })
+      return { ...label }
     },
 
     listMembers(actor: Actor, boardId: string): BoardMemberDto[] {
@@ -144,6 +244,7 @@ export function createBoardsService(
         )
       }
       repo.setBoardMember(boardId, userId, input.role)
+      log(actor, boardId, 'board_member.set', 'user', userId, { role: input.role })
       return repo.listBoardMembers(boardId).find((m) => m.userId === userId)!
     },
 
@@ -151,6 +252,7 @@ export function createBoardsService(
       access.requireBoard(actor, boardId, 'board:manage_members')
       if (!repo.getBoardRole(boardId, userId)) throw notFound('Board member')
       repo.removeBoardMember(boardId, userId)
+      log(actor, boardId, 'board_member.removed', 'user', userId)
     },
   }
 }

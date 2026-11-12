@@ -55,6 +55,16 @@ export function UserMenu() {
             className="menu-item"
             onClick={() => {
               setIsOpen(false)
+              navigate('/settings/api-keys')
+            }}
+          >
+            {t('menu.apiKeys')}
+          </button>
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => {
+              setIsOpen(false)
               logout.mutate(undefined, { onSettled: () => navigate('/login', { replace: true }) })
             }}
           >

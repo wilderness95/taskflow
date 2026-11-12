@@ -1,5 +1,13 @@
 import { z } from 'zod'
 import {
+  apiKeyListSchema,
+  createApiKeySchema,
+  createdApiKeySchema,
+  activityListSchema,
+  boardSnapshotSchema,
+  cardListQuerySchema,
+  cardListSchema,
+  pageQuerySchema,
   boardListSchema,
   boardMemberListSchema,
   boardMemberSchema,
@@ -69,8 +77,55 @@ const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
 const auth = { tag: 'Auth' }
 const workspace = { tag: 'Workspaces' }
+const apiKey = { tag: 'API keys' }
 
 export const operations: Operation[] = [
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/snapshot',
+    summary:
+      'Compact agent-friendly summary of a board: columns, cards, due dates, stats, recent activity',
+    success: { status: 200, schema: boardSnapshotSchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/cards',
+    summary: 'List cards of a board with filters and cursor pagination (ordered by id)',
+    query: cardListQuerySchema,
+    success: { status: 200, schema: cardListSchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/activity',
+    summary: 'Board activity log, newest first (shows whether a human or an API key acted)',
+    query: pageQuerySchema,
+    success: { status: 200, schema: activityListSchema },
+  },
+  {
+    ...apiKey,
+    method: 'get',
+    path: '/api-keys',
+    summary: 'List my API keys (session only)',
+    success: { status: 200, schema: apiKeyListSchema },
+  },
+  {
+    ...apiKey,
+    method: 'post',
+    path: '/api-keys',
+    summary: 'Create an API key; the secret `key` is returned only once (session only)',
+    body: createApiKeySchema,
+    success: { status: 201, schema: createdApiKeySchema },
+  },
+  {
+    ...apiKey,
+    method: 'delete',
+    path: '/api-keys/{id}',
+    summary: 'Revoke an API key (session only)',
+    success: { status: 204 },
+  },
   {
     ...workspace,
     method: 'get',
