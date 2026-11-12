@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import { useDismiss } from '../../shared/hooks/useDismiss'
 import { Avatar } from './Avatar'
 import { ProfileModal } from './ProfileModal'
+import { UserMenuNav } from './UserMenuNav'
 import { useAuthActions, useCurrentUser } from './useSession'
 import '../../shared/styles/menu.css'
 import './UserMenu.css'
@@ -40,6 +41,7 @@ export function UserMenu() {
             <strong>{user.name}</strong>
             <small>{user.email}</small>
           </div>
+          <UserMenuNav onNavigate={() => setIsOpen(false)} />
           <button
             type="button"
             className="menu-item"

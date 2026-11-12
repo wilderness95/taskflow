@@ -8,6 +8,19 @@ test.describe('listák', () => {
     baseURL,
   }) => {
     await register(page, 'Olga')
+    // Gyors navigáció a felhasználói menüből: Listák, majd vissza a Táblákhoz és újra a Listákhoz.
+    await page.getByRole('button', { name: 'Felhasználói menü' }).click()
+    await page
+      .getByRole('navigation', { name: 'Gyors navigáció' })
+      .getByRole('button', { name: 'Listák' })
+      .click()
+    await expect(page).toHaveURL(/\/lists$/)
+    await page.getByRole('button', { name: 'Felhasználói menü' }).click()
+    await page
+      .getByRole('navigation', { name: 'Gyors navigáció' })
+      .getByRole('button', { name: 'Táblák' })
+      .click()
+    await expect(page).toHaveURL(/\/w\/[^/]+$/)
     await page.getByRole('link', { name: 'Listák' }).click()
     await page.getByRole('button', { name: '+ Új lista' }).click()
     await page.getByRole('dialog').getByLabel('A lista neve').fill('Hétvégi bevásárlás')

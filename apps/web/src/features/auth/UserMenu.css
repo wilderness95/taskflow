@@ -26,3 +26,19 @@
 .user-menu-identity small {
   color: rgba(226, 232, 240, 0.7);
 }
+
+.user-menu-nav {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.user-menu-label {
+  padding: 8px 10px 2px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.6);
+}
