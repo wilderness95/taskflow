@@ -4,6 +4,8 @@ import './i18n'
 import './shared/styles/tokens.css'
 import './index.css'
 import App from './app/App'
+// Az általános reszponzív szabályok az összes komponens-CSS után jöjjenek (azonos fajsúlynál ez dönt).
+import './shared/styles/responsive.css'
 import { initTheme } from './shared/theme/useTheme'
 
 initTheme()
