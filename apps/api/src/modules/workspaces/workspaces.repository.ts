@@ -200,7 +200,10 @@ export function createWorkspacesRepository(db: Db) {
         .run()
     },
     expireInvitation: (id: string, now: Date): void => {
-      db.update(invitations).set({ expiresAt: now }).where(eq(invitations.id, id)).run()
+      db.update(invitations)
+        .set({ expiresAt: now, revokedAt: now })
+        .where(eq(invitations.id, id))
+        .run()
     },
     markInvitationAccepted: (id: string, now: Date): void => {
       db.update(invitations).set({ acceptedAt: now }).where(eq(invitations.id, id)).run()

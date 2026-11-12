@@ -26,6 +26,8 @@ export const users = sqliteTable('users', {
   locale: text('locale').notNull().default('hu'),
   emailVerifiedAt: integer('email_verified_at', { mode: 'timestamp_ms' }),
   isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  /** Felfüggesztett fiók: nem léphet be, a munkamenetei és az API kulcsai nem érvényesek. */
+  suspendedAt: integer('suspended_at', { mode: 'timestamp_ms' }),
   createdAt: createdAt(),
 })
 
@@ -73,6 +75,8 @@ export const invitations = sqliteTable('invitations', {
     .references(() => users.id),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
   acceptedAt: integer('accepted_at', { mode: 'timestamp_ms' }),
+  /** Kézzel visszavont meghívó (a lejárt meghívótól megkülönböztetve). */
+  revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
   createdAt: createdAt(),
 })
 
@@ -117,6 +121,34 @@ export const activityLog = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [index('activity_log_board_idx').on(t.boardId, t.id)],
+)
+
+/**
+ * Platformszintű auditnapló: adminműveletek és fontos hitelesítési események. Nem tartalmaz titkot
+ * (jelszó, token, kulcs). A hivatkozások `set null`-ra állnak, hogy a napló a fiók törlése után is megmaradjon.
+ */
+export const auditLog = sqliteTable(
+  'audit_log',
+  {
+    id: id(),
+    /** A végrehajtó; `null`: ismeretlen (pl. sikertelen belépés ismeretlen címmel). */
+    actorId: text('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    /** `domain.verb`, pl. `admin.user_suspended`, `auth.login_failed`; nyelvfüggetlen. */
+    action: text('action').notNull(),
+    targetType: text('target_type').notNull(),
+    targetId: text('target_id'),
+    /** Az érintett felhasználó, ha van (szűréshez). */
+    targetUserId: text('target_user_id').references(() => users.id, { onDelete: 'set null' }),
+    ip: text('ip'),
+    /** JSON objektum. */
+    meta: text('meta').notNull().default('{}'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('audit_log_actor_idx').on(t.actorId),
+    index('audit_log_target_user_idx').on(t.targetUserId),
+    index('audit_log_action_idx').on(t.action),
+  ],
 )
 
 /** `Idempotency-Key` fejléc: a korábbi válasz újrajátszásához. */
