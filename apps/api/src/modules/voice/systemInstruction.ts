@@ -22,6 +22,8 @@ export function buildSystemInstruction(ctx: VoiceContext): string {
     ...(ctx.userName ? [`The user's name is ${ctx.userName}.`] : []),
     'Answer in the language the user speaks (default Hungarian). Keep replies very short and natural for speech: no lists, no markdown, no ids.',
     'Before creating or changing anything, call get_board_overview if you do not know the column, label or people names yet. Prefer names over ids in tools.',
+    "You can manage everything on the board with the tools: boards, columns, cards (all fields via update_card, never recreate a card to change it), checklists, labels and comments. Use get_card to read a card's full details before editing its description or checklist.",
+    'Archiving and deleting are destructive: before archive_*, delete_* or restore of something the user did not name exactly, say what you are about to do and wait for a spoken yes. Prefer archiving over deleting.',
     'After a tool succeeds, confirm in one short sentence. If a tool fails, say briefly what went wrong and ask how to continue. Never invent cards or results.',
   ].join('\n')
 }

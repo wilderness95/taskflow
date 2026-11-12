@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { createApiClient, type FetchLike } from './client.js'
 import { createTaskflowMcpServer } from './tools.js'
 
+const CARD = 'K'.padStart(26, '0')
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 
@@ -65,12 +66,24 @@ describe('tools', () => {
       log.push({ method, path, body })
       if (path === '/boards/b1/snapshot') return json(snapshot)
       if (path === '/boards/b1/participants') return json(people)
-      if (path === '/columns/c1/cards') return json({ id: 'k1', title: body.title }, 201)
-      if (path === '/cards/k1/checklists') return json({ id: 'cl1' }, 201)
+      if (path === '/columns/c1/cards') return json({ id: CARD, title: body.title }, 201)
+      if (path === `/cards/${CARD}/checklists`) return json({ id: 'cl1' }, 201)
       if (path === '/checklists/cl1/items') return json({ id: 'i' }, 201)
-      if (path === '/cards/k1' && method === 'GET')
-        return json({ id: 'k1', title: 'T', version: 4 })
-      if (path === '/cards/k1/move') return json({ id: 'k1' })
+      if (path === `/cards/${CARD}` && method === 'GET') {
+        return json({
+          id: CARD,
+          title: 'T',
+          version: 4,
+          checklists: [
+            { id: 'cl1', title: 'Lista', items: [{ id: 'it1', text: 'Tej', done: false }] },
+          ],
+        })
+      }
+      if (path === `/cards/${CARD}` && method === 'PATCH') return json({ id: CARD, title: 'T' })
+      if (path === `/cards/${CARD}` && method === 'DELETE')
+        return new Response(null, { status: 204 })
+      if (path === '/checklist-items/it1') return json({ id: 'it1' })
+      if (path === `/cards/${CARD}/move`) return json({ id: CARD })
       return json({ error: { code: 'not_found', message: 'nope' } }, 404)
     }
     const server = createTaskflowMcpServer(createApiClient({ baseUrl: 'http://x/api/v1', fetch }))
@@ -80,20 +93,27 @@ describe('tools', () => {
     return { client, log }
   }
 
-  it('exposes the voice-friendly tool set', async () => {
+  it('exposes tools for boards, columns, cards, checklists, labels and comments', async () => {
     const { client } = await setup()
-    const names = (await client.listTools()).tools.map((t) => t.name).sort()
+    const names = (await client.listTools()).tools.map((t) => t.name)
     expect(names).toEqual(
-      [
-        'add_comment',
-        'create_card',
-        'get_board_overview',
-        'list_boards',
-        'move_card',
-        'search_cards',
+      expect.arrayContaining([
+        'create_board',
+        'update_board',
+        'archive_board',
+        'create_column',
+        'update_column',
+        'delete_column',
+        'get_card',
         'update_card',
-      ].sort(),
+        'delete_card',
+        'archive_card',
+        'update_checklist_item',
+        'create_label',
+        'list_comments',
+      ]),
     )
+    expect(names.length).toBeGreaterThanOrEqual(25)
   })
 
   it('create_card resolves names and creates labels, assignees and checklist in one call', async () => {
@@ -131,9 +151,9 @@ describe('tools', () => {
     const { client, log } = await setup()
     await client.callTool({
       name: 'move_card',
-      arguments: { cardId: 'k1', boardId: 'b1', column: 'kész' },
+      arguments: { card: CARD, boardId: 'b1', column: 'kész' },
     })
-    expect(log.find((l) => l.path === '/cards/k1/move')?.body).toMatchObject({
+    expect(log.find((l) => l.path === `/cards/${CARD}/move`)?.body).toMatchObject({
       columnId: 'c2',
       version: 4,
     })
@@ -143,8 +163,41 @@ describe('tools', () => {
     const { client } = await setup()
     const res = await client.callTool({
       name: 'add_comment',
-      arguments: { cardId: 'zz', body: 'hi' },
+      arguments: { card: 'zz'.padStart(26, '0'), body: 'hi' },
     })
     expect(res.isError).toBe(true)
+  })
+
+  it('update_card changes more than the title and clears the due date', async () => {
+    const { client, log } = await setup()
+    const res = await client.callTool({
+      name: 'update_card',
+      arguments: { card: CARD, description: 'Új leírás', priority: 'high', dueDate: '' },
+    })
+    expect(res.isError).toBeFalsy()
+    expect(log.find((l) => l.method === 'PATCH')?.body).toEqual({
+      description: 'Új leírás',
+      priority: 'high',
+      dueDate: null,
+      version: 4,
+    })
+  })
+
+  it('update_card rejects an empty update and delete_card removes the card', async () => {
+    const { client, log } = await setup()
+    const empty = await client.callTool({ name: 'update_card', arguments: { card: CARD } })
+    expect(empty.isError).toBe(true)
+    const del = await client.callTool({ name: 'delete_card', arguments: { card: CARD } })
+    expect(del.isError).toBeFalsy()
+    expect(log.some((l) => l.method === 'DELETE' && l.path === `/cards/${CARD}`)).toBe(true)
+  })
+
+  it('update_checklist_item finds the item by text and ticks it', async () => {
+    const { client, log } = await setup()
+    await client.callTool({
+      name: 'update_checklist_item',
+      arguments: { card: CARD, item: 'tej', done: true },
+    })
+    expect(log.find((l) => l.path === '/checklist-items/it1')?.body).toMatchObject({ done: true })
   })
 })
