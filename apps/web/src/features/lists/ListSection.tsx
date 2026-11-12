@@ -63,22 +63,24 @@ export function ListSection({ group, canWrite, mutations, hasDrag, onDropEnd, ch
             <div className="list-item-actions">
               <button
                 type="button"
-                className="secondary-button"
+                className="list-icon-button"
+                title={t('section.rename')}
                 aria-label={t('section.renameAria', { title: section.title })}
                 onClick={() => {
                   setDraft(section.title)
                   setIsRenaming(true)
                 }}
               >
-                {t('section.rename')}
+                <span aria-hidden="true">✎</span>
               </button>
               <button
                 type="button"
-                className="secondary-button"
+                className="list-icon-button"
+                title={t('section.delete')}
                 aria-label={t('section.deleteAria', { title: section.title })}
                 onClick={() => setIsDeleting(true)}
               >
-                {t('section.delete')}
+                <span aria-hidden="true">✕</span>
               </button>
             </div>
           )}
