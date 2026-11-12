@@ -94,7 +94,8 @@ export function createApiKeysService(deps: {
       const now = Date.now()
       if (row.expiresAt && row.expiresAt.getTime() <= now) return null
       const owner = users.findUserById(row.userId)
-      if (owner === undefined) return null
+      // Felfüggesztett fiók kulcsai sem érvényesek.
+      if (owner === undefined || owner.suspendedAt) return null
       if (!row.lastUsedAt || now - row.lastUsedAt.getTime() >= TOUCH_INTERVAL_MS) {
         repo.update(row.id, { lastUsedAt: new Date(now) })
       }

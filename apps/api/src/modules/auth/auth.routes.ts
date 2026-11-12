@@ -64,7 +64,7 @@ export function authRoutes(service: AuthService, config: Config) {
     })
 
     app.post('/api/v1/auth/reset-password', strict, async (req, reply) => {
-      await service.resetPassword(resetPasswordSchema.parse(req.body))
+      await service.resetPassword(resetPasswordSchema.parse(req.body), { ip: clientIp(req) })
       return reply.status(204).send()
     })
 

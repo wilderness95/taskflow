@@ -13,6 +13,8 @@ const BOARD_MEMBERS = /^\/api\/v1\/boards\/[^/]+\/members$/
 const SESSION_ONLY = [
   /^\/api\/v1\/auth\//,
   /^\/api\/v1\/api-keys(\/|$)/,
+  // Platform-adminisztráció: csak böngészős bejelentkezéssel (és platform-adminnal).
+  /^\/api\/v1\/admin(\/|$)/,
   /^\/api\/v1\/notifications(\/|$)/,
   /^\/api\/v1\/voice(\/|$)/,
   // Kimenő webhookot (kulccsal, azaz AI agenttel) nem lehet konfigurálni.

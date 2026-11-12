@@ -133,3 +133,22 @@ export const adminOverviewSchema = z.object({
   recentEvents: z.array(auditEventSchema),
 })
 export type AdminOverviewDto = z.infer<typeof adminOverviewSchema>
+
+/** Az auditnaplóba kerülő események (nyelvfüggetlen kulcsok; a fordítás a frontenden). */
+export const AUDIT_ACTIONS = [
+  'auth.registered',
+  'auth.login_succeeded',
+  'auth.login_failed',
+  'auth.login_blocked',
+  'auth.password_reset',
+  'admin.user_suspended',
+  'admin.user_restored',
+  'admin.user_sessions_revoked',
+  'admin.user_admin_granted',
+  'admin.user_admin_revoked',
+  'admin.user_verification_resent',
+  'admin.invitation_created',
+  'admin.invitation_resent',
+  'admin.invitation_revoked',
+] as const
+export type AuditAction = (typeof AUDIT_ACTIONS)[number]

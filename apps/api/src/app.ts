@@ -2,6 +2,8 @@ import rateLimit from '@fastify/rate-limit'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { clientIp, registerAuth } from './auth/auth.plugin.js'
 import { createActivityRepository } from './modules/activity/activity.repository.js'
+import { createAuditRepository } from './modules/audit/audit.repository.js'
+import { createAuditService } from './modules/audit/audit.service.js'
 import { createActivityService } from './modules/activity/activity.service.js'
 import { apiKeysRoutes } from './modules/apikeys/apikeys.routes.js'
 import { createApiKeysRepository } from './modules/apikeys/apikeys.repository.js'
@@ -110,11 +112,13 @@ export function buildApp(
   })
   const mailer = deps.mailer ?? createMailer(config)
   const authRepo = createAuthRepository(db)
+  const audit = createAuditService(createAuditRepository(db))
   const auth = createAuthService({
     repo: authRepo,
     mailer,
     config,
     logger: app.log,
+    audit,
   })
   const bus = createEventBus()
   const activity = createActivityService(createActivityRepository(db), bus)
