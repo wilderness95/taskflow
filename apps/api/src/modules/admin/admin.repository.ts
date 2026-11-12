@@ -1,9 +1,25 @@
-import type { AdminUsersQuery } from '@taskflow/shared'
-import { and, desc, eq, gt, isNotNull, isNull, lt, or, sql } from 'drizzle-orm'
+import type { AdminInvitationsQuery, AdminUsersQuery } from '@taskflow/shared'
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  gt,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  or,
+  sql,
+} from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
-import { sessions, users, workspaceMembers, workspaces } from '../../db/schema.js'
+import { invitations, sessions, users, workspaceMembers, workspaces } from '../../db/schema.js'
 
 export type AdminUserRow = typeof users.$inferSelect
+export type AdminInvitationRow = typeof invitations.$inferSelect & {
+  workspaceName: string | null
+  invitedByName: string | null
+}
 
 /** A `LIKE` jokerkarakterei (`%`, `_`) és a védőkarakter nem lehetnek a keresőkifejezés részei. */
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (c) => `\\${c}`)
@@ -13,6 +29,9 @@ const loginUser = isNotNull(users.passwordHash)
 
 export function createAdminRepository(db: Db) {
   return {
+    /** Bármely felhasználó (a jelszó nélküli seed is), pl. a meghívó feladójához. */
+    findAnyUser: (id: string): AdminUserRow | undefined =>
+      db.select().from(users).where(eq(users.id, id)).get(),
     findUser: (id: string): AdminUserRow | undefined =>
       db
         .select()
@@ -88,6 +107,90 @@ export function createAdminRepository(db: Db) {
         .where(eq(workspaceMembers.userId, userId))
         .orderBy(workspaces.name)
         .all(),
+    listInvitations: (
+      status: AdminInvitationsQuery['status'],
+      now: Date,
+      limit: number,
+      beforeId?: string,
+    ): AdminInvitationRow[] =>
+      db
+        .select({
+          ...getTableColumns(invitations),
+          workspaceName: workspaces.name,
+          invitedByName: users.name,
+        })
+        .from(invitations)
+        .leftJoin(workspaces, eq(workspaces.id, invitations.workspaceId))
+        .leftJoin(users, eq(users.id, invitations.invitedBy))
+        .where(
+          and(
+            status === 'accepted' ? isNotNull(invitations.acceptedAt) : undefined,
+            status === 'revoked'
+              ? and(isNotNull(invitations.revokedAt), isNull(invitations.acceptedAt))
+              : undefined,
+            status === 'pending'
+              ? and(
+                  isNull(invitations.acceptedAt),
+                  isNull(invitations.revokedAt),
+                  gt(invitations.expiresAt, now),
+                )
+              : undefined,
+            status === 'expired'
+              ? and(
+                  isNull(invitations.acceptedAt),
+                  isNull(invitations.revokedAt),
+                  lte(invitations.expiresAt, now),
+                )
+              : undefined,
+            beforeId ? lt(invitations.id, beforeId) : undefined,
+          ),
+        )
+        .orderBy(desc(invitations.id))
+        .limit(limit)
+        .all(),
+    findInvitation: (id: string): AdminInvitationRow | undefined =>
+      db
+        .select({
+          ...getTableColumns(invitations),
+          workspaceName: workspaces.name,
+          invitedByName: users.name,
+        })
+        .from(invitations)
+        .leftJoin(workspaces, eq(workspaces.id, invitations.workspaceId))
+        .leftJoin(users, eq(users.id, invitations.invitedBy))
+        .where(eq(invitations.id, id))
+        .get(),
+    countPendingInvitations: (now: Date): number =>
+      db
+        .select({ n: sql<number>`count(*)` })
+        .from(invitations)
+        .where(
+          and(
+            isNull(invitations.acceptedAt),
+            isNull(invitations.revokedAt),
+            gt(invitations.expiresAt, now),
+          ),
+        )
+        .get()?.n ?? 0,
+    /** Egy meghívó lejáratása; `revoked`: kézi visszavonás (különben csak lejárt, pl. újraküldéskor). */
+    expireInvitation: (id: string, now: Date, revoked: boolean): void => {
+      db.update(invitations)
+        .set({ expiresAt: now, ...(revoked ? { revokedAt: now } : {}) })
+        .where(eq(invitations.id, id))
+        .run()
+    },
+    insertInvitation: (values: typeof invitations.$inferInsert): void => {
+      db.insert(invitations).values(values).run()
+    },
+    findWorkspace: (id: string) => db.select().from(workspaces).where(eq(workspaces.id, id)).get(),
+    /** Már tagja-e a munkaterületnek a megadott e-mail-című felhasználó. */
+    isMemberByEmail: (workspaceId: string, email: string): boolean =>
+      db
+        .select({ id: users.id })
+        .from(workspaceMembers)
+        .innerJoin(users, eq(users.id, workspaceMembers.userId))
+        .where(and(eq(workspaceMembers.workspaceId, workspaceId), eq(users.email, email)))
+        .get() !== undefined,
     transaction: <T>(fn: () => T): T => db.transaction(fn),
   }
 }

@@ -1,5 +1,11 @@
 import type { FastifyInstance } from 'fastify'
-import { adminUsersQuerySchema, idParamsSchema, setAdminRoleSchema } from '@taskflow/shared'
+import {
+  adminInvitationsQuerySchema,
+  adminUsersQuerySchema,
+  createAdminInvitationSchema,
+  idParamsSchema,
+  setAdminRoleSchema,
+} from '@taskflow/shared'
 import { clientIp, requireActor } from '../../auth/auth.plugin.js'
 import type { AdminContext, AdminService } from './admin.service.js'
 
@@ -40,5 +46,28 @@ export function adminRoutes(service: AdminService) {
         ctx(req),
       ),
     )
+
+    app.get('/api/v1/admin/invitations', async (req) =>
+      service.listInvitations(requireActor(req), adminInvitationsQuerySchema.parse(req.query)),
+    )
+
+    app.post('/api/v1/admin/invitations', async (req, reply) => {
+      const invitation = await service.createInvitation(
+        requireActor(req),
+        createAdminInvitationSchema.parse(req.body),
+        ctx(req),
+      )
+      return reply.status(201).send(invitation)
+    })
+
+    app.post('/api/v1/admin/invitations/:id/resend', async (req, reply) => {
+      const invitation = await service.resendInvitation(requireActor(req), userId(req), ctx(req))
+      return reply.status(201).send(invitation)
+    })
+
+    app.delete('/api/v1/admin/invitations/:id', async (req, reply) => {
+      service.revokeInvitation(requireActor(req), userId(req), ctx(req))
+      return reply.status(204).send()
+    })
   }
 }

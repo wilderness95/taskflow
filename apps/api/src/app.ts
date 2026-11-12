@@ -205,7 +205,18 @@ export function buildApp(
     logger: app.log,
   })
   app.register(authRoutes(auth, config))
-  app.register(adminRoutes(createAdminService({ repo: createAdminRepository(db), audit, auth })))
+  app.register(
+    adminRoutes(
+      createAdminService({
+        repo: createAdminRepository(db),
+        audit,
+        auth,
+        mailer,
+        config,
+        logger: app.log,
+      }),
+    ),
+  )
   app.register(apiKeysRoutes(apiKeys))
   app.register(workspacesRoutes(workspaces, config))
   app.register(boardsRoutes(boards))

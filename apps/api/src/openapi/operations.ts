@@ -1,5 +1,9 @@
 import { z } from 'zod'
 import {
+  adminInvitationListSchema,
+  adminInvitationSchema,
+  adminInvitationsQuerySchema,
+  createAdminInvitationSchema,
   adminUserDetailSchema,
   adminUserListSchema,
   adminUsersQuerySchema,
@@ -1030,6 +1034,44 @@ export const operations: Operation[] = [
       'Grant or revoke the platform admin role; only confirmed, active accounts can be granted; 409 `last_admin` (platform admin, session only)',
     body: setAdminRoleSchema,
     success: { status: 200, schema: adminUserDetailSchema },
+    errors: [403, 409],
+  },
+  {
+    ...admin,
+    method: 'get',
+    path: '/admin/invitations',
+    summary:
+      'List invitations (platform and workspace) with a derived status, newest first (platform admin, session only)',
+    query: adminInvitationsQuerySchema,
+    success: { status: 200, schema: adminInvitationListSchema },
+    errors: [403],
+  },
+  {
+    ...admin,
+    method: 'post',
+    path: '/admin/invitations',
+    summary:
+      'Invite by email: a platform registration invite, or with `workspaceId` + `role` a workspace invite; 409 `email_taken` / `already_member` (platform admin, session only)',
+    body: createAdminInvitationSchema,
+    success: { status: 201, schema: adminInvitationSchema },
+    errors: [403, 409],
+  },
+  {
+    ...admin,
+    method: 'post',
+    path: '/admin/invitations/{id}/resend',
+    summary:
+      'Resend an invitation: issues a new one and expires the old one; 409 `invitation_not_resendable` if accepted or revoked (platform admin, session only)',
+    success: { status: 201, schema: adminInvitationSchema },
+    errors: [403, 409],
+  },
+  {
+    ...admin,
+    method: 'delete',
+    path: '/admin/invitations/{id}',
+    summary:
+      'Revoke a pending invitation; 409 `invitation_not_pending` (platform admin, session only)',
+    success: { status: 204 },
     errors: [403, 409],
   },
 ]
