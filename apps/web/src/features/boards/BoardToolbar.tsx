@@ -1,3 +1,4 @@
+import type { RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BoardMeta } from './useBoardData'
 import '../../shared/styles/base.css'
@@ -8,6 +9,8 @@ type BoardToolbarProps = {
   searchQuery: string
   onSearchChange: (query: string) => void
   /** A haladó szűrő aktív feltételeinek száma. */
+  /** A kereső mező (a `/` gyorsbillentyű ide viszi a fókuszt). */
+  searchInputRef?: RefObject<HTMLInputElement | null>
   activeFilterCount: number
   filtersOpen: boolean
   onToggleFilters: () => void
@@ -17,6 +20,7 @@ export function BoardToolbar({
   meta,
   searchQuery,
   onSearchChange,
+  searchInputRef,
   activeFilterCount,
   filtersOpen,
   onToggleFilters,
@@ -28,6 +32,8 @@ export function BoardToolbar({
       <div className="board-filter-bar">
         <span className="search-icon">⌕</span>
         <input
+          ref={searchInputRef}
+          aria-keyshortcuts="/"
           type="text"
           placeholder={t('filter.placeholder')}
           aria-label={t('filter.aria')}

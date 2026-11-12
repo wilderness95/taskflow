@@ -13,12 +13,14 @@ export function ViewSwitcher({ activeView, onChange }: ViewSwitcherProps) {
   const { t } = useTranslation('board')
 
   return (
-    <div className="view-switcher" aria-label={t('views.aria')}>
+    <div className="view-switcher" role="group" aria-label={t('views.aria')}>
       {VIEWS.map((view) => (
         <button
           key={view}
           type="button"
           className={classNames('view-tab', activeView === view && 'active')}
+          aria-pressed={activeView === view}
+          aria-keyshortcuts={String(VIEWS.indexOf(view) + 1)}
           onClick={() => onChange(view)}
         >
           {t(`views.${view}.label`)}

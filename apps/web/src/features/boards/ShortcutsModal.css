@@ -1,0 +1,27 @@
+.shortcut-list {
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 0;
+}
+
+.shortcut-row {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.shortcut-row dt,
+.shortcut-row dd {
+  margin: 0;
+}
+
+.shortcut-row kbd {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.16);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  font-family: inherit;
+  font-size: 0.82rem;
+}

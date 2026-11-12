@@ -5,6 +5,7 @@ import { classNames } from '../../shared/lib/classNames'
 import { attachmentFileUrl } from '../../api/attachments'
 import { AssigneeStack } from './AssigneeStack'
 import type { DragProps } from '../boards/useBoardDrag'
+import { directionFromKey, type MoveDirection } from '../boards/keyboardMove'
 import type { Task } from '../boards/types'
 import '../../shared/styles/buttons.css'
 import '../../shared/styles/tags.css'
@@ -18,6 +19,8 @@ type TaskCardProps = {
   onEdit: () => void
   onDelete: () => void
   onArchive: () => void
+  /** Alt + nyíl: a kártya áthelyezése billentyűzettel. */
+  onKeyboardMove: (direction: MoveDirection) => void
   /** Olvasási jog: nincs szerkesztés és törlés. */
   readOnly?: boolean
 }
@@ -30,6 +33,7 @@ export function TaskCard({
   onEdit,
   onDelete,
   onArchive,
+  onKeyboardMove,
   readOnly = false,
 }: TaskCardProps) {
   const { t } = useTranslation('card')
@@ -43,7 +47,25 @@ export function TaskCard({
         isDragging && 'is-dragging',
         isDropTarget && 'is-over-target',
       )}
+      data-task-id={task.id}
+      tabIndex={0}
+      aria-keyshortcuts={
+        readOnly ? undefined : 'Enter Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight'
+      }
       onDoubleClick={readOnly ? undefined : onEdit}
+      onKeyDown={(event) => {
+        // A kártyán belüli gombok saját billentyűzet-kezelését nem írjuk felül.
+        if (readOnly || event.target !== event.currentTarget) return
+        const direction = event.altKey ? directionFromKey(event.key) : null
+        if (direction) {
+          event.preventDefault()
+          event.stopPropagation()
+          onKeyboardMove(direction)
+        } else if (event.key === 'Enter') {
+          event.preventDefault()
+          onEdit()
+        }
+      }}
       {...dragProps}
     >
       {isDropTarget && <div className="insert-indicator" aria-hidden="true" />}

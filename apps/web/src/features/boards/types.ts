@@ -64,4 +64,5 @@ export type Dialog =
   | { type: 'activity' }
   | { type: 'archive' }
   | { type: 'labels' }
+  | { type: 'shortcuts' }
   | { type: 'board-archive' }

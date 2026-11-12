@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
+import { directionFromKey, type MoveDirection } from '../boards/keyboardMove'
 import type { BoardDrag } from '../boards/useBoardDrag'
 import type { Column, Task } from '../boards/types'
 import { TaskCard } from '../cards/TaskCard'
@@ -13,6 +14,8 @@ type ColumnViewProps = {
   onDelete: () => void
   onArchive: () => void
   onArchiveTask: (taskId: string) => void
+  onKeyboardMoveTask: (taskId: string, direction: MoveDirection) => void
+  onKeyboardMoveColumn: (direction: 'left' | 'right') => void
   onAddTask: () => void
   onEditTask: (task: Task) => void
   onDeleteTask: (taskId: string) => void
@@ -27,6 +30,8 @@ export function ColumnView({
   onDelete,
   onArchive,
   onArchiveTask,
+  onKeyboardMoveTask,
+  onKeyboardMoveColumn,
   onAddTask,
   onEditTask,
   onDeleteTask,
@@ -49,7 +54,20 @@ export function ColumnView({
       )}
       {...drag.getColumnProps(columnId)}
     >
-      <header className="column-header">
+      <header
+        className="column-header"
+        data-column-id={columnId}
+        tabIndex={readOnly ? undefined : 0}
+        aria-keyshortcuts={readOnly ? undefined : 'Alt+ArrowLeft Alt+ArrowRight'}
+        onKeyDown={(event) => {
+          if (readOnly || event.target !== event.currentTarget || !event.altKey) return
+          const direction = directionFromKey(event.key)
+          if (direction === 'left' || direction === 'right') {
+            event.preventDefault()
+            onKeyboardMoveColumn(direction)
+          }
+        }}
+      >
         <div className="column-title-wrap">
           <span className="column-dot" aria-hidden="true" />
           <h2>{column.title}</h2>
@@ -111,6 +129,7 @@ export function ColumnView({
                 onEdit={() => onEditTask(task)}
                 onDelete={() => onDeleteTask(task.id)}
                 onArchive={() => onArchiveTask(task.id)}
+                onKeyboardMove={(direction) => onKeyboardMoveTask(task.id, direction)}
                 readOnly={readOnly}
               />
             ))}

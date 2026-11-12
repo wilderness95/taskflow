@@ -14,6 +14,7 @@ import { Topbar } from './Topbar'
 import { COLUMN_ACCENTS, type Dialog } from './types'
 import { useBoardDrag } from './useBoardDrag'
 import { useBoardData } from './useBoardData'
+import { useBoardKeyboard } from './useBoardKeyboard'
 import './BoardPage.css'
 
 const STATUS_KEYS = {
@@ -31,6 +32,17 @@ export function BoardPage() {
   const [filter, setFilter] = useState<BoardFilter>(EMPTY_BOARD_FILTER)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [dialog, setDialog] = useState<Dialog | null>(null)
+
+  const keyboard = useBoardKeyboard({
+    columns,
+    canWrite: meta.permissions.write,
+    dialog,
+    setDialog,
+    setActiveView: meta.setActiveView,
+    toggleFilters: () => setFiltersOpen((open) => !open),
+    moveTask: actions.moveTask,
+    reorderColumns: actions.reorderColumns,
+  })
 
   const drag = useBoardDrag({
     onMoveTask: actions.moveTask,
@@ -122,6 +134,7 @@ export function BoardPage() {
               onMembers={() => setDialog({ type: 'members' })}
               onActivity={() => setDialog({ type: 'activity' })}
               onLabels={() => setDialog({ type: 'labels' })}
+              onShortcuts={() => setDialog({ type: 'shortcuts' })}
               onArchive={() => setDialog({ type: 'archive' })}
               onArchiveBoard={() => setDialog({ type: 'board-archive' })}
               onAddColumn={handleAddColumn}
@@ -135,6 +148,7 @@ export function BoardPage() {
               meta={meta}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              searchInputRef={keyboard.searchInputRef}
               activeFilterCount={countActiveFilters(filter)}
               filtersOpen={filtersOpen}
               onToggleFilters={() => setFiltersOpen((open) => !open)}
@@ -159,6 +173,8 @@ export function BoardPage() {
                 onDeleteTask={actions.deleteTask}
                 onArchiveColumn={actions.archiveColumn}
                 onArchiveTask={actions.archiveTask}
+                onKeyboardMoveTask={keyboard.moveTaskByKey}
+                onKeyboardMoveColumn={keyboard.moveColumnByKey}
                 readOnly={!meta.permissions.write}
               />
             ) : (
@@ -173,6 +189,9 @@ export function BoardPage() {
               />
             )}
           </main>
+          <div className="visually-hidden" role="status" aria-live="polite">
+            {keyboard.announcement}
+          </div>
         </div>
       </div>
 
