@@ -15,7 +15,6 @@ type BoardHeaderProps = {
   onActivity: () => void
   onArchive: () => void
   onLabels: () => void
-  onShortcuts: () => void
   onArchiveBoard: () => void
   onAddColumn: () => void
 }
@@ -26,11 +25,10 @@ export function BoardHeader({
   onActivity,
   onArchive,
   onLabels,
-  onShortcuts,
   onArchiveBoard,
   onAddColumn,
 }: BoardHeaderProps) {
-  const { t } = useTranslation(['board', 'archive', 'labels', 'shortcuts'])
+  const { t } = useTranslation(['board', 'archive', 'labels'])
 
   return (
     <section className="board-header">
@@ -66,7 +64,6 @@ export function BoardHeader({
             { key: 'activity', label: t('activity.open'), onSelect: onActivity },
             { key: 'labels', label: t('labels:open'), onSelect: onLabels },
             { key: 'archive', label: t('archive:open'), onSelect: onArchive },
-            { key: 'shortcuts', label: t('shortcuts:open'), onSelect: onShortcuts },
             ...(meta.permissions.update
               ? [
                   {

@@ -135,7 +135,6 @@ export function BoardPage() {
               onMembers={() => setDialog({ type: 'members' })}
               onActivity={() => setDialog({ type: 'activity' })}
               onLabels={() => setDialog({ type: 'labels' })}
-              onShortcuts={() => setDialog({ type: 'shortcuts' })}
               onArchive={() => setDialog({ type: 'archive' })}
               onArchiveBoard={() => setDialog({ type: 'board-archive' })}
               onAddColumn={handleAddColumn}
