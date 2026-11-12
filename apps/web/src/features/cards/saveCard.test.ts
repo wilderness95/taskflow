@@ -117,13 +117,16 @@ describe('saveCard', () => {
         position: 'a1',
       })
     const task = makeTask('x', {
-      checklist: {
-        title: 'L',
-        items: [
-          { id: 'tmp1', text: 'a', done: false },
-          { id: 'tmp2', text: 'b', done: true },
-        ],
-      },
+      checklists: [
+        {
+          id: 'tmp',
+          title: 'L',
+          items: [
+            { id: 'tmp1', text: 'a', done: false },
+            { id: 'tmp2', text: 'b', done: true },
+          ],
+        },
+      ],
     })
     await saveCard(board(), { task, columnId: 'c1' })
     expect(api.createChecklist).toHaveBeenCalledWith('new', { title: 'L' })
@@ -148,13 +151,16 @@ describe('saveCard', () => {
       ],
     })
     const task = makeTask('k1', {
-      checklist: {
-        title: 'New',
-        items: [
-          { id: 'keep', text: 'same', done: false },
-          { id: 'change', text: 'old', done: true },
-        ],
-      },
+      checklists: [
+        {
+          id: 'cl',
+          title: 'New',
+          items: [
+            { id: 'keep', text: 'same', done: false },
+            { id: 'change', text: 'old', done: true },
+          ],
+        },
+      ],
     })
     await saveCard(board([existing]), { task, columnId: 'c2', originalColumnId: 'c1' })
     expect(api.updateCard).toHaveBeenCalledWith(
@@ -171,5 +177,27 @@ describe('saveCard', () => {
     expect(api.updateChecklistItem).toHaveBeenCalledTimes(1)
     expect(api.updateChecklistItem).toHaveBeenCalledWith('change', { text: 'old', done: true })
     expect(api.createChecklistItem).not.toHaveBeenCalled()
+  })
+
+  it('keeps several checklists in sync: deletes removed ones and creates new ones', async () => {
+    const list = (id: string, title: string) => ({
+      id,
+      cardId: 'k1',
+      title,
+      position: 'a0',
+      items: [],
+    })
+    const existing = card({ checklists: [list('keep', 'A'), list('drop', 'B')] })
+    const task = makeTask('k1', {
+      checklists: [
+        { id: 'keep', title: 'A', items: [] },
+        { id: 'tmp-new', title: 'C', items: [] },
+      ],
+    })
+    await saveCard(board([existing]), { task, columnId: 'c1', originalColumnId: 'c1' })
+    expect(api.deleteChecklist).toHaveBeenCalledTimes(1)
+    expect(api.deleteChecklist).toHaveBeenCalledWith('drop')
+    expect(api.createChecklist).toHaveBeenCalledWith('k1', { title: 'C' })
+    expect(api.updateChecklist).not.toHaveBeenCalled()
   })
 })
