@@ -1,0 +1,15 @@
+{
+  "title": "Értesítések",
+  "aria_one": "Értesítések, {{count, number}} olvasatlan",
+  "aria_other": "Értesítések, {{count, number}} olvasatlan",
+  "markAllRead": "Mind olvasott",
+  "loading": "Értesítések betöltése...",
+  "loadError": "Az értesítések betöltése nem sikerült.",
+  "empty": "Nincs értesítésed.",
+  "unknownActor": "Valaki",
+  "types": {
+    "assigned": "{{actor}} hozzád rendelte a(z) „{{card}}” kártyát",
+    "mentioned": "{{actor}} megemlített a(z) „{{card}}” kártyán",
+    "due_soon": "A(z) „{{card}}” kártya határideje közel van: {{date}}"
+  }
+}

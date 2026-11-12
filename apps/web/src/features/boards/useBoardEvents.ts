@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { BOARD_EVENT_NAME, boardEventSchema } from '@taskflow/shared'
 import { useEffect } from 'react'
+import { NOTIFICATIONS_KEY } from '../notifications/useNotifications'
 
 /** Az események összevonása: egy gyors sorozat (pl. több API-hívásos mentés) egyetlen újratöltés. */
 const DEBOUNCE_MS = 150
@@ -24,6 +25,8 @@ export function useBoardEvents(boardId: string, enabled = true): void {
       timer = setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: ['board', boardId] })
         void queryClient.invalidateQueries({ queryKey: ['boards'] })
+        // Hozzárendelés vagy említés a harangon is megjelenhet.
+        void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY })
       }, DEBOUNCE_MS)
     }
 

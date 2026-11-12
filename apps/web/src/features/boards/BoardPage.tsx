@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
@@ -31,6 +31,21 @@ export function BoardPage() {
     onReorderColumns: actions.reorderColumns,
     enabled: meta.permissions.write,
   })
+
+  // Értesítésből érkezve (`?card=<id>`) a kártya szerkesztője nyílik meg.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedCardId = searchParams.get('card')
+  useEffect(() => {
+    if (!requestedCardId || status !== 'ready') return
+    for (const [columnId, column] of Object.entries(columns)) {
+      const task = column.tasks.find((candidate) => candidate.id === requestedCardId)
+      if (task) {
+        setDialog(meta.permissions.write ? { type: 'card-edit', columnId, task } : null)
+        break
+      }
+    }
+    setSearchParams({}, { replace: true })
+  }, [requestedCardId, status, columns, meta.permissions.write, setSearchParams])
 
   const visibleColumns = useMemo(
     () => filterColumns(columns, searchQuery, (priority) => t(`card:priority.${priority}`)),

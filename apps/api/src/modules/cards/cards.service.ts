@@ -15,6 +15,7 @@ import type { AccessService } from '../access/access.service.js'
 import type { BoardsRepository } from '../boards/boards.repository.js'
 import type { ChecklistsRepository } from '../checklists/checklists.repository.js'
 import { toChecklistDto } from '../checklists/checklists.service.js'
+import type { NotificationsService } from '../notifications/notifications.service.js'
 import type { ColumnsRepository } from '../columns/columns.repository.js'
 import type { CardRow, CardsRepository } from './cards.repository.js'
 
@@ -25,8 +26,9 @@ export function createCardsService(deps: {
   checklists: ChecklistsRepository
   access: AccessService
   activity: ActivityService
+  notifications: NotificationsService
 }) {
-  const { cards, columns, boards, checklists, access, activity } = deps
+  const { cards, columns, boards, checklists, access, activity, notifications } = deps
 
   const hydrate = (rows: CardRow[]): CardDto[] => {
     const ids = rows.map((r) => r.id)
@@ -143,6 +145,12 @@ export function createCardsService(deps: {
         entityId: id,
         meta: { title: input.title, columnId, assigneeIds },
       })
+      notifications.notify(actor, {
+        type: 'assigned',
+        userIds: assigneeIds,
+        boardId: board.id,
+        cardId: id,
+      })
       return hydrate([require(id)])[0]!
     },
 
@@ -179,6 +187,14 @@ export function createCardsService(deps: {
             : {}),
         },
       })
+      if (assigned) {
+        notifications.notify(actor, {
+          type: 'assigned',
+          userIds: assigned.filter((u) => !before.includes(u)),
+          boardId: board.id,
+          cardId: id,
+        })
+      }
       return hydrate([require(id)])[0]!
     },
 
