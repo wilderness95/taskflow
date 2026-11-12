@@ -16,8 +16,8 @@
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgb(var(--slate) / 0.08);
+  border: 1px solid rgb(var(--slate) / 0.16);
 }
 
 .members-identity {
@@ -27,7 +27,7 @@
 }
 
 .members-identity small {
-  color: rgba(226, 232, 240, 0.7);
+  color: rgb(var(--ink) / 0.7);
 }
 
 .members-invite-form {
@@ -41,9 +41,9 @@
 .members-page select {
   padding: 9px 12px;
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  color: #eff6ff;
+  background: rgb(var(--surface) / 0.9);
+  border: 1px solid rgb(var(--slate) / 0.2);
+  color: var(--text);
   font: inherit;
 }
 

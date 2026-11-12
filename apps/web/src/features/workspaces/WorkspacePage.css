@@ -44,8 +44,8 @@
   gap: 8px;
   padding: 16px;
   border-radius: 14px;
-  background: rgba(148, 163, 184, 0.09);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgb(var(--slate) / 0.09);
+  border: 1px solid rgb(var(--slate) / 0.18);
 }
 
 .workspace-board-link {
@@ -58,11 +58,11 @@
 
 .workspace-board-meta {
   font-size: 0.8rem;
-  color: rgba(226, 232, 240, 0.72);
+  color: rgb(var(--ink) / 0.72);
 }
 
 .workspace-empty {
-  color: rgba(226, 232, 240, 0.72);
+  color: rgb(var(--ink) / 0.72);
 }
 
 .workspace-archived-list {
@@ -80,5 +80,5 @@
   gap: 12px;
   padding: 8px 12px;
   border-radius: 10px;
-  background: rgba(148, 163, 184, 0.1);
+  background: rgb(var(--slate) / 0.1);
 }

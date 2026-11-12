@@ -4,9 +4,9 @@
   margin: 0 8px;
   padding: 14px;
   border-radius: 12px;
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  color: #e2e8f0;
+  background: rgb(var(--slate) / 0.08);
+  border: 1px solid rgb(var(--slate) / 0.12);
+  color: var(--text);
 }
 
 .filter-groups {
@@ -69,8 +69,8 @@
 
 .saved-filter-form input {
   flex: 1;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgb(var(--surface) / 0.6);
+  border: 1px solid rgb(var(--slate) / 0.2);
   border-radius: 8px;
   color: inherit;
   padding: 6px 10px;

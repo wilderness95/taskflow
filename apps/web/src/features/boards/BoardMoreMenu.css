@@ -8,9 +8,9 @@
 
 .menu-item:hover,
 .menu-item:focus-visible {
-  background: rgba(148, 163, 184, 0.14);
+  background: rgb(var(--slate) / 0.14);
 }
 
 .more-menu-danger {
-  color: #fca5a5;
+  color: var(--danger-text);
 }

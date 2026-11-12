@@ -16,15 +16,15 @@
   gap: 8px;
   padding: 8px 10px;
   border-radius: 9px;
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgb(var(--slate) / 0.08);
+  border: 1px solid rgb(var(--slate) / 0.12);
 }
 
 .board-filter-bar input {
   width: 100%;
   background: transparent;
   border: none;
-  color: #edf4ff;
+  color: var(--text);
   font: inherit;
   font-size: 0.9rem;
 }
@@ -49,9 +49,9 @@
   align-items: center;
   padding: 7px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  background: rgb(var(--hl) / 0.08);
+  border: 1px solid rgb(var(--hl) / 0.08);
+  color: var(--text);
   font-size: 0.76rem;
   font-weight: 600;
 }

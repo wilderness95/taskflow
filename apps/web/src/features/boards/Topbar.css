@@ -4,8 +4,8 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: rgba(15, 23, 42, 0.82);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgb(var(--surface) / 0.82);
+  border-bottom: 1px solid rgb(var(--slate) / 0.12);
 }
 
 .brand-wrap {
@@ -13,7 +13,7 @@
   align-items: center;
   gap: 10px;
   padding-right: 4px;
-  color: #f1f5f9;
+  color: var(--text);
   text-decoration: none;
   border-radius: 10px;
 }
@@ -21,7 +21,7 @@
 .brand-wrap:hover,
 .brand-wrap:visited,
 .brand-wrap:active {
-  color: #f1f5f9;
+  color: var(--text);
   text-decoration: none;
 }
 
@@ -57,20 +57,20 @@
   justify-self: center;
   padding: 8px 10px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgb(var(--hl) / 0.05);
+  border: 1px solid rgb(var(--hl) / 0.05);
 }
 
 .search-box input {
   width: 100%;
   background: transparent;
   border: none;
-  color: #eef6ff;
+  color: var(--text);
   font: inherit;
 }
 
 .search-box input::placeholder {
-  color: rgba(226, 232, 240, 0.72);
+  color: rgb(var(--ink) / 0.72);
 }
 
 .search-box input:focus {
@@ -90,9 +90,9 @@
   justify-content: center;
   padding: 7px 10px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.1);
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  color: #eaf3ff;
+  background: rgb(var(--slate) / 0.1);
+  border: 1px solid rgb(var(--slate) / 0.14);
+  color: var(--text);
   font-size: 0.74rem;
   font-weight: 600;
 }
@@ -100,10 +100,10 @@
 .icon-button {
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid rgb(var(--slate) / 0.16);
   border-radius: 9px;
-  background: rgba(148, 163, 184, 0.06);
-  color: #ebf2ff;
+  background: rgb(var(--slate) / 0.06);
+  color: var(--text);
   cursor: pointer;
   transition:
     background 0.2s ease,
@@ -124,7 +124,7 @@
   background: linear-gradient(135deg, #fbbf24, #f97316);
   color: #0f172a;
   font-weight: 800;
-  border: 2px solid rgba(255, 255, 255, 0.18);
+  border: 2px solid rgb(var(--hl) / 0.18);
 }
 
 @media (max-width: 820px) {

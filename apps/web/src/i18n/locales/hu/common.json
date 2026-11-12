@@ -2,5 +2,11 @@
   "appName": "TaskFlow",
   "cancel": "Mégse",
   "close": "Bezárás",
-  "save": "Mentés"
+  "save": "Mentés",
+  "theme": {
+    "label": "Megjelenés",
+    "system": "Rendszer",
+    "light": "Világos",
+    "dark": "Sötét"
+  }
 }
