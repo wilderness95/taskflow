@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { UserMenu } from '../auth/UserMenu'
+import { SettingsMenu } from './SettingsMenu'
 import { WorkspaceSwitcher } from '../workspaces/WorkspaceSwitcher'
 import '../../shared/styles/base.css'
 import './Topbar.css'
@@ -50,9 +51,7 @@ export function Topbar({
       <div className="topbar-actions">
         <div className="stat-pill">{t('board:taskCount', { count: totalTasks })}</div>
         <NotificationBell />
-        <button type="button" className="icon-button" aria-label={t('board:settings')}>
-          ⚙
-        </button>
+        <SettingsMenu workspaceId={workspaceId} />
         <UserMenu />
       </div>
     </header>

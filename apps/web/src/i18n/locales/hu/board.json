@@ -12,6 +12,9 @@
   "taskCount_one": "{{count, number}} feladat",
   "taskCount_other": "{{count, number}} feladat",
   "settings": "Beállítások",
+  "settingsMenu": {
+    "workspaceMembers": "Munkaterület tagjai"
+  },
   "editTitleAria": "Táblacím szerkesztése",
   "star": {
     "add": "Kedvenc hozzáadása",
