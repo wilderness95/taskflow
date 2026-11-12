@@ -85,6 +85,13 @@
       "when": 1794487027365,
       "tag": "0011_harsh_killer_shrike",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1794501216481,
+      "tag": "0012_bright_dark_phoenix",
+      "breakpoints": true
     }
   ]
 }
