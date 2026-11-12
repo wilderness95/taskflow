@@ -43,6 +43,21 @@ const operationObject = (op: Operation): Json => {
     ...parameters(z.object(Object.fromEntries(pathParams.map((name) => [name, idSchema]))), 'path'),
     ...(op.query ? parameters(op.query, 'query') : []),
   ]
+  // Író műveleteknél opcionális `Idempotency-Key` (a bejelentkezés előtti auth végpontokon nincs értelme).
+  const allParams: Json[] =
+    op.method !== 'get' && !op.public
+      ? [
+          ...params,
+          {
+            name: 'Idempotency-Key',
+            in: 'header',
+            required: false,
+            description:
+              'Same key + same request returns the stored response (header `Idempotent-Replayed: true`) instead of repeating the write. Reusing a key with a different request is a 422; stored for 24 hours.',
+            schema: { type: 'string', minLength: 1, maxLength: 255 },
+          },
+        ]
+      : params
   const errorRef = {
     content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
   }
@@ -71,7 +86,7 @@ const operationObject = (op: Operation): Json => {
     ...(op.public ? { security: [] } : {}),
     summary: op.summary,
     operationId: `${op.method}_${op.path.replace(/[{}]/g, '').replace(/\W+/g, '_').replace(/^_|_$/g, '')}`,
-    ...(params.length > 0 && { parameters: params }),
+    ...(allParams.length > 0 && { parameters: allParams }),
     ...(op.body && {
       requestBody: {
         required: true,
