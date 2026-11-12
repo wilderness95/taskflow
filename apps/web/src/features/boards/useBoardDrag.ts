@@ -24,6 +24,8 @@ const IDLE_TASK_DRAG: TaskDragState = {
   targetTaskId: null,
 }
 
+const NO_DRAG: DragProps = {}
+
 const IDLE_COLUMN_DRAG: ColumnDragState = { activeColumnId: null, targetColumnId: null }
 
 type UseBoardDragOptions = {
@@ -34,6 +36,8 @@ type UseBoardDragOptions = {
     targetTaskId: string | null,
   ) => void
   onReorderColumns: (sourceColumnId: string, targetColumnId: string) => void
+  /** Olvasási joggal nincs húzás: a props-ok üresek, az elemek nem húzhatók. */
+  enabled?: boolean
 }
 
 const allowMove = (event: DragEvent) => {
@@ -45,7 +49,11 @@ const allowMove = (event: DragEvent) => {
  * A tábla drag & drop állapota és eseménykezelői (kártyák és oszlopok húzása).
  * A komponensek a `get*Props` függvények eredményét terjesztik szét az elemeikre.
  */
-export function useBoardDrag({ onMoveTask, onReorderColumns }: UseBoardDragOptions) {
+export function useBoardDrag({
+  onMoveTask,
+  onReorderColumns,
+  enabled = true,
+}: UseBoardDragOptions) {
   const [taskDrag, setTaskDrag] = useState<TaskDragState>(IDLE_TASK_DRAG)
   const [columnDrag, setColumnDrag] = useState<ColumnDragState>(IDLE_COLUMN_DRAG)
 
@@ -82,7 +90,9 @@ export function useBoardDrag({ onMoveTask, onReorderColumns }: UseBoardDragOptio
     }
   }
 
-  const getColumnProps = (columnId: string): DragProps => ({
+  const getColumnProps = (columnId: string): DragProps =>
+    enabled ? columnProps(columnId) : NO_DRAG
+  const columnProps = (columnId: string): DragProps => ({
     draggable: true,
     onDragStart: (event) => {
       event.dataTransfer.effectAllowed = 'move'
@@ -110,7 +120,9 @@ export function useBoardDrag({ onMoveTask, onReorderColumns }: UseBoardDragOptio
     },
   })
 
-  const getTaskProps = (columnId: string, taskId: string): DragProps => ({
+  const getTaskProps = (columnId: string, taskId: string): DragProps =>
+    enabled ? taskProps(columnId, taskId) : NO_DRAG
+  const taskProps = (columnId: string, taskId: string): DragProps => ({
     draggable: true,
     onDragStart: (event) => {
       // Ne induljon el a kártyát tartalmazó oszlop húzása is.
@@ -145,7 +157,9 @@ export function useBoardDrag({ onMoveTask, onReorderColumns }: UseBoardDragOptio
   })
 
   /** Az üres oszlop "+ Kártya hozzáadása" gombja is dobási cél. */
-  const getEmptyColumnProps = (columnId: string): DragProps => ({
+  const getEmptyColumnProps = (columnId: string): DragProps =>
+    enabled ? emptyColumnProps(columnId) : NO_DRAG
+  const emptyColumnProps = (columnId: string): DragProps => ({
     onDragOver: (event) => {
       if (!taskDrag.activeTaskId) {
         return

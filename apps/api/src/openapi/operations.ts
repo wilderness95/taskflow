@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import {
   boardListSchema,
+  boardMemberListSchema,
+  boardMemberSchema,
+  setBoardMemberSchema,
   boardSchema,
   boardSummarySchema,
   cardSchema,
@@ -14,7 +17,6 @@ import {
   createColumnSchema,
   createLabelSchema,
   deleteColumnQuerySchema,
-  idParamsSchema,
   labelSchema,
   moveCardSchema,
   moveColumnSchema,
@@ -23,6 +25,17 @@ import {
   updateChecklistItemSchema,
   updateChecklistSchema,
   updateColumnSchema,
+  acceptInvitationSchema,
+  createWorkspaceInvitationSchema,
+  createWorkspaceSchema,
+  memberListSchema,
+  memberSchema,
+  updateMemberSchema,
+  updateWorkspaceSchema,
+  workspaceInvitationListSchema,
+  workspaceInvitationSchema,
+  workspaceListSchema,
+  workspaceSchema,
   createInvitationSchema,
   forgotPasswordSchema,
   invitationSchema,
@@ -35,7 +48,7 @@ import {
 } from '@taskflow/shared'
 
 export type Operation = {
-  method: 'get' | 'post' | 'patch' | 'delete'
+  method: 'get' | 'post' | 'put' | 'patch' | 'delete'
   /** OpenAPI-formátumú útvonal (`/boards/{id}`), a `/api/v1` előtag nélkül. */
   path: string
   tag: string
@@ -55,8 +68,107 @@ const column = { tag: 'Columns' }
 const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
 const auth = { tag: 'Auth' }
+const workspace = { tag: 'Workspaces' }
 
 export const operations: Operation[] = [
+  {
+    ...workspace,
+    method: 'get',
+    path: '/workspaces',
+    summary: 'List my workspaces',
+    success: { status: 200, schema: workspaceListSchema },
+  },
+  {
+    ...workspace,
+    method: 'post',
+    path: '/workspaces',
+    summary: 'Create a workspace (the creator becomes its owner)',
+    body: createWorkspaceSchema,
+    success: { status: 201, schema: workspaceSchema },
+  },
+  {
+    ...workspace,
+    method: 'get',
+    path: '/workspaces/{id}',
+    summary: 'Get a workspace',
+    success: { status: 200, schema: workspaceSchema },
+  },
+  {
+    ...workspace,
+    method: 'patch',
+    path: '/workspaces/{id}',
+    summary: 'Rename a workspace (owner, admin)',
+    body: updateWorkspaceSchema,
+    success: { status: 200, schema: workspaceSchema },
+    errors: [403],
+  },
+  {
+    ...workspace,
+    method: 'delete',
+    path: '/workspaces/{id}',
+    summary: 'Delete an empty workspace (owner)',
+    success: { status: 204 },
+    errors: [403, 409],
+  },
+  {
+    ...workspace,
+    method: 'get',
+    path: '/workspaces/{id}/members',
+    summary: 'List members',
+    success: { status: 200, schema: memberListSchema },
+  },
+  {
+    ...workspace,
+    method: 'patch',
+    path: '/workspaces/{id}/members/{userId}',
+    summary: 'Change a member role (owner, admin)',
+    body: updateMemberSchema,
+    success: { status: 200, schema: memberSchema },
+    errors: [403, 409],
+  },
+  {
+    ...workspace,
+    method: 'delete',
+    path: '/workspaces/{id}/members/{userId}',
+    summary: 'Remove a member, or leave the workspace yourself',
+    success: { status: 204 },
+    errors: [403, 409],
+  },
+  {
+    ...workspace,
+    method: 'get',
+    path: '/workspaces/{id}/invitations',
+    summary: 'List pending invitations (owner, admin)',
+    success: { status: 200, schema: workspaceInvitationListSchema },
+    errors: [403],
+  },
+  {
+    ...workspace,
+    method: 'post',
+    path: '/workspaces/{id}/invitations',
+    summary: 'Invite someone by email with a role (owner, admin)',
+    body: createWorkspaceInvitationSchema,
+    success: { status: 201, schema: workspaceInvitationSchema },
+    errors: [403, 409, 429],
+  },
+  {
+    ...workspace,
+    method: 'delete',
+    path: '/workspaces/{id}/invitations/{invitationId}',
+    summary: 'Revoke a pending invitation (owner, admin)',
+    success: { status: 204 },
+    errors: [403],
+  },
+  {
+    ...workspace,
+    method: 'post',
+    path: '/invitations/accept',
+    summary: 'Accept a workspace invitation (signed in with the invited email)',
+    body: acceptInvitationSchema,
+    success: { status: 200, schema: workspaceSchema },
+    errors: [403, 429],
+  },
+
   {
     ...auth,
     public: true,
@@ -141,23 +253,68 @@ export const operations: Operation[] = [
     ...board,
     method: 'get',
     path: '/boards',
-    summary: 'List boards',
+    summary: 'List the boards I can read, across my workspaces',
+    success: { status: 200, schema: boardListSchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/workspaces/{id}/boards',
+    summary: 'List the boards I can read in a workspace',
     success: { status: 200, schema: boardListSchema },
   },
   {
     ...board,
     method: 'post',
-    path: '/boards',
-    summary: 'Create a board',
+    path: '/workspaces/{id}/boards',
+    summary: 'Create a board in a workspace (owner, admin, member)',
     body: createBoardSchema,
     success: { status: 201, schema: boardSummarySchema },
   },
   {
     ...board,
+    public: true,
     method: 'get',
     path: '/boards/{id}',
-    summary: 'Get a board with columns, cards and labels',
+    summary: 'Get a board with columns, cards and labels (public boards need no login)',
     success: { status: 200, schema: boardSchema },
+  },
+  {
+    ...board,
+    method: 'put',
+    path: '/boards/{id}/star',
+    summary: 'Star a board',
+    success: { status: 204 },
+  },
+  {
+    ...board,
+    method: 'delete',
+    path: '/boards/{id}/star',
+    summary: 'Unstar a board',
+    success: { status: 204 },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/members',
+    summary: 'List explicit board members',
+    success: { status: 200, schema: boardMemberListSchema },
+  },
+  {
+    ...board,
+    method: 'put',
+    path: '/boards/{id}/members/{userId}',
+    summary: 'Give a workspace member an explicit board role (board admin)',
+    body: setBoardMemberSchema,
+    success: { status: 200, schema: boardMemberSchema },
+    errors: [422],
+  },
+  {
+    ...board,
+    method: 'delete',
+    path: '/boards/{id}/members/{userId}',
+    summary: 'Remove an explicit board role (board admin)',
+    success: { status: 204 },
   },
   {
     ...board,
@@ -307,5 +464,3 @@ export const operations: Operation[] = [
     success: { status: 204 },
   },
 ]
-
-export { idParamsSchema }

@@ -1,6 +1,13 @@
 import { relations } from 'drizzle-orm'
 import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { PRIORITIES, TAG_COLORS } from '@taskflow/shared'
+import {
+  BOARD_ROLES,
+  BOARD_VISIBILITIES,
+  INVITABLE_ROLES,
+  PRIORITIES,
+  TAG_COLORS,
+  WORKSPACE_ROLES,
+} from '@taskflow/shared'
 
 const id = () => text('id').primaryKey()
 const createdAt = () =>
@@ -46,11 +53,16 @@ export const emailTokens = sqliteTable('email_tokens', {
   createdAt: createdAt(),
 })
 
-/** Regisztrációs meghívó (zárt rendszer); az M3 munkaterület-szerepkörrel bővíti. */
+/**
+ * Meghívó: munkaterület nélkül platform-szintű regisztrációs meghívó (admin), munkaterülettel
+ * és szerepkörrel munkaterületi meghívó (ez egyben regisztrációs meghívó is az új e-mail-címeknek).
+ */
 export const invitations = sqliteTable('invitations', {
   id: id(),
   email: text('email').notNull(),
   tokenHash: text('token_hash').notNull().unique(),
+  workspaceId: text('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }),
+  role: text('role', { enum: INVITABLE_ROLES }),
   invitedBy: text('invited_by')
     .notNull()
     .references(() => users.id),
@@ -59,18 +71,73 @@ export const invitations = sqliteTable('invitations', {
   createdAt: createdAt(),
 })
 
+export const workspaces = sqliteTable('workspaces', {
+  id: id(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  createdBy: text('created_by')
+    .notNull()
+    .references(() => users.id),
+  createdAt: createdAt(),
+})
+
+export const workspaceMembers = sqliteTable(
+  'workspace_members',
+  {
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: text('role', { enum: WORKSPACE_ROLES }).notNull(),
+    joinedAt: integer('joined_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [primaryKey({ columns: [t.workspaceId, t.userId] })],
+)
+
 export const boards = sqliteTable('boards', {
   id: id(),
+  /** A régi (M1) táblák az induláskor kapnak munkaterületet (db/backfill.ts); utána mindig kitöltött. */
+  workspaceId: text('workspace_id').references(() => workspaces.id),
   title: text('title').notNull(),
-  visibility: text('visibility', { enum: ['private', 'workspace', 'public'] })
-    .notNull()
-    .default('private'),
+  visibility: text('visibility', { enum: BOARD_VISIBILITIES }).notNull().default('private'),
   createdBy: text('created_by')
     .notNull()
     .references(() => users.id),
   archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
   createdAt: createdAt(),
 })
+
+/** Explicit tábla-szerepkör (a privát táblák hozzáférése). */
+export const boardMembers = sqliteTable(
+  'board_members',
+  {
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    role: text('role', { enum: BOARD_ROLES }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.boardId, t.userId] })],
+)
+
+export const boardStars = sqliteTable(
+  'board_stars',
+  {
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.boardId, t.userId] })],
+)
 
 export const columns = sqliteTable('columns', {
   id: id(),

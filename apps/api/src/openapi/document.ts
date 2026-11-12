@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { errorResponseSchema } from '@taskflow/shared'
-import { idParamsSchema, operations, type Operation } from './operations.js'
+import { errorResponseSchema, idSchema } from '@taskflow/shared'
+import { operations, type Operation } from './operations.js'
 
 type Json = Record<string, unknown>
 
@@ -11,6 +11,8 @@ const jsonSchema = (schema: z.ZodType, io: 'input' | 'output'): Json => {
   }) as Json
   return rest
 }
+
+const WRITE_TAGS = new Set(['Boards', 'Columns', 'Cards', 'Checklists'])
 
 const ERROR_DESCRIPTIONS: Record<number, string> = {
   400: 'Validation error or invalid token',
@@ -36,18 +38,21 @@ const parameters = (schema: z.ZodObject, location: 'path' | 'query'): Json[] => 
 }
 
 const operationObject = (op: Operation): Json => {
+  const pathParams = [...op.path.matchAll(/\{(\w+)\}/g)].map((match) => match[1] as string)
   const params = [
-    ...(op.path.includes('{id}') ? parameters(idParamsSchema, 'path') : []),
+    ...parameters(z.object(Object.fromEntries(pathParams.map((name) => [name, idSchema]))), 'path'),
     ...(op.query ? parameters(op.query, 'query') : []),
   ]
   const errorRef = {
     content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
   }
-  const hasId = op.path.includes('{id}')
+  const hasId = pathParams.length > 0
   const errorStatuses = new Set([
     ...(hasId ? [404] : []),
     ...(op.body || op.query || hasId ? [400] : []),
     ...(op.public ? [] : [401]),
+    // A tartalom módosítása jogosultsághoz kötött (a nem olvasható erőforrás 404).
+    ...(op.method !== 'get' && WRITE_TAGS.has(op.tag) ? [403] : []),
     ...(op.errors ?? []),
   ])
   const responses: Json = {

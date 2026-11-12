@@ -13,8 +13,8 @@ import type { Config } from '../../config.js'
 import { newId } from '../../db/ids.js'
 import { SEED_USER_ID } from '../../db/seed.js'
 import { AppError } from '../../errors.js'
-import { renderEmail, type EmailTemplate } from '../../i18n/index.js'
 import type { Mailer } from '../../mail/mailer.js'
+import { createMailSender } from '../../mail/sendMail.js'
 import type { AuthRepository, UserRow } from './auth.repository.js'
 import { LoginThrottle } from './loginThrottle.js'
 import { hashPassword, verifyDummyPassword, verifyPassword } from './passwords.js'
@@ -54,19 +54,7 @@ export function createAuthService(deps: {
   const link = (path: string, token: string) =>
     `${config.APP_URL.replace(/\/$/, '')}${path}?token=${encodeURIComponent(token)}`
 
-  /**
-   * A levelet nem várjuk be: a lassú vagy elérhetetlen SMTP-szerver nem akaszthatja meg a kérést,
-   * és a válaszidő nem árulja el, hogy létezik-e a fiók. A hibát naplózzuk.
-   */
-  const sendMail = (
-    user: { email: string; locale: string },
-    template: EmailTemplate,
-    params: Record<string, string | number>,
-  ): void => {
-    mailer
-      .send({ to: user.email, ...renderEmail(user.locale, template, params) })
-      .catch((error: unknown) => logger.error({ err: error, template }, 'failed to send email'))
-  }
+  const sendMail = createMailSender(mailer, logger)
 
   const createSession = (userId: string, ctx: RequestContext): NewSession => {
     const token = randomToken()
@@ -120,18 +108,17 @@ export function createAuthService(deps: {
   return {
     async register(input: RegisterInput, ctx: RequestContext): Promise<AuthResult> {
       const isFirstUser = repo.countLoginUsers() === 0
-      let invitation = undefined as ReturnType<AuthRepository['findInvitation']>
+      const found = input.inviteToken ? repo.findInvitation(sha256(input.inviteToken)) : undefined
+      const invitation =
+        found &&
+        !found.acceptedAt &&
+        found.expiresAt.getTime() > Date.now() &&
+        found.email === input.email
+          ? found
+          : undefined
 
-      if (!isFirstUser && config.REGISTRATION_MODE === 'invite') {
-        invitation = input.inviteToken ? repo.findInvitation(sha256(input.inviteToken)) : undefined
-        if (
-          !invitation ||
-          invitation.acceptedAt ||
-          invitation.expiresAt.getTime() < Date.now() ||
-          invitation.email !== input.email
-        ) {
-          throw new AppError(403, 'invitation_required', 'A valid invitation is required')
-        }
+      if (!isFirstUser && config.REGISTRATION_MODE === 'invite' && !invitation) {
+        throw new AppError(403, 'invitation_required', 'A valid invitation is required')
       }
 
       if (repo.findUserByEmail(input.email)) {
@@ -158,6 +145,11 @@ export function createAuthService(deps: {
           ? repo.updateUser(seedUser.id, values)!
           : repo.insertUser({ id: newId(), ...values })
         if (invitation) repo.markInvitationAccepted(invitation.id, now)
+        repo.ensurePersonalWorkspace(created.id, created.name)
+        // Munkaterületi meghívóval regisztráló azonnal tag lesz.
+        if (invitation?.workspaceId && invitation.role) {
+          repo.addWorkspaceMember(invitation.workspaceId, created.id, invitation.role)
+        }
         return created
       })
 

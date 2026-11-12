@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BOARD_ROLES } from '../roles'
 import {
   dateSchema,
   httpUrlSchema,
@@ -67,11 +68,17 @@ export const columnSchema = z.object({
 })
 export type ColumnDto = z.infer<typeof columnSchema>
 
+export const boardRoleSchema = z.enum(BOARD_ROLES)
+
 export const boardSummarySchema = z.object({
   id: idSchema,
+  workspaceId: idSchema,
   title: z.string(),
   visibility: visibilitySchema,
   createdAt: z.string(),
+  /** A bejelentkezett felhasználó tényleges szerepköre a táblán (a UI ebből tiltja le a műveleteket). */
+  myRole: boardRoleSchema,
+  starred: z.boolean(),
 })
 export type BoardSummaryDto = z.infer<typeof boardSummarySchema>
 
@@ -154,6 +161,20 @@ export type MoveColumnInput = z.infer<typeof moveColumnSchema>
 export const boardListSchema = z.object({ data: z.array(boardSummarySchema) })
 
 /** A kérés törzse, ahogy a kliens küldi (az alapértelmezések még kitöltetlenek). */
+export type CreateBoardRequest = z.input<typeof createBoardSchema>
 export type CreateColumnRequest = z.input<typeof createColumnSchema>
 export type CreateCardRequest = z.input<typeof createCardSchema>
 export type CreateChecklistRequest = z.input<typeof createChecklistSchema>
+
+export const boardMemberSchema = z.object({
+  userId: idSchema,
+  name: z.string(),
+  email: z.string(),
+  avatarUrl: z.string().nullable(),
+  role: boardRoleSchema,
+})
+export type BoardMemberDto = z.infer<typeof boardMemberSchema>
+export const boardMemberListSchema = z.object({ data: z.array(boardMemberSchema) })
+
+export const setBoardMemberSchema = z.object({ role: boardRoleSchema })
+export type SetBoardMemberInput = z.infer<typeof setBoardMemberSchema>

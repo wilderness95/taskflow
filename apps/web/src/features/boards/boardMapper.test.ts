@@ -6,6 +6,9 @@ const board: BoardDto = {
   id: 'b',
   title: 'T',
   visibility: 'private',
+  workspaceId: 'w',
+  myRole: 'admin',
+  starred: false,
   createdAt: '2026-01-01T00:00:00.000Z',
   labels: [{ id: 'l1', boardId: 'b', name: 'UI', color: 'blue' }],
   columns: [

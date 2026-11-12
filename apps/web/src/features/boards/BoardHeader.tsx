@@ -10,18 +10,22 @@ import './BoardHeader.css'
 
 type BoardHeaderProps = {
   meta: BoardMeta
-  onInvite: () => void
+  onMembers: () => void
   onAddColumn: () => void
 }
 
-export function BoardHeader({ meta, onInvite, onAddColumn }: BoardHeaderProps) {
+export function BoardHeader({ meta, onMembers, onAddColumn }: BoardHeaderProps) {
   const { t } = useTranslation('board')
 
   return (
     <section className="board-header">
       <div className="board-header-main">
         <span className="eyebrow">{t('eyebrow')}</span>
-        <BoardTitle title={meta.title} onChange={meta.setTitle} />
+        <BoardTitle
+          title={meta.title}
+          onChange={meta.setTitle}
+          readOnly={!meta.permissions.update}
+        />
       </div>
 
       <div className="board-actions">
@@ -34,21 +38,21 @@ export function BoardHeader({ meta, onInvite, onAddColumn }: BoardHeaderProps) {
           ★
         </button>
 
-        <VisibilityMenu visibility={meta.visibility} onChange={meta.setVisibility} />
+        <VisibilityMenu
+          visibility={meta.visibility}
+          onChange={meta.setVisibility}
+          readOnly={!meta.permissions.update}
+        />
         <ViewSwitcher activeView={meta.activeView} onChange={meta.setActiveView} />
 
-        <div className="member-stack">
-          <span className="member">A</span>
-          <span className="member">B</span>
-          <span className="member">C</span>
-        </div>
-
-        <button type="button" className="secondary-button" onClick={onInvite}>
-          {t('invite')}
+        <button type="button" className="secondary-button" onClick={onMembers}>
+          {t('members.open')}
         </button>
-        <button type="button" className="primary-button" onClick={onAddColumn}>
-          {t('addColumn')}
-        </button>
+        {meta.permissions.write && (
+          <button type="button" className="primary-button" onClick={onAddColumn}>
+            {t('addColumn')}
+          </button>
+        )}
       </div>
     </section>
   )

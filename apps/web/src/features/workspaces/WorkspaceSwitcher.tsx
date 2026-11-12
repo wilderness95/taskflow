@@ -1,46 +1,69 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 import { useDismiss } from '../../shared/hooks/useDismiss'
 import { classNames } from '../../shared/lib/classNames'
+import { CreateWorkspaceModal } from './CreateWorkspaceModal'
+import { useWorkspaces } from './useWorkspaces'
 import '../../shared/styles/menu.css'
 import './WorkspaceSwitcher.css'
 
-// Átmeneti, beégetett lista: az M3 mérföldkőben a szerverről jön.
-const WORKSPACE_OPTIONS = ['Web App Fejlesztés', 'Marketing', 'CRM']
+type WorkspaceSwitcherProps = {
+  /** A jelenleg megnyitott munkaterület. */
+  currentWorkspaceId?: string
+}
 
-export function WorkspaceSwitcher() {
-  const [selected, setSelected] = useState(WORKSPACE_OPTIONS[0])
+export function WorkspaceSwitcher({ currentWorkspaceId }: WorkspaceSwitcherProps) {
+  const { t } = useTranslation('workspace')
+  const navigate = useNavigate()
+  const { data: workspaces = [] } = useWorkspaces()
   const [isOpen, setIsOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useDismiss(ref, isOpen, () => setIsOpen(false))
+
+  const current = workspaces.find((workspace) => workspace.id === currentWorkspaceId)
 
   return (
     <div className="workspace-switcher-wrap" ref={ref}>
       <button
         type="button"
         className="workspace-switcher"
+        aria-label={t('switcher.aria')}
         onClick={() => setIsOpen((open) => !open)}
       >
-        <span>{selected}</span>
+        <span>{current?.name ?? t('switcher.choose')}</span>
         <span className="caret">⌄</span>
       </button>
       {isOpen && (
         <div className="menu-panel workspace-panel">
-          {WORKSPACE_OPTIONS.map((workspace) => (
+          {workspaces.map((workspace) => (
             <button
-              key={workspace}
+              key={workspace.id}
               type="button"
-              className={classNames('menu-item', selected === workspace && 'selected')}
+              className={classNames('menu-item', workspace.id === currentWorkspaceId && 'selected')}
               onClick={() => {
-                setSelected(workspace)
                 setIsOpen(false)
+                navigate(`/w/${workspace.id}`)
               }}
             >
-              {workspace}
+              {workspace.name}
             </button>
           ))}
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => {
+              setIsOpen(false)
+              setIsCreating(true)
+            }}
+          >
+            {t('switcher.create')}
+          </button>
         </div>
       )}
+      {isCreating && <CreateWorkspaceModal onClose={() => setIsCreating(false)} />}
     </div>
   )
 }
