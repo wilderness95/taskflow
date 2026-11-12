@@ -19,6 +19,9 @@ const SESSION_ONLY = [
   /^\/api\/v1\/workspaces\/[^/]+\/invitations$/,
   /^\/api\/v1\/boards\/[^/]+\/members\/.+/,
   /^\/api\/v1\/boards\/[^/]+\/star$/,
+  // A mentett szűrők személyes nézet-beállítások (csak böngészős bejelentkezéssel).
+  /^\/api\/v1\/boards\/[^/]+\/filters$/,
+  /^\/api\/v1\/filters\//,
 ]
 
 export function requiredScope(method: string, path: string): RequiredScope {

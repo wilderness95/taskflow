@@ -352,6 +352,25 @@ export const attachments = sqliteTable(
   (t) => [index('attachments_card_idx').on(t.cardId)],
 )
 
+/** A felhasználó saját, mentett kártyaszűrői egy táblán. */
+export const savedFilters = sqliteTable(
+  'saved_filters',
+  {
+    id: id(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    /** JSON (`BoardFilter`). */
+    filter: text('filter').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('saved_filters_name_idx').on(t.boardId, t.userId, t.name)],
+)
+
 export const checklists = sqliteTable('checklists', {
   id: id(),
   cardId: text('card_id')

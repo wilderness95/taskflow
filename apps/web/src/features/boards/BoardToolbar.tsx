@@ -7,10 +7,21 @@ type BoardToolbarProps = {
   meta: BoardMeta
   searchQuery: string
   onSearchChange: (query: string) => void
+  /** A haladó szűrő aktív feltételeinek száma. */
+  activeFilterCount: number
+  filtersOpen: boolean
+  onToggleFilters: () => void
 }
 
-export function BoardToolbar({ meta, searchQuery, onSearchChange }: BoardToolbarProps) {
-  const { t } = useTranslation('board')
+export function BoardToolbar({
+  meta,
+  searchQuery,
+  onSearchChange,
+  activeFilterCount,
+  filtersOpen,
+  onToggleFilters,
+}: BoardToolbarProps) {
+  const { t } = useTranslation(['board', 'filters'])
 
   return (
     <div className="board-toolbar">
@@ -24,6 +35,17 @@ export function BoardToolbar({ meta, searchQuery, onSearchChange }: BoardToolbar
           onChange={(event) => onSearchChange(event.target.value)}
         />
       </div>
+
+      <button
+        type="button"
+        className="secondary-button"
+        aria-expanded={filtersOpen}
+        onClick={onToggleFilters}
+      >
+        {activeFilterCount > 0
+          ? t('filters:openCount', { count: activeFilterCount })
+          : t('filters:open')}
+      </button>
 
       <div className="board-meta">
         <span className="meta-pill">

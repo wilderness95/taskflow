@@ -40,6 +40,9 @@ import { notificationsRoutes } from './modules/notifications/notifications.route
 import { createNotificationsRepository } from './modules/notifications/notifications.repository.js'
 import { createNotificationsService } from './modules/notifications/notifications.service.js'
 import { AppError } from './errors.js'
+import { filtersRoutes } from './modules/filters/filters.routes.js'
+import { createFiltersRepository } from './modules/filters/filters.repository.js'
+import { createFiltersService } from './modules/filters/filters.service.js'
 import { createLocalFileStore, type FileStore } from './files/fileStore.js'
 import { attachmentsRoutes } from './modules/attachments/attachments.routes.js'
 import { createAttachmentsRepository } from './modules/attachments/attachments.repository.js'
@@ -181,6 +184,7 @@ export function buildApp(
   app.register(boardsRoutes(boards))
   app.register(columnsRoutes(columns, cards))
   app.register(cardsRoutes(cards, checklists))
+  app.register(filtersRoutes(createFiltersService(createFiltersRepository(db), access)))
   app.register(checklistsRoutes(checklists))
   app.register(
     attachmentsRoutes(
