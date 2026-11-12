@@ -163,3 +163,41 @@ curl -N -H "Authorization: Bearer $KEY" $TF/boards/$BOARD_ID/events
   `X-RateLimit-Remaining` fejléc mutatja az állást. Túllépés után `429` és `Retry-After`.
 - A visszavont kulcs azonnal érvénytelen. Kulcsot gyanú esetén vonj vissza, és hozz létre újat.
 - A kulcsot ne tedd repóba, logba vagy promptba; csak környezeti változóban tartsd.
+
+## MCP szerver (`apps/mcp`)
+
+Külső AI eszközhöz (Claude Desktop, Gemini CLI, OpenCode) stdio MCP szerver is van, ugyanazzal az API kulccsal:
+
+```json
+{
+  "mcpServers": {
+    "taskflow": {
+      "command": "npx",
+      "args": ["tsx", "apps/mcp/src/stdio.ts"],
+      "env": { "TASKFLOW_URL": "https://taskflow.example.com", "TASKFLOW_API_KEY": "tfk_..." }
+    }
+  }
+}
+```
+
+Eszközök (munkaterület: `create_workspace`, `delete_workspace`; táblák: `list_workspaces`, `list_boards`, `get_board_overview`, `create_board`, `update_board`, `archive_board`,
+`restore_board`, `list_archived_boards`, `list_board_archive`; oszlopok: `create_column`, `update_column`, `move_column`,
+`archive_column`, `restore_column`, `delete_column`; kártyák: `get_card`, `create_card`, `search_cards`, `update_card`
+(minden mező), `move_card`, `archive_card`, `restore_card`, `delete_card`; checklist: `add_checklist_items`,
+`update_checklist_item`, `update_checklist`; címkék: `create_label`, `update_label`, `delete_label`; hozzászólások:
+`add_comment`, `list_comments`, `update_comment`, `delete_comment`). A kártya azonosítóval vagy címmel, az oszlopok,
+címkék és személyek névvel is megadhatók (kis- és nagybetű, ékezet nem számít). Minden író hívás automatikus
+`Idempotency-Key`-t kap, hálózati hibánál ugyanazzal a kulccsal újrapróbál.
+
+## Webhookok (opcionális, csak session)
+
+A tábla admin (`board:update`) a böngészős munkamenetével kimenő webhookot vehet fel (`POST /boards/{id}/webhooks`,
+kezelés: `PATCH|DELETE /webhooks/{id}`); API kulccsal nem konfigurálható. A tábla minden eseményéről (`card.created`,
+`card.moved`, `comment.created`, ...) vagy a megadott mintákról (`*`, `card.*`, `card.moved`) JSON POST érkezik
+(`WebhookPayload`: vékony jelzés, a részleteket az API-ból olvasd újra).
+
+Aláírás: `X-TaskFlow-Signature: t=<unix mp>,v1=<hex>`, ahol `v1 = HMAC_SHA256(secret, "<t>.<nyers törzs>")`. Ellenőrizd az
+aláírást és hogy a `t` friss (pl. 5 percen belüli). A `secret` (`whsec_...`) csak létrehozáskor látszik. További
+fejlécek: `X-TaskFlow-Event`, `X-TaskFlow-Delivery` (újrapróbálkozásnál azonos: ezzel deduplikálj). Hibánál (nem 2xx vagy
+időtúllépés, 5 mp) 3 próbálkozás; 10 egymás utáni sikertelen kézbesítés után a webhook kikapcsol (`active: false`), a
+`PATCH {"active": true}` újra bekapcsolja. Nem publikus célcím (loopback, privát hálózat, `localhost`) tiltott.

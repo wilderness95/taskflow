@@ -71,6 +71,20 @@
       "when": 1794470169094,
       "tag": "0009_eager_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1794486616094,
+      "tag": "0010_bored_nighthawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1794487027365,
+      "tag": "0011_harsh_killer_shrike",
+      "breakpoints": true
     }
   ]
 }

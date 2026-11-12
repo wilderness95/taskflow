@@ -9,9 +9,18 @@ export type BoardEventListener = (event: BoardEvent) => void
  */
 export function createEventBus() {
   const listeners = new Map<string, Set<BoardEventListener>>()
+  /** Minden tábla eseményét kapó előfizetők (pl. a webhook-kézbesítő). */
+  const global = new Set<BoardEventListener>()
 
   return {
     publish(event: BoardEvent): void {
+      for (const listener of global) {
+        try {
+          listener(event)
+        } catch {
+          // lásd lent
+        }
+      }
       for (const listener of listeners.get(event.boardId) ?? []) {
         try {
           listener(event)
@@ -29,6 +38,11 @@ export function createEventBus() {
         set.delete(listener)
         if (set.size === 0) listeners.delete(boardId)
       }
+    },
+    /** Feliratkozás az összes tábla eseményeire; a visszaadott függvény leiratkozik. */
+    subscribeAll(listener: BoardEventListener): () => void {
+      global.add(listener)
+      return () => void global.delete(listener)
     },
     subscriberCount: (boardId: string): number => listeners.get(boardId)?.size ?? 0,
   }

@@ -30,16 +30,20 @@ export const users = sqliteTable('users', {
 })
 
 /** A `id` a munkamenet-token SHA-256 hash-e; a nyers token csak a cookie-ban él. */
-export const sessions = sqliteTable('sessions', {
-  id: id(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-  userAgent: text('user_agent'),
-  ip: text('ip'),
-  createdAt: createdAt(),
-})
+export const sessions = sqliteTable(
+  'sessions',
+  {
+    id: id(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    userAgent: text('user_agent'),
+    ip: text('ip'),
+    createdAt: createdAt(),
+  },
+  (t) => [index('sessions_user_idx').on(t.userId)],
+)
 
 /** Egyszer használatos tokenek e-mailben (e-mail megerősítés, jelszó-visszaállítás); csak a hash tárolt. */
 export const emailTokens = sqliteTable('email_tokens', {
@@ -73,21 +77,25 @@ export const invitations = sqliteTable('invitations', {
 })
 
 /** API kulcs: csak a SHA-256 hash tárolt; a `prefix` a kulcs eleje az azonosításhoz. */
-export const apiKeys = sqliteTable('api_keys', {
-  id: id(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  prefix: text('prefix').notNull(),
-  keyHash: text('key_hash').notNull().unique(),
-  /** JSON tömb (`ApiKeyScope[]`). */
-  scopes: text('scopes').notNull(),
-  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
-  revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
-  lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
-  createdAt: createdAt(),
-})
+export const apiKeys = sqliteTable(
+  'api_keys',
+  {
+    id: id(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    prefix: text('prefix').notNull(),
+    keyHash: text('key_hash').notNull().unique(),
+    /** JSON tömb (`ApiKeyScope[]`). */
+    scopes: text('scopes').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
+    revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('api_keys_user_idx').on(t.userId)],
+)
 
 /** Írási műveletek naplója; az `actorType` megkülönbözteti az embert és az API kulcsot. */
 export const activityLog = sqliteTable(
@@ -152,21 +160,28 @@ export const workspaceMembers = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date()),
   },
-  (t) => [primaryKey({ columns: [t.workspaceId, t.userId] })],
+  (t) => [
+    primaryKey({ columns: [t.workspaceId, t.userId] }),
+    index('workspace_members_user_idx').on(t.userId),
+  ],
 )
 
-export const boards = sqliteTable('boards', {
-  id: id(),
-  /** A régi (M1) táblák az induláskor kapnak munkaterületet (db/backfill.ts); utána mindig kitöltött. */
-  workspaceId: text('workspace_id').references(() => workspaces.id),
-  title: text('title').notNull(),
-  visibility: text('visibility', { enum: BOARD_VISIBILITIES }).notNull().default('private'),
-  createdBy: text('created_by')
-    .notNull()
-    .references(() => users.id),
-  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
-  createdAt: createdAt(),
-})
+export const boards = sqliteTable(
+  'boards',
+  {
+    id: id(),
+    /** A régi (M1) táblák az induláskor kapnak munkaterületet (db/backfill.ts); utána mindig kitöltött. */
+    workspaceId: text('workspace_id').references(() => workspaces.id),
+    title: text('title').notNull(),
+    visibility: text('visibility', { enum: BOARD_VISIBILITIES }).notNull().default('private'),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('boards_workspace_idx').on(t.workspaceId)],
+)
 
 /** Explicit tábla-szerepkör (a privát táblák hozzáférése). */
 export const boardMembers = sqliteTable(
@@ -180,7 +195,10 @@ export const boardMembers = sqliteTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     role: text('role', { enum: BOARD_ROLES }).notNull(),
   },
-  (t) => [primaryKey({ columns: [t.boardId, t.userId] })],
+  (t) => [
+    primaryKey({ columns: [t.boardId, t.userId] }),
+    index('board_members_user_idx').on(t.userId),
+  ],
 )
 
 export const boardStars = sqliteTable(
@@ -193,53 +211,68 @@ export const boardStars = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (t) => [primaryKey({ columns: [t.boardId, t.userId] })],
+  (t) => [
+    primaryKey({ columns: [t.boardId, t.userId] }),
+    index('board_stars_user_idx').on(t.userId),
+  ],
 )
 
-export const columns = sqliteTable('columns', {
-  id: id(),
-  boardId: text('board_id')
-    .notNull()
-    .references(() => boards.id, { onDelete: 'cascade' }),
-  title: text('title').notNull(),
-  accent: text('accent', { enum: TAG_COLORS }).notNull(),
-  isDone: integer('is_done', { mode: 'boolean' }).notNull().default(false),
-  position: text('position').notNull(),
-  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
-})
+export const columns = sqliteTable(
+  'columns',
+  {
+    id: id(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    accent: text('accent', { enum: TAG_COLORS }).notNull(),
+    isDone: integer('is_done', { mode: 'boolean' }).notNull().default(false),
+    position: text('position').notNull(),
+    archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
+  },
+  (t) => [index('columns_board_idx').on(t.boardId)],
+)
 
-export const cards = sqliteTable('cards', {
-  id: id(),
-  columnId: text('column_id')
-    .notNull()
-    .references(() => columns.id),
-  title: text('title').notNull(),
-  description: text('description').notNull().default(''),
-  priority: text('priority', { enum: PRIORITIES }).notNull().default('medium'),
-  dueDate: text('due_date'),
-  coverImage: text('cover_image'),
-  /** A borítóként beállított csatolmány (`attachments.id`); törléskor a service nullázza. */
-  coverAttachmentId: text('cover_attachment_id'),
-  position: text('position').notNull(),
-  createdBy: text('created_by')
-    .notNull()
-    .references(() => users.id),
-  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
-  createdAt: createdAt(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  version: integer('version').notNull().default(1),
-})
+export const cards = sqliteTable(
+  'cards',
+  {
+    id: id(),
+    columnId: text('column_id')
+      .notNull()
+      .references(() => columns.id),
+    title: text('title').notNull(),
+    description: text('description').notNull().default(''),
+    priority: text('priority', { enum: PRIORITIES }).notNull().default('medium'),
+    dueDate: text('due_date'),
+    coverImage: text('cover_image'),
+    /** A borítóként beállított csatolmány (`attachments.id`); törléskor a service nullázza. */
+    coverAttachmentId: text('cover_attachment_id'),
+    position: text('position').notNull(),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
+    createdAt: createdAt(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    version: integer('version').notNull().default(1),
+  },
+  (t) => [index('cards_column_idx').on(t.columnId)],
+)
 
-export const labels = sqliteTable('labels', {
-  id: id(),
-  boardId: text('board_id')
-    .notNull()
-    .references(() => boards.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  color: text('color', { enum: TAG_COLORS }).notNull(),
-})
+export const labels = sqliteTable(
+  'labels',
+  {
+    id: id(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    color: text('color', { enum: TAG_COLORS }).notNull(),
+  },
+  (t) => [index('labels_board_idx').on(t.boardId)],
+)
 
 export const cardLabels = sqliteTable(
   'card_labels',
@@ -251,7 +284,10 @@ export const cardLabels = sqliteTable(
       .notNull()
       .references(() => labels.id, { onDelete: 'cascade' }),
   },
-  (t) => [primaryKey({ columns: [t.cardId, t.labelId] })],
+  (t) => [
+    primaryKey({ columns: [t.cardId, t.labelId] }),
+    index('card_labels_label_idx').on(t.labelId),
+  ],
 )
 
 /** Kártyához rendelt felhasználók (a kártya felelősei). */
@@ -371,24 +407,32 @@ export const savedFilters = sqliteTable(
   (t) => [uniqueIndex('saved_filters_name_idx').on(t.boardId, t.userId, t.name)],
 )
 
-export const checklists = sqliteTable('checklists', {
-  id: id(),
-  cardId: text('card_id')
-    .notNull()
-    .references(() => cards.id, { onDelete: 'cascade' }),
-  title: text('title').notNull(),
-  position: text('position').notNull(),
-})
+export const checklists = sqliteTable(
+  'checklists',
+  {
+    id: id(),
+    cardId: text('card_id')
+      .notNull()
+      .references(() => cards.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    position: text('position').notNull(),
+  },
+  (t) => [index('checklists_card_idx').on(t.cardId)],
+)
 
-export const checklistItems = sqliteTable('checklist_items', {
-  id: id(),
-  checklistId: text('checklist_id')
-    .notNull()
-    .references(() => checklists.id, { onDelete: 'cascade' }),
-  text: text('text').notNull(),
-  done: integer('done', { mode: 'boolean' }).notNull().default(false),
-  position: text('position').notNull(),
-})
+export const checklistItems = sqliteTable(
+  'checklist_items',
+  {
+    id: id(),
+    checklistId: text('checklist_id')
+      .notNull()
+      .references(() => checklists.id, { onDelete: 'cascade' }),
+    text: text('text').notNull(),
+    done: integer('done', { mode: 'boolean' }).notNull().default(false),
+    position: text('position').notNull(),
+  },
+  (t) => [index('checklist_items_checklist_idx').on(t.checklistId)],
+)
 
 export const boardsRelations = relations(boards, ({ many }) => ({
   columns: many(columns),
@@ -418,3 +462,26 @@ export const checklistItemsRelations = relations(checklistItems, ({ one }) => ({
     references: [checklists.id],
   }),
 }))
+
+/** Kimenő webhook egy táblához (board admin kezeli); a titok titkosítva tárolt (HMAC-aláíráshoz kell). */
+export const webhooks = sqliteTable(
+  'webhooks',
+  {
+    id: id(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    /** AES-256-GCM, `iv.tag.ciphertext` (base64url). */
+    secretEnc: text('secret_enc').notNull(),
+    /** JSON: esemény-minták (`*`, `card.*`, `card.moved`). */
+    events: text('events').notNull(),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    failureCount: integer('failure_count').notNull().default(0),
+    lastStatus: integer('last_status'),
+    lastDeliveryAt: integer('last_delivery_at', { mode: 'timestamp_ms' }),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('webhooks_board_idx').on(t.boardId)],
+)

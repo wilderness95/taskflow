@@ -7,7 +7,10 @@ import { MemoryMailer } from '../mail/mailer.js'
 
 export const PASSWORD = 'correct-horse-battery'
 
-export function createTestApp(env: Record<string, string> = {}) {
+export function createTestApp(
+  env: Record<string, string> = {},
+  deps: Omit<Parameters<typeof buildApp>[2], 'mailer'> = {},
+) {
   const { db } = createDb(':memory:')
   runMigrations(db)
   const mailer = new MemoryMailer()
@@ -21,7 +24,7 @@ export function createTestApp(env: Record<string, string> = {}) {
       ...env,
     }),
     db,
-    { mailer, fileStore: files },
+    { mailer, fileStore: files, ...deps },
   )
   return { app, db, mailer, files }
 }

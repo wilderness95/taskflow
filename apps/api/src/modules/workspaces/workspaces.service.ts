@@ -17,6 +17,7 @@ import { newId } from '../../db/ids.js'
 import { AppError, notFound } from '../../errors.js'
 import type { Mailer } from '../../mail/mailer.js'
 import { createMailSender } from '../../mail/sendMail.js'
+import type { FileStore } from '../../files/fileStore.js'
 import type { ActivityService } from '../activity/activity.service.js'
 import { randomToken, sha256 } from '../auth/tokens.js'
 import type { InvitationRow, WorkspaceRow, WorkspacesRepository } from './workspaces.repository.js'
@@ -45,6 +46,8 @@ export function createWorkspacesService(deps: {
   mailer: Mailer
   config: Config
   activity: ActivityService
+  /** A törölt munkaterület csatolmány-fájljainak eltávolítására. */
+  files?: FileStore
   logger: { error: (obj: unknown, msg: string) => void }
 }) {
   const { repo, config, activity } = deps
@@ -104,10 +107,16 @@ export function createWorkspacesService(deps: {
     remove(actor: Actor, id: string): void {
       authorize(actor, id, 'workspace:delete')
       if (repo.countBoards(id) > 0) {
-        throw new AppError(409, 'workspace_not_empty', 'Delete or move the boards first')
+        throw new AppError(409, 'workspace_not_empty', 'Archive or move the active boards first')
       }
       const { workspace } = membership(actor, id)
-      repo.transaction(() => repo.delete(id))
+      // Az archivált táblák a munkaterülettel együtt véglegesen törlődnek.
+      const storageKeys = repo.transaction(() => {
+        const keys = repo.purgeBoards(id)
+        repo.delete(id)
+        return keys
+      })
+      for (const key of storageKeys) void deps.files?.delete(key).catch(() => undefined)
       // A napló a munkaterülethez kötött sorokat törli, ezért ez már nem hivatkozik rá.
       log(actor, null, 'workspace.deleted', id, { name: workspace.name })
     },

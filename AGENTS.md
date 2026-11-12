@@ -8,13 +8,16 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 - npm workspaces monorepo; csomagkezelő: npm (`package-lock.json`). Ne használj yarn/pnpm-et.
   - `apps/web`: React 19 + Vite, i18next (megvan); TanStack Query, React Router (megvan).
   - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer, argon2 (megvan).
+  - `apps/mcp`: MCP szerver (`@taskflow/mcp`, `@modelcontextprotocol/sdk`); `apps/e2e`: Playwright E2E tesztek.
+  - Hangasszisztens: `@google/genai` (Gemini Live), `@fastify/websocket`.
   - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k (megvan); hibakódok (tervezett).
 - Üzemeltetés: Docker Compose (`web` + `api` + `cloudflared`) a házi szerveren, Cloudflare Tunnelen, saját domainnel.
-- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) és az M4 (nyilvános API, API kulcsok) kész; az M5 (kollaboráció, valós idő) kész; az M6 (funkcióbővítés: archiválás, címkekezelés, csatolmányok, szűrők, nézetek, billentyűzet) az `m6-features` branchen készült. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
+- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) és az M4 (nyilvános API, API kulcsok) kész; az M5 (kollaboráció, valós idő) kész; az M6 (funkcióbővítés: archiválás, címkekezelés, csatolmányok, szűrők, nézetek, billentyűzet) kész; az M7 (MCP, élő hangasszisztens, webhookok, üzemeltetés, E2E) az `m7-ai-ops` branchen készült. Az API-hoz bejelentkezés (session cookie) vagy API kulcs (`Authorization: Bearer tfk_...`) kell; a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
 
 ## Parancsok
 - Fejlesztés: `npm run dev`
 - Build: `npm run build`
+- E2E (külön, nem része a `npm test`-nek): `npm run e2e -w @taskflow/e2e`
 - Lint: `npm run lint` (oxlint, konfig: `.oxlintrc.json`)
 - Typecheck: `npm run typecheck`; tesztek: `npm test` (Vitest); formázás: `npm run format` / `npm run format:check` (Prettier)
 - Változtatás után mindig futtasd a lintet, a format-ellenőrzést, a typechecket, a teszteket és a buildet, és javítsd a hibákat. A CI (`.github/workflows/ci.yml`) ugyanezt futtatja.
@@ -45,6 +48,11 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 - Csatolmány: a fájl a `FileStore`-on (`files/fileStore.ts`) át tárolódik, a kulcs szerveroldali ULID, a felhasználói fájlnév csak megjelenítendő adat; letöltésnél csak a biztonságos képtípus megy `inline`. Kártya törlésekor a fájlokat is töröld.
 - Mentett szűrő: személyes nézet-beállítás, session-only, nem kerül az `activity_log`-ba.
 - Hozzárendelhető és megemlíthető felhasználó csak a tábla résztvevője (`AccessService.participants`).
+
+- MCP: az eszközök (`apps/mcp/src/tools.ts`) az API kulcsos REST fölött vékony, beszédbarát összevonások; új eszköz a meglévő végpontokra épüljön, nem kerüli meg az API-t. A kliens minden író kérésre `Idempotency-Key`-t tesz.
+- Hangasszisztens (`modules/voice/`): `WS /api/v1/voice/live` csak session-nel és `Origin`-ellenőrzéssel; a Gemini API kulcs nem kerülhet a böngészőbe; az eszközhívások a belépett felhasználó session cookie-jával futnak az API-n át (nincs külön jogosultsági út). Új munkamenet-korlát vagy üzenet a `packages/shared/src/schemas/voice.ts`-ben.
+- Webhook (`modules/webhooks/`): csak session, board admin; a kimenő kérés aláírt (HMAC), a célcím nem lehet privát hálózat (SSRF). Visszafejthető titkot csak a `lib/secretBox.ts`-en át tárolj, és csak ha a nyers érték kell (az API kulcs és a jelszó továbbra is csak hash).
+- Új külső kulcsokhoz/szolgáltatásokhoz tartozó változó a `.env.example`-be és a `docker-compose.yml`-be is kerüljön.
 
 ## Hozzáférhetőség
 - Minden interaktív elem billentyűzettel is elérhető és látható fókuszú (`:focus-visible`); a modalok a `shared/ui/Modal`-t használják (dialog szerep, Escape, fókuszcsapda).
