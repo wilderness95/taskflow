@@ -3,6 +3,8 @@ import {
   apiKeyListSchema,
   createApiKeySchema,
   createdApiKeySchema,
+  activityListSchema,
+  pageQuerySchema,
   boardListSchema,
   boardMemberListSchema,
   boardMemberSchema,
@@ -75,6 +77,14 @@ const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
 
 export const operations: Operation[] = [
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/activity',
+    summary: 'Board activity log, newest first (shows whether a human or an API key acted)',
+    query: pageQuerySchema,
+    success: { status: 200, schema: activityListSchema },
+  },
   {
     ...apiKey,
     method: 'get',

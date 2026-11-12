@@ -18,6 +18,7 @@ import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
 import { AppError, notFound } from '../../errors.js'
 import type { AccessService } from '../access/access.service.js'
+import type { ActivityService } from '../activity/activity.service.js'
 import type { CardsService } from '../cards/cards.service.js'
 import { toColumnDto } from '../columns/columns.service.js'
 import type { BoardRow, BoardsRepository } from './boards.repository.js'
@@ -36,7 +37,17 @@ export function createBoardsService(
   repo: BoardsRepository,
   cards: CardsService,
   access: AccessService,
+  activity: ActivityService,
 ) {
+  const log = (
+    actor: Actor,
+    boardId: string,
+    action: string,
+    entityType: string,
+    entityId: string,
+    meta: Record<string, unknown> = {},
+  ) => activity.record(actor, { boardId, action, entityType, entityId, meta })
+
   return {
     /** A felhasználó összes olvasható táblája (opcionálisan egy munkaterületre szűrve). */
     list(actor: Actor, workspaceId?: string): BoardSummaryDto[] {
@@ -80,18 +91,28 @@ export function createBoardsService(
         repo.setBoardMember(row.id, actor.id, 'admin')
         return row
       })
+      log(actor, board.id, 'board.created', 'board', board.id, { title: board.title })
       return toSummary(board, 'admin', false)
     },
 
     update(actor: Actor, id: string, input: UpdateBoardInput): BoardSummaryDto {
       const { role } = access.requireBoard(actor, id, 'board:update')
-      return toSummary(repo.update(id, input)!, role, repo.isStarred(id, actor.id))
+      const updated = repo.update(id, input)!
+      log(actor, id, 'board.updated', 'board', id, { fields: Object.keys(input) })
+      return toSummary(updated, role, repo.isStarred(id, actor.id))
     },
 
     /** Archiválás: a tábla eltűnik a listából, az adat megmarad. */
     remove(actor: Actor, id: string): void {
       access.requireBoard(actor, id, 'board:delete')
       repo.update(id, { archivedAt: new Date() })
+      log(actor, id, 'board.archived', 'board', id)
+    },
+
+    /** A tábla tevékenységnaplója (legújabb elöl), cursor-lapozással. */
+    activity(actor: Actor, boardId: string, page: { limit: number; cursor?: string }) {
+      access.requireBoard(actor, boardId, 'board:read')
+      return activity.listForBoard(boardId, page.limit, page.cursor)
     },
 
     star(actor: Actor, id: string): void {
@@ -106,7 +127,7 @@ export function createBoardsService(
 
     createColumn(actor: Actor, boardId: string, input: CreateColumnInput): ColumnDto {
       access.requireBoard(actor, boardId, 'board:write')
-      return toColumnDto(
+      const column = toColumnDto(
         repo.insertColumn({
           id: newId(),
           boardId,
@@ -116,11 +137,15 @@ export function createBoardsService(
           position: generateKeyBetween(repo.lastColumnPosition(boardId), null),
         }),
       )
+      log(actor, boardId, 'column.created', 'column', column.id, { title: column.title })
+      return column
     },
 
     createLabel(actor: Actor, boardId: string, input: CreateLabelInput): LabelDto {
       access.requireBoard(actor, boardId, 'board:write')
-      return { ...repo.insertLabel({ id: newId(), boardId, ...input }) }
+      const label = repo.insertLabel({ id: newId(), boardId, ...input })
+      log(actor, boardId, 'label.created', 'label', label.id, { name: label.name })
+      return { ...label }
     },
 
     listMembers(actor: Actor, boardId: string): BoardMemberDto[] {
@@ -144,6 +169,7 @@ export function createBoardsService(
         )
       }
       repo.setBoardMember(boardId, userId, input.role)
+      log(actor, boardId, 'board_member.set', 'user', userId, { role: input.role })
       return repo.listBoardMembers(boardId).find((m) => m.userId === userId)!
     },
 
@@ -151,6 +177,7 @@ export function createBoardsService(
       access.requireBoard(actor, boardId, 'board:manage_members')
       if (!repo.getBoardRole(boardId, userId)) throw notFound('Board member')
       repo.removeBoardMember(boardId, userId)
+      log(actor, boardId, 'board_member.removed', 'user', userId)
     },
   }
 }
