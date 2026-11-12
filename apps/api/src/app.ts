@@ -32,6 +32,8 @@ import { createColumnsRepository } from './modules/columns/columns.repository.js
 import { createColumnsService } from './modules/columns/columns.service.js'
 import { AppError } from './errors.js'
 import { openApiPlugin } from './openapi/openapi.plugin.js'
+import { createIdempotencyRepository } from './modules/idempotency/idempotency.repository.js'
+import { registerIdempotency } from './plugins/idempotency.js'
 import { registerErrorHandler } from './plugins/errorHandler.js'
 
 declare module 'fastify' {
@@ -80,6 +82,7 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     activity,
   })
   registerAuth(app, config, auth, apiKeys)
+  registerIdempotency(app, createIdempotencyRepository(db))
 
   const boardsRepo = createBoardsRepository(db)
   const columnsRepo = createColumnsRepository(db)

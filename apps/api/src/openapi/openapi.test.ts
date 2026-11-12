@@ -17,9 +17,13 @@ describe('openapi', () => {
     const doc = res.json()
     expect(doc.openapi).toBe('3.1.0')
     expect(doc.paths['/cards/{id}/move'].post.requestBody).toBeDefined()
-    expect(
-      doc.paths['/columns/{id}'].delete.parameters.map((p: { name: string }) => p.name),
-    ).toEqual(['id', 'moveCardsTo'])
+    const params = doc.paths['/columns/{id}'].delete.parameters as { name: string; in: string }[]
+    expect(params.filter((p) => p.in !== 'header').map((p) => p.name)).toEqual([
+      'id',
+      'moveCardsTo',
+    ])
+    expect(params.map((p) => p.name)).toContain('Idempotency-Key')
+    expect(doc.paths['/boards'].get.parameters).toBeUndefined()
     expect(doc.paths['/boards'].get.responses['200']).toBeDefined()
     expect(doc.components.schemas.ErrorResponse).toBeDefined()
   })
