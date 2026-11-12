@@ -116,6 +116,7 @@ test.describe('parancspaletta', () => {
     const palette = page.getByRole('dialog', { name: 'Parancspaletta' })
     await expect(palette).toBeVisible()
     await palette.getByRole('combobox').fill('bevasar')
+    await expect(palette.getByRole('option', { name: /Bevásárlás/ })).toBeVisible()
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/\/l\//)
 

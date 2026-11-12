@@ -193,6 +193,8 @@ curl -N -H "Authorization: Bearer $KEY" $TF/boards/$BOARD_ID/events
 
 ## 9. Korlátok
 
+- Ha a szerveren kötelező az e-mail-megerősítés (`REQUIRE_EMAIL_VERIFICATION`, alapból igen), a megerősítetlen e-mail-című
+  tulajdonos kulcsa `403 email_not_verified`-et kap (a platform-admin és a meghívóval regisztráltak mentesek).
 - Kulcsonként percenként legfeljebb `API_KEY_RATE_LIMIT_MAX` kérés (alapértelmezés: 120); a `X-RateLimit-Limit` és
   `X-RateLimit-Remaining` fejléc mutatja az állást. Túllépés után `429` és `Retry-After`.
 - A visszavont kulcs azonnal érvénytelen. Kulcsot gyanú esetén vonj vissza, és hozz létre újat.
