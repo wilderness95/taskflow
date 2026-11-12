@@ -93,9 +93,32 @@ curl -H "Authorization: Bearer $KEY" \
   "$TF/boards/$BOARD_ID/cards?priority=high&dueBefore=2030-01-31&limit=50"
 ```
 
-Szűrők: `columnId`, `priority`, `labelId`, `dueBefore`, `dueAfter` (bezárólag), `q` (részszöveg a címben/leírásban).
+Szűrők: `columnId`, `priority`, `labelId`, `assigneeId` (az adott felhasználóhoz rendelt kártyák), `dueBefore`, `dueAfter` (bezárólag), `q` (részszöveg a címben/leírásban).
 A válasz `{ "data": [...], "nextCursor": "..." }`; a következő oldal: `&cursor=<nextCursor>`, a `nextCursor: null` az utolsó
 oldal. `limit`: 1–200 (alapértelmezés: 50). Ugyanígy lapozható a `GET /boards/{id}/activity`.
+
+## 6/b. Archiválás, címkék és csatolmányok
+
+```sh
+# kártya archiválása / visszaállítása (az oszlop végére); oszlop: /columns/{id}/archive|restore
+curl -X POST $TF/cards/$CARD_ID/archive -H "Authorization: Bearer $KEY"
+curl -X POST $TF/cards/$CARD_ID/restore -H "Authorization: Bearer $KEY"
+# az archivált kártyák és oszlopok
+curl -H "Authorization: Bearer $KEY" $TF/boards/$BOARD_ID/archive
+# címke átnevezése / átszínezése (a név táblánként egyedi)
+curl -X PATCH $TF/labels/$LABEL_ID -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"name":"Hiba","color":"rose"}'
+# fájl csatolása: a törzs a nyers fájl, a Content-Type a fájl típusa, a név a lekérdezésben
+curl -X POST "$TF/cards/$CARD_ID/attachments?name=kep.png" -H "Authorization: Bearer $KEY" \
+  -H "Content-Type: image/png" --data-binary @kep.png
+# borító beállítása a feltöltött képből, letöltés
+curl -X PATCH $TF/cards/$CARD_ID -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"coverAttachmentId":"'$ATTACHMENT_ID'"}'
+curl -H "Authorization: Bearer $KEY" -o out.png $TF/attachments/$ATTACHMENT_ID/file
+```
+
+A feltöltés legnagyobb mérete `MAX_UPLOAD_MB` (alapértelmezés: 10 MB), felette `413 payload_too_large`. A mentett szűrők
+személyesek, kulccsal nem érhetők el.
 
 ## 7. Tevékenységnapló
 
