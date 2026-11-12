@@ -29,6 +29,8 @@ export type Task = {
   /** A borítóként használt csatolmány (kép) azonosítója. */
   coverAttachmentId?: string
   attachmentCount: number
+  /** A kártya létrehozásának időpontja (ISO); az idővonal a sáv kezdetét ebből veszi. */
+  createdAt?: string
   done?: boolean
   /** A kártya checklistjei (több is lehet). */
   checklists: TaskChecklist[]

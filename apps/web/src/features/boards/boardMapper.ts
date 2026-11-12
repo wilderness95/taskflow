@@ -26,6 +26,7 @@ const toTask = (
     coverImage: card.coverImage ?? undefined,
     coverAttachmentId: card.coverAttachmentId ?? undefined,
     attachmentCount: card.attachmentCount,
+    createdAt: card.createdAt,
     done,
     version: card.version,
     checklists: card.checklists.map((checklist) => ({

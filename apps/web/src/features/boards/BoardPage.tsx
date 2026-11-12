@@ -6,6 +6,7 @@ import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
 import { BoardDialogs } from './BoardDialogs'
 import { BoardHeader } from './BoardHeader'
+import { BoardAltView } from '../views/BoardAltView'
 import { BoardFilterPanel } from '../filters/BoardFilterPanel'
 import { BoardToolbar } from './BoardToolbar'
 import { applyBoardFilter, countTasks, filterColumns } from './filterColumns'
@@ -147,18 +148,30 @@ export function BoardPage() {
                 participants={participants}
               />
             )}
-            <Board
-              columns={visibleColumns}
-              drag={drag}
-              onRenameColumn={(columnId) => setDialog({ type: 'column-rename', columnId })}
-              onDeleteColumn={handleDeleteColumn}
-              onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
-              onEditTask={(columnId, task) => setDialog({ type: 'card-edit', columnId, task })}
-              onDeleteTask={actions.deleteTask}
-              onArchiveColumn={actions.archiveColumn}
-              onArchiveTask={actions.archiveTask}
-              readOnly={!meta.permissions.write}
-            />
+            {meta.activeView === 'kanban' ? (
+              <Board
+                columns={visibleColumns}
+                drag={drag}
+                onRenameColumn={(columnId) => setDialog({ type: 'column-rename', columnId })}
+                onDeleteColumn={handleDeleteColumn}
+                onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
+                onEditTask={(columnId, task) => setDialog({ type: 'card-edit', columnId, task })}
+                onDeleteTask={actions.deleteTask}
+                onArchiveColumn={actions.archiveColumn}
+                onArchiveTask={actions.archiveTask}
+                readOnly={!meta.permissions.write}
+              />
+            ) : (
+              <BoardAltView
+                view={meta.activeView}
+                columns={visibleColumns}
+                onOpenTask={
+                  meta.permissions.write
+                    ? (columnId, task) => setDialog({ type: 'card-edit', columnId, task })
+                    : undefined
+                }
+              />
+            )}
           </main>
         </div>
       </div>

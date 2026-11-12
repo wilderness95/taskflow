@@ -85,6 +85,7 @@ describe('toColumns', () => {
       dueDate: undefined,
       coverImage: undefined,
       attachmentCount: 0,
+      createdAt: '2026-01-01T00:00:00.000Z',
       done: true,
       version: 1,
       checklists: [{ id: 'cl', title: 'Lista', items: [{ id: 'i1', text: 'Egy', done: true }] }],

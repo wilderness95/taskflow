@@ -1,0 +1,25 @@
+{
+  "list": {
+    "caption": "Kártyák listája",
+    "title": "Kártya",
+    "column": "Oszlop",
+    "priority": "Prioritás",
+    "labels": "Címkék",
+    "assignees": "Felelősök",
+    "due": "Határidő",
+    "empty": "Nincs a szűrésnek megfelelő kártya."
+  },
+  "calendar": {
+    "aria": "Naptár a kártyák határidejével",
+    "previous": "Előző hónap",
+    "next": "Következő hónap",
+    "today": "Ma",
+    "unscheduled": "Határidő nélkül"
+  },
+  "timeline": {
+    "aria": "Idővonal a kártyák létrehozásától a határidejükig",
+    "card": "Kártya",
+    "empty": "Nincs határidős kártya, amit az idővonalon meg lehetne jeleníteni.",
+    "unscheduled": "Határidő nélkül"
+  }
+}
