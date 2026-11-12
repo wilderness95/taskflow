@@ -339,7 +339,17 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 - teljesítmény: indexek, N+1 ellenőrzés;
 - döntési pont: maradhat-e SQLite, vagy Postgres-re kell váltani (Drizzle miatt olcsó váltás).
 
-> **Új függőségek (egyeztetés kell a bevezetésük előtt, az `AGENTS.md` szerint):** `@google/genai`, az MCP SDK (`@modelcontextprotocol/sdk`) és egy WebSocket-támogatás az API-hoz (pl. `@fastify/websocket`).
+**Megvalósítás (kész):**
+- MCP (`apps/mcp`, `@taskflow/mcp`): `createTaskflowMcpServer(apiClient)` a hét összevont eszközzel (`list_boards`, `get_board_overview`, `create_card`, `search_cards`, `move_card`, `update_card`, `add_comment`); az oszlop, címke és személy névvel is megadható (ékezet- és kisbetű-érzéketlen feloldás, hibánál nem jön létre fél kártya). Az API-kliens minden író kérésre UUID `Idempotency-Key`-t tesz, hálózati hibánál ugyanazzal újrapróbál. Stdio belépő: `apps/mcp/src/stdio.ts` (`TASKFLOW_URL`, `TASKFLOW_API_KEY`).
+- Hangasszisztens backend: `WS /api/v1/voice/live?boardId=...` (`modules/voice/`), csak session-nel (`session_required` kulccsal), `Origin` ellenőrzéssel (cross-site WebSocket ellen). A híd a `@taskflow/mcp` szervert **memórián belüli átvitellel** köti a Gemini Live munkamenetre, az API-t a saját folyamatban (`inject`) a felhasználó session cookie-jával hívja, így nincs külön jogosultsági út, és az SSE is frissül. A `systemInstruction` az aktuális dátumot és a nézett táblát tartalmazza; a `boardId`-t nem megadó eszközhívásokba a szerver beteszi. Korlátok: `VOICE_MAX_SESSIONS_PER_USER`, `VOICE_MAX_MINUTES`; `GEMINI_API_KEY` nélkül 503 `voice_unavailable`. Protokoll: `packages/shared/src/schemas/voice.ts`; `GET /health` -> `voice: bool` mondja meg a frontendnek, hogy van-e hangasszisztens.
+- Hangasszisztens frontend (`features/voice/`): mikrofon gomb a Topbarban (állapot: hallgat / gondolkodik / beszél), `AudioWorklet` 16 kHz-es PCM-rögzítés, pufferelt 24 kHz-es lejátszó, szerver-oldali (modell) és kézi megszakítás; minden szöveg i18n kulccsal (`voice` névtér).
+- Webhookok: `GET|POST /boards/{id}/webhooks`, `PATCH|DELETE /webhooks/{id}` (board admin, csak session). HMAC-SHA256 aláírás (`X-TaskFlow-Signature: t=<unix>,v1=<hex>`), 3 próbálkozás azonos `deliveryId`-val, 10 egymás utáni hiba után automatikus kikapcsolás, SSRF-védelem (privát/loopback cél tiltva, névfeloldás után is). A titok AES-256-GCM-mel tárolt (`SESSION_SECRET`-ből származtatott kulcs), mert az aláíráshoz a nyers érték kell; csak létrehozáskor látszik. Felület (UI) nincs hozzá, az API-n kezelhető.
+- Üzemeltetés: lásd `docs/OPERATIONS.md` (healthcheckek, log-rotáció, nginx WebSocket upgrade, napi mentés sidecar és visszaállítás, Cloudflare Access, SQLite/Postgres döntés: **marad az SQLite**).
+- Teljesítmény: indexek az idegen kulcsokra (migráció `0011`) és egy lekérdezésszám-teszt (`queryCount.test.ts`), amely a beolvasó végpontokon az N+1-et zárja ki.
+- E2E: `apps/e2e` (Playwright, Chromium): regisztráció/belépés, tábla és kártya, valamint az API kulcsos agent élő megjelenése az SSE-n át. Futtatás: `npm run e2e -w @taskflow/e2e` (egyszer: `npx playwright install chromium`); a CI külön job-ban futtatja.
+- Nem része az M7-nek: a webhook-kezelő UI, a Cloudflare Tunnelen végzett éles WebSocket-próba (a checklist a `docs/OPERATIONS.md`-ben; a deploykor kell elvégezni).
+
+> **Új függőségek (az M7-ben bevezetve):** `@google/genai`, `@modelcontextprotocol/sdk`, `@fastify/websocket`, és fejlesztői függőségként a `@playwright/test`.
 
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 
