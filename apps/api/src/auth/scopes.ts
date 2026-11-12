@@ -15,6 +15,9 @@ const SESSION_ONLY = [
   /^\/api\/v1\/api-keys(\/|$)/,
   /^\/api\/v1\/notifications(\/|$)/,
   /^\/api\/v1\/voice(\/|$)/,
+  // Kimenő webhookot (kulccsal, azaz AI agenttel) nem lehet konfigurálni.
+  /^\/api\/v1\/boards\/[^/]+\/webhooks$/,
+  /^\/api\/v1\/webhooks(\/|$)/,
   /^\/api\/v1\/invitations(\/|$)/,
   /^\/api\/v1\/workspaces\/[^/]+\/(members|invitations)\/.+/,
   /^\/api\/v1\/workspaces\/[^/]+\/invitations$/,

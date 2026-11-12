@@ -184,3 +184,16 @@ Eszközök: `list_boards`, `get_board_overview`, `create_card` (felelősök, cí
 `search_cards`, `move_card`, `update_card`, `add_comment`. Az oszlopok, címkék és személyek névvel is megadhatók
 (kis- és nagybetű, ékezet nem számít). Minden író hívás automatikus `Idempotency-Key`-t kap, hálózati hibánál
 ugyanazzal a kulccsal újrapróbál.
+
+## Webhookok (opcionális, csak session)
+
+A tábla admin (`board:update`) a böngészős munkamenetével kimenő webhookot vehet fel (`POST /boards/{id}/webhooks`,
+kezelés: `PATCH|DELETE /webhooks/{id}`); API kulccsal nem konfigurálható. A tábla minden eseményéről (`card.created`,
+`card.moved`, `comment.created`, ...) vagy a megadott mintákról (`*`, `card.*`, `card.moved`) JSON POST érkezik
+(`WebhookPayload`: vékony jelzés, a részleteket az API-ból olvasd újra).
+
+Aláírás: `X-TaskFlow-Signature: t=<unix mp>,v1=<hex>`, ahol `v1 = HMAC_SHA256(secret, "<t>.<nyers törzs>")`. Ellenőrizd az
+aláírást és hogy a `t` friss (pl. 5 percen belüli). A `secret` (`whsec_...`) csak létrehozáskor látszik. További
+fejlécek: `X-TaskFlow-Event`, `X-TaskFlow-Delivery` (újrapróbálkozásnál azonos: ezzel deduplikálj). Hibánál (nem 2xx vagy
+időtúllépés, 5 mp) 3 próbálkozás; 10 egymás utáni sikertelen kézbesítés után a webhook kikapcsol (`active: false`), a
+`PATCH {"active": true}` újra bekapcsolja. Nem publikus célcím (loopback, privát hálózat, `localhost`) tiltott.
