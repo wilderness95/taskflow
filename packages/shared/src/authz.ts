@@ -11,6 +11,8 @@ export type WorkspaceAction =
   | 'workspace:delete'
   | 'workspace:manage_members'
   | 'board:create'
+  | 'list:read'
+  | 'list:write'
 
 export type BoardAction =
   'board:read' | 'board:write' | 'board:update' | 'board:delete' | 'board:manage_members'
@@ -40,10 +42,19 @@ export const WORKSPACE_PERMISSIONS: Record<WorkspaceRole, readonly WorkspaceActi
     'workspace:delete',
     'workspace:manage_members',
     'board:create',
+    'list:read',
+    'list:write',
   ],
-  admin: ['workspace:read', 'workspace:update', 'workspace:manage_members', 'board:create'],
-  member: ['workspace:read', 'board:create'],
-  viewer: ['workspace:read'],
+  admin: [
+    'workspace:read',
+    'workspace:update',
+    'workspace:manage_members',
+    'board:create',
+    'list:read',
+    'list:write',
+  ],
+  member: ['workspace:read', 'board:create', 'list:read', 'list:write'],
+  viewer: ['workspace:read', 'list:read'],
 }
 
 export const BOARD_PERMISSIONS: Record<BoardRole, readonly BoardAction[]> = {
