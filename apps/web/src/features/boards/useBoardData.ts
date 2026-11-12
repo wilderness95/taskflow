@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { boardRoleCan, type BoardDto } from '@taskflow/shared'
 import { useMemo, useState } from 'react'
+import i18n from '../../i18n'
+import { showToast } from '../../shared/ui/toast'
 import * as api from '../../api/boards'
 import { ApiError } from '../../api/client'
 import { useBoardEvents } from './useBoardEvents'
@@ -177,7 +179,17 @@ export function useBoardData(boardId: string) {
         updateColumn.mutate({ columnId, title, accent }),
       deleteColumn: (columnId: string) => deleteColumn.mutate(columnId),
       archiveColumn: (columnId: string) => archiveColumn.mutate(columnId),
-      archiveTask: (taskId: string) => archiveTask.mutate(taskId),
+      archiveTask: (taskId: string) =>
+        archiveTask.mutate(taskId, {
+          onSuccess: () =>
+            showToast({
+              message: i18n.t('board:toast.cardArchived'),
+              action: {
+                label: i18n.t('common:undo'),
+                run: () => void api.restoreCard(taskId).then(refresh),
+              },
+            }),
+        }),
       archiveBoard: () => archiveBoard.mutateAsync(),
       reorderColumns: (sourceId: string, targetId: string) => {
         const ids = Object.keys(columns)

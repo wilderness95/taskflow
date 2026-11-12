@@ -19,7 +19,7 @@
 .list-view td {
   text-align: left;
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  border-bottom: 1px solid rgb(var(--slate) / 0.14);
   vertical-align: middle;
 }
 
@@ -43,7 +43,7 @@
 button.view-task {
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: rgba(148, 163, 184, 0.4);
+  text-decoration-color: rgb(var(--slate) / 0.4);
 }
 
 .list-due.overdue {

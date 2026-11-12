@@ -58,6 +58,9 @@ import { createLocalFileStore, type FileStore } from './files/fileStore.js'
 import { attachmentsRoutes } from './modules/attachments/attachments.routes.js'
 import { createAttachmentsRepository } from './modules/attachments/attachments.repository.js'
 import { createAttachmentsService } from './modules/attachments/attachments.service.js'
+import { listsRoutes } from './modules/lists/lists.routes.js'
+import { createListsRepository } from './modules/lists/lists.repository.js'
+import { createListsService } from './modules/lists/lists.service.js'
 import { openApiPlugin } from './openapi/openapi.plugin.js'
 import { createIdempotencyRepository } from './modules/idempotency/idempotency.repository.js'
 import { registerIdempotency } from './plugins/idempotency.js'
@@ -201,6 +204,7 @@ export function buildApp(
   app.register(columnsRoutes(columns, cards))
   app.register(cardsRoutes(cards, checklists))
   app.register(filtersRoutes(createFiltersService(createFiltersRepository(db), access)))
+  app.register(listsRoutes(createListsService(createListsRepository(db), access, activity)))
   app.register(checklistsRoutes(checklists))
   app.register(
     attachmentsRoutes(
@@ -239,7 +243,14 @@ export function buildApp(
     maxMinutes: config.VOICE_MAX_MINUTES,
     logger: app.log,
   })
-  app.register(healthRoutes({ voice: voice.available }))
+  app.register(
+    healthRoutes({
+      voice: voice.available,
+      emailVerificationRequired: config.REQUIRE_EMAIL_VERIFICATION,
+      registrationOpen: () =>
+        config.REGISTRATION_MODE === 'open' || authRepo.countLoginUsers() === 0,
+    }),
+  )
   const secrets = createSecretBox(config.SESSION_SECRET)
   const webhooksRepo = createWebhooksRepository(db)
   const dispatcher = createWebhookDispatcher({

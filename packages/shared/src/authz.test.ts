@@ -28,10 +28,19 @@ describe('workspace policy matrix', () => {
       'workspace:delete',
       'workspace:manage_members',
       'board:create',
+      'list:read',
+      'list:write',
     ],
-    admin: ['workspace:read', 'workspace:update', 'workspace:manage_members', 'board:create'],
-    member: ['workspace:read', 'board:create'],
-    viewer: ['workspace:read'],
+    admin: [
+      'workspace:read',
+      'workspace:update',
+      'workspace:manage_members',
+      'board:create',
+      'list:read',
+      'list:write',
+    ],
+    member: ['workspace:read', 'board:create', 'list:read', 'list:write'],
+    viewer: ['workspace:read', 'list:read'],
   }
   const actions: WorkspaceAction[] = [
     'workspace:read',
@@ -39,6 +48,8 @@ describe('workspace policy matrix', () => {
     'workspace:delete',
     'workspace:manage_members',
     'board:create',
+    'list:read',
+    'list:write',
   ]
 
   for (const role of WORKSPACE_ROLES) {

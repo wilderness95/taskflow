@@ -1,0 +1,82 @@
+{
+  "nav": {
+    "lists": "Listák"
+  },
+  "overview": {
+    "eyebrow": "Munkaterület",
+    "title": "Listák",
+    "create": "+ Új lista",
+    "empty": "Még nincs lista. Hozz létre egyet (pl. bevásárlólistát)!",
+    "loadError": "A listák betöltése nem sikerült.",
+    "progress": "{{done}} / {{total}} kész",
+    "archived": "Archivált listák",
+    "restore": "Visszaállítás",
+    "restoreAria": "{{title}} lista visszaállítása",
+    "backToBoards": "Táblák"
+  },
+  "create": {
+    "eyebrow": "Lista",
+    "title": "Új lista",
+    "titleLabel": "A lista neve",
+    "submit": "Létrehozás"
+  },
+  "page": {
+    "eyebrow": "Lista",
+    "loadError": "A lista nem tölthető be, vagy nincs hozzáférésed.",
+    "back": "Vissza a listákhoz",
+    "editTitleAria": "Lista nevének szerkesztése",
+    "progress": "{{done}} / {{total}} kész",
+    "readOnly": "Csak olvasási jogod van ehhez a listához.",
+    "empty": "A lista üres. Adj hozzá egy tételt!",
+    "moveHint": "Áthelyezés: Alt + fel/le nyíl",
+    "moved": "{{text}} áthelyezve"
+  },
+  "add": {
+    "label": "Új tétel",
+    "placeholder": "Új tétel (Enter a hozzáadáshoz)",
+    "submit": "Hozzáadás",
+    "section": "Szakasz",
+    "recurring": "Ismétlődő"
+  },
+  "item": {
+    "edit": "Szerkesztés",
+    "editAria": "{{text}} szerkesztése",
+    "delete": "Törlés",
+    "deleteAria": "{{text}} törlése",
+    "recurringBadge": "Ismétlődő tétel",
+    "text": "Szöveg",
+    "section": "Szakasz",
+    "noSection": "Szakasz nélkül",
+    "recurring": "Ismétlődő",
+    "save": "Mentés",
+    "cancel": "Mégse"
+  },
+  "section": {
+    "add": "+ Szakasz",
+    "addTitle": "Új szakasz",
+    "titleLabel": "A szakasz neve",
+    "addSubmit": "Hozzáadás",
+    "rename": "Átnevezés",
+    "renameAria": "{{title}} szakasz átnevezése",
+    "delete": "Törlés",
+    "deleteAria": "{{title}} szakasz törlése",
+    "deleteTitle": "Szakasz törlése",
+    "deleteMessage": "A(z) „{{title}}” szakasz törlődik, a tételei megmaradnak szakasz nélkül.",
+    "loose": "Szakasz nélkül",
+    "empty": "Üres szakasz"
+  },
+  "actions": {
+    "resetRecurring": "Ismétlődők visszaállítása ({{count}})",
+    "clearDone": "Kipipáltak törlése ({{count}})",
+    "clearDoneTitle": "Kipipáltak törlése",
+    "clearDoneMessage": "A kipipált, nem ismétlődő tételek törlődnek ({{count}} db).",
+    "archive": "Archiválás",
+    "archiveTitle": "Lista archiválása",
+    "archiveMessage": "A(z) „{{title}}” lista archiválódik; az Archivált listák között bármikor visszaállítható.",
+    "confirm": "Megerősítés"
+  },
+  "toast": {
+    "itemDeleted": "„{{text}}” törölve",
+    "listArchived": "A(z) „{{title}}” lista archiválva"
+  }
+}

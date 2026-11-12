@@ -6,6 +6,6 @@
   padding: 8px 14px;
   background: rgba(251, 191, 36, 0.14);
   border-bottom: 1px solid rgba(251, 191, 36, 0.3);
-  color: #fde68a;
+  color: var(--warn-text);
   font-size: 0.9rem;
 }

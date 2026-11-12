@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router'
 import { useDismiss } from '../../shared/hooks/useDismiss'
 import { Avatar } from './Avatar'
 import { ProfileModal } from './ProfileModal'
+import { OPEN_PALETTE_EVENT } from '../palette/PaletteHost'
+import { ThemeSwitcher } from './ThemeSwitcher'
+import { UserMenuNav } from './UserMenuNav'
 import { useAuthActions, useCurrentUser } from './useSession'
 import '../../shared/styles/menu.css'
 import './UserMenu.css'
@@ -40,6 +43,18 @@ export function UserMenu() {
             <strong>{user.name}</strong>
             <small>{user.email}</small>
           </div>
+          <UserMenuNav onNavigate={() => setIsOpen(false)} />
+          <button
+            type="button"
+            className="menu-item"
+            onClick={() => {
+              setIsOpen(false)
+              window.dispatchEvent(new Event(OPEN_PALETTE_EVENT))
+            }}
+          >
+            {t('menu.palette')}
+          </button>
+          <ThemeSwitcher />
           <button
             type="button"
             className="menu-item"

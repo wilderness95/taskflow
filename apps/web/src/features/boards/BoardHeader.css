@@ -17,9 +17,9 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  background: rgba(148, 163, 184, 0.08);
-  color: rgba(226, 232, 240, 0.8);
+  border: 1px solid rgb(var(--slate) / 0.2);
+  background: rgb(var(--slate) / 0.08);
+  color: rgb(var(--ink) / 0.8);
   font-size: 1.1rem;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -56,8 +56,8 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  border: 2px solid rgba(15, 23, 42, 0.7);
-  background: linear-gradient(135deg, #dbeafe, #cbd5e1);
+  border: 2px solid rgb(var(--surface) / 0.7);
+  background: linear-gradient(135deg, var(--text), var(--text-soft));
   color: #0f172a;
   font-size: 0.68rem;
   font-weight: 700;
@@ -76,6 +76,11 @@
   .board-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  /* Oszlop irányban a `flex-basis` magasságot jelentene: ne nyúljon meg a cím. */
+  .board-header-main {
+    flex: 0 0 auto;
   }
 }
 

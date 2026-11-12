@@ -1,0 +1,115 @@
+/*
+ * Közös, reszponzív és érintésbarát szabályok. A komponensek saját CSS-e a részleteket adja;
+ * itt a gombok, a linkként megjelenő gombok és a mobil elrendezés általános viselkedése van.
+ */
+
+/* Linkként megjelenő gomb: ne legyen aláhúzva, a szöveg ne törjön sorra. */
+a.primary-button,
+a.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.primary-button,
+.secondary-button {
+  white-space: nowrap;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+}
+
+/* Telefon és érintőképernyő: a kezelőelemek legalább 44 px-esek. */
+@media (pointer: coarse) {
+  .primary-button,
+  .secondary-button,
+  .menu-item,
+  .theme-option,
+  .list-icon-button,
+  .icon-button,
+  .view-tab {
+    min-height: var(--touch-target);
+  }
+
+  .icon-button,
+  .list-icon-button {
+    min-width: var(--touch-target);
+  }
+
+  .task-form input,
+  .task-form select,
+  .task-form textarea,
+  .list-add-form input[type='text'],
+  .list-add-form select {
+    min-height: var(--touch-target);
+    /* A 16 px alatti szövegmezőre az iOS rázoomol. */
+    font-size: 1rem;
+  }
+
+  .list-check-label input[type='checkbox'] {
+    width: 24px;
+    height: 24px;
+  }
+
+  .list-item {
+    padding-block: 12px;
+  }
+}
+
+/* A kivágásos (notch) készülékeken a tartalom ne kerüljön a kivágás alá. */
+.app-shell {
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 820px) {
+  /* A fejléc két sorba törik: elöl márka, váltó és gombok, alatta a kereső. */
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .topbar .search-box {
+    order: 5;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .topbar-actions {
+    margin-left: auto;
+  }
+
+  .workspace-actions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .trello-surface {
+    border-radius: 16px;
+  }
+
+  .workspace-page {
+    padding: 16px;
+  }
+
+  .modal-overlay {
+    padding: 8px;
+  }
+
+  .modal-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+}

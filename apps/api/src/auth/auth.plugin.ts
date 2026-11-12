@@ -31,6 +31,13 @@ const PUBLIC_PATHS = new Set([
   '/api/openapi.json',
 ])
 
+/**
+ * Megerősítetlen e-mail-című felhasználó ezeket is eléri: a fiókkezelést (belépés, kilépés, `me`,
+ * megerősítés és újraküldés), az állapotot és a dokumentációt.
+ */
+const UNVERIFIED_ALLOWED = (path: string) =>
+  path.startsWith('/api/v1/auth/') || PUBLIC_PATHS.has(path) || path.startsWith('/api/docs')
+
 const PUBLIC_BOARD_READ = /^\/api\/v1\/boards\/[^/]+$/
 
 /**
@@ -87,6 +94,15 @@ export function registerAuth(
 
   const allowedOrigin = new URL(config.APP_URL).origin
 
+  /** Kötelező e-mail-megerősítés: a megerősítetlen szereplő csak a fiókkezelő végpontokat éri el. */
+  const requireVerifiedEmail = (actor: Actor | null, path: string) => {
+    if (config.REQUIRE_EMAIL_VERIFICATION && actor && !actor.emailCleared) {
+      if (!UNVERIFIED_ALLOWED(path)) {
+        throw new AppError(403, 'email_not_verified', 'Confirm your email address first')
+      }
+    }
+  }
+
   // A `preValidation` már a cookie-plugin `onRequest` hookja után fut, így a `req.cookies` kész.
   // Kulcsonkénti rate limit (az IP-alapú globális limit mellett).
   const keyLimiter = createFixedWindowLimiter(config.API_KEY_RATE_LIMIT_MAX, 60_000)
@@ -104,6 +120,7 @@ export function registerAuth(
         throw new AppError(401, 'invalid_api_key', 'Invalid, revoked or expired API key')
       }
       req.actor = actor
+      requireVerifiedEmail(actor, path)
       const required = requiredScope(req.method, path)
       if (required === 'session') {
         throw new AppError(403, 'session_required', 'This endpoint is not available with API keys')
@@ -133,6 +150,8 @@ export function registerAuth(
       req.actor = auth.authenticate(unsigned.value)
       req.sessionToken = req.actor ? unsigned.value : null
     }
+
+    requireVerifiedEmail(req.actor, path)
 
     if (!req.actor && !isPublic(req.method, path)) {
       throw new AppError(401, 'unauthenticated', 'Authentication required')

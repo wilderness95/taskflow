@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { AuthLayout } from './AuthLayout'
 import { authErrorKey } from './authErrors'
+import { useRegistrationOpen } from './useRegistrationOpen'
 import { useAuthActions } from './useSession'
 
 export function RegisterPage() {
@@ -15,12 +16,33 @@ export function RegisterPage() {
   const [email, setEmail] = useState(params.get('email') ?? '')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
+  const registrationOpen = useRegistrationOpen()
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     register.mutate(
       { email, name, password, inviteToken },
       { onSuccess: () => navigate('/', { replace: true }) },
+    )
+  }
+
+  // Meghívó nélkül, zárt regisztrációnál csak a tájékoztató látszik (a szerver is elutasítaná).
+  if (!inviteToken && registrationOpen === undefined) {
+    return (
+      <p className="auth-loading" role="status">
+        {t('loading')}
+      </p>
+    )
+  }
+  if (!inviteToken && registrationOpen === false) {
+    return (
+      <AuthLayout
+        title={t('register.inviteOnly.title')}
+        description={t('register.inviteOnly.message')}
+        footer={<Link to="/login">{t('register.inviteOnly.login')}</Link>}
+      >
+        <p className="auth-invite-hint">{t('register.inviteOnly.hint')}</p>
+      </AuthLayout>
     )
   }
 

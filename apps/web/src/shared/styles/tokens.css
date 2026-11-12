@@ -1,0 +1,72 @@
+/*
+ * Design tokenek: a színek témafüggők (sötét az alap, `data-theme="light"` a világos).
+ * A `--slate`, `--ink`, `--surface`, `--accent`, `--shadow`, `--hl` RGB-hármasok, hogy az
+ * átlátszóság a használat helyén adható meg: `rgb(var(--slate) / 0.18)`.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Semleges rétegek és szegélyek */
+  --slate: 148 163 184;
+  /* Szöveg átlátszósággal */
+  --ink: 226 232 240;
+  /* Felületek (kártya, menü, beviteli mező) */
+  --surface: 15 23 42;
+  /* Árnyékok és takarás */
+  --shadow: 2 6 23;
+  /* Kártyák (a felületnél kicsit világosabb) */
+  --card: 30 41 59;
+  /* Kiemelés (fókusz, kijelölés) */
+  --accent: 96 165 250;
+  /* Finom világosító réteg (hover) */
+  --hl: 255 255 255;
+
+  --bg-top: #0f172a;
+  --bg-bottom: #111827;
+  --text: #e5eefb;
+  --text-soft: #cbd5e1;
+  --text-strong: #fff;
+  --accent-text: #93c5fd;
+  --accent-solid: #60a5fa;
+  --warn-text: #fde68a;
+  --danger-text: #fecdd3;
+  --ok-text: #a7f3d0;
+  --violet-text: #ddd6fe;
+
+  /* Közös léptékek */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --touch-target: 44px;
+  --transition: 0.18s ease;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --slate: 100 116 139;
+  --ink: 30 41 59;
+  --surface: 255 255 255;
+  --card: 255 255 255;
+  --shadow: 15 23 42;
+  --accent: 37 99 235;
+  --hl: 15 23 42;
+
+  --bg-top: #eef2f7;
+  --bg-bottom: #e2e8f0;
+  --text: #0f172a;
+  --text-soft: #334155;
+  --text-strong: #000;
+  --accent-text: #1d4ed8;
+  --accent-solid: #2563eb;
+  --warn-text: #92400e;
+  --danger-text: #be123c;
+  --ok-text: #047857;
+  --violet-text: #6d28d9;
+}

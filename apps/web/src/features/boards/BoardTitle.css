@@ -14,16 +14,16 @@
   margin: 0;
   font-size: clamp(1.8rem, 2.6vw, 2.35rem);
   line-height: 1.1;
-  color: #f4f8ff;
+  color: var(--text);
   letter-spacing: -0.06em;
 }
 
 .board-title-input {
   width: min(100%, 520px);
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(96, 165, 250, 0.8);
+  background: rgb(var(--surface) / 0.7);
+  border: 1px solid rgb(var(--accent) / 0.8);
   border-radius: 10px;
-  color: #f8fbff;
+  color: var(--text);
   padding: 8px 12px;
   font-size: clamp(1.6rem, 2.2vw, 2.2rem);
   font-weight: 700;

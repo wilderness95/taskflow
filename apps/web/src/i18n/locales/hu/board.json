@@ -94,5 +94,8 @@
       "editor": "Szerkesztő",
       "viewer": "Megtekintő"
     }
+  },
+  "toast": {
+    "cardArchived": "Kártya archiválva"
   }
 }

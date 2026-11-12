@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { boardEventSchema, errorResponseSchema, idSchema } from '@taskflow/shared'
+import { boardEventSchema, errorResponseSchema, idSchema, listEventSchema } from '@taskflow/shared'
 import { operations, type Operation } from './operations.js'
 
 type Json = Record<string, unknown>
@@ -92,7 +92,9 @@ const operationObject = (op: Operation): Json => {
       }),
       ...(op.stream && {
         content: {
-          'text/event-stream': { schema: jsonSchema(boardEventSchema, 'output') },
+          'text/event-stream': {
+            schema: jsonSchema(op.stream === 'list' ? listEventSchema : boardEventSchema, 'output'),
+          },
         },
       }),
     },

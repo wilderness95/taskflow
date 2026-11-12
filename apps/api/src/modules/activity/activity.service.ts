@@ -1,4 +1,4 @@
-import type { ActivityDto, BoardEvent } from '@taskflow/shared'
+import type { ActivityDto, BoardEvent, ListEvent } from '@taskflow/shared'
 import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
 import type { EventBus } from '../../events/eventBus.js'
@@ -7,6 +7,8 @@ import type { ActivityRepository, ActivityRow } from './activity.repository.js'
 export type ActivityEvent = {
   boardId?: string | null
   workspaceId?: string | null
+  /** A lista azonosítója: az esemény a lista SSE csatornájára is kimegy (nem tárolt mező). */
+  listId?: string | null
   /** `entity.verb`, pl. `card.moved`. */
   action: string
   entityType: string
@@ -63,6 +65,22 @@ const toBoardEvent = (
   }
 }
 
+const toListEvent = (
+  id: string,
+  actor: Actor,
+  listId: string,
+  event: ActivityEvent,
+): ListEvent => ({
+  id,
+  listId,
+  action: event.action,
+  entityType: event.entityType,
+  entityId: event.entityId,
+  actorType: actor.type,
+  actorId: actor.id,
+  createdAt: new Date().toISOString(),
+})
+
 const paginate = (rows: ActivityRow[], limit: number) => {
   const page = rows.slice(0, limit)
   return {
@@ -90,6 +108,7 @@ export function createActivityService(repo: ActivityRepository, bus?: EventBus) 
       })
       // Valós idejű értesítés a tábla előfizetőinek (a napló az igazság, ez csak jelzés).
       if (bus && event.boardId) bus.publish(toBoardEvent(id, actor, event.boardId, event))
+      if (bus && event.listId) bus.publishList(toListEvent(id, actor, event.listId, event))
     },
     listForBoard(boardId: string, limit: number, cursor?: string) {
       // Egyel többet kérünk le, hogy kiderüljön, van-e következő oldal.

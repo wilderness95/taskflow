@@ -9,11 +9,15 @@ import {
   checklists,
   columns,
   labels,
+  listItems,
+  lists,
+  listSections,
   users,
   workspaceMembers,
 } from '../../db/schema.js'
 
 export type BoardRow = typeof boards.$inferSelect
+export type ListRow = typeof lists.$inferSelect
 
 /** A jogosultság-ellenőrzéshez szükséges adatok (tagságok, erőforrás → tábla feloldás). */
 export function createAccessRepository(db: Db) {
@@ -76,6 +80,16 @@ export function createAccessRepository(db: Db) {
             .from(users)
             .where(inArray(users.id, ids))
             .all(),
+    findList: (listId: string): ListRow | undefined =>
+      db.select().from(lists).where(eq(lists.id, listId)).get(),
+    listIdOfSection: (sectionId: string): string | undefined =>
+      db
+        .select({ id: listSections.listId })
+        .from(listSections)
+        .where(eq(listSections.id, sectionId))
+        .get()?.id,
+    listIdOfItem: (itemId: string): string | undefined =>
+      db.select({ id: listItems.listId }).from(listItems).where(eq(listItems.id, itemId)).get()?.id,
     boardIdOfColumn: (columnId: string): string | undefined =>
       db.select({ id: columns.boardId }).from(columns).where(eq(columns.id, columnId)).get()?.id,
     boardIdOfCard: (cardId: string): string | undefined =>

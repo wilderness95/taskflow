@@ -407,6 +407,57 @@ export const savedFilters = sqliteTable(
   (t) => [uniqueIndex('saved_filters_name_idx').on(t.boardId, t.userId, t.name)],
 )
 
+/** Teendő- vagy bevásárlólista: munkaterülethez tartozik, a tagság és a szerepkör szabja a hozzáférést. */
+export const lists = sqliteTable(
+  'lists',
+  {
+    id: id(),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    /** Archiváláskor kitöltött; az archivált lista nem törlődik, visszaállítható. */
+    archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('lists_workspace_idx').on(t.workspaceId)],
+)
+
+export const listSections = sqliteTable(
+  'list_sections',
+  {
+    id: id(),
+    listId: text('list_id')
+      .notNull()
+      .references(() => lists.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    position: text('position').notNull(),
+  },
+  (t) => [index('list_sections_list_idx').on(t.listId)],
+)
+
+export const listItems = sqliteTable(
+  'list_items',
+  {
+    id: id(),
+    listId: text('list_id')
+      .notNull()
+      .references(() => lists.id, { onDelete: 'cascade' }),
+    /** Szakasz törlésekor NULL (a tétel megmarad, szakasz nélkül). */
+    sectionId: text('section_id').references(() => listSections.id, { onDelete: 'set null' }),
+    text: text('text').notNull(),
+    done: integer('done', { mode: 'boolean' }).notNull().default(false),
+    recurring: integer('recurring', { mode: 'boolean' }).notNull().default(false),
+    position: text('position').notNull(),
+    version: integer('version').notNull().default(1),
+    createdAt: createdAt(),
+  },
+  (t) => [index('list_items_list_idx').on(t.listId)],
+)
+
 export const checklists = sqliteTable(
   'checklists',
   {

@@ -2,8 +2,8 @@
   font-family: Inter, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #e5eefb;
-  background: #0f172a;
+  color: var(--text);
+  background: var(--bg-top);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -22,7 +22,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #0f172a;
+  background: var(--bg-top);
 }
 
 button,
@@ -43,7 +43,7 @@ img {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+  scrollbar-color: rgb(var(--slate) / 0.45) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -56,14 +56,14 @@ img {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.35);
+  background: rgb(var(--slate) / 0.35);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.52);
+  background: rgb(var(--slate) / 0.52);
   border: 2px solid transparent;
   background-clip: padding-box;
 }

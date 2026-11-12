@@ -351,6 +351,52 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 
 > **Új függőségek (az M7-ben bevezetve):** `@google/genai`, `@modelcontextprotocol/sdk`, `@fastify/websocket`, és fejlesztői függőségként a `@playwright/test`.
 
+### M8 – Listák: teendő- és bevásárlólista (Sprint 13)
+
+Cél: egyszerű, kanban nélküli lista (teendő, bevásárlás), amely munkaterületen belül megosztható. Az Android-kliens (M9) előtt készül.
+
+**Döntések:** önálló `lists` modul (nem a tábla/kártya modell fölött); a megosztás a meglévő munkaterületi tagságon és szerepkörökön alapul (policy: `packages/shared/src/authz.ts`, új `list:*` műveletek); nincs új külső függőség.
+
+**Első verzió:**
+- Lista (`lists`: név, munkaterület, `archivedAt`), szakasz (`list_sections`: pl. zöldség, tejtermék; `position`) és tétel (`list_items`: szöveg, `done`, `position`, opcionális szakasz, `version`).
+- Tétel felvétele, szerkesztése, kipipálása, törlése; sorrend húzással és billentyűzettel (fractional indexing); szakaszok kezelése és tételek szakaszok közti mozgatása.
+- Ismétlődő tételek: a tétel `recurring` jelölést kap; a „Visszaállítás" művelet a kipipált ismétlődő tételeket újra nyitja (a nem ismétlődő kipipáltak törölhetők egy lépésben: „Kipipáltak törlése").
+- Archiválás (nem végleges törlés), visszaállítás külön végponttal; az archivált elem a listákból kimarad.
+- API: `/api/v1/workspaces/{id}/lists`, `/lists/{id}`, `/lists/{id}/sections`, `/lists/{id}/items`, `/items/{id}`; Zod sémák a `shared`-ben, OpenAPI, cursor-lapozás, `Idempotency-Key`; GET = `boards:read`, írás = `boards:write` scope (az `auth/scopes.ts`-ben ellenőrizve).
+- Naplózás: az írások az `ActivityService.record`-on át az `activity_log`-ba, valós idejű frissítés külön SSE csatornán (munkaterületi/listaszintű), hogy a közös lista élőben frissüljön.
+- Frontend: `features/lists/` (listaválasztó, listanézet, gyors tételfelvétel Enterrel, szakaszok, mobilbarát nagy érintési felületek), `lists` i18n névtér, hozzáférhetőség (billentyűzet, aria-live); TanStack Query hookok az `api/` kliensen át.
+- Migráció `drizzle-kit generate`-tel; tesztek: tiszta függvények (sorrend, ismétlődő visszaállítás) unit, integrációs és jogosultsági teszt (viewer nem írhat, nem tag nem lát), E2E egy forgatókönyvvel.
+- Becslés: kb. 3–5 nap.
+
+**Nincs az első verzióban:** határidő/emlékeztető, mennyiség/egység mezők, MCP-eszköz a listákhoz (később, a meglévő végpontokra épülve).
+
+**Megvalósítás (kész):**
+- Adatmodell: `lists` (munkaterület, `archivedAt`), `list_sections`, `list_items` (`done`, `recurring`, `position`, `version`); migráció `0012`. Szakasz törlésekor a tételek szakasz nélkül megmaradnak (a sorrendjük megőrzésével).
+- Jogosultság: új `list:read` / `list:write` munkaterületi művelet a központi policyban (`owner`/`admin`/`member` ír, `viewer` olvas); az `AccessService.requireList|requireListSection|requireListItem` oldja fel az erőforrást, nem tagnak 404.
+- API: `GET|POST /workspaces/{id}/lists` (`?archived=true`), `GET|PATCH /lists/{id}`, `POST /lists/{id}/archive|restore|clear-done|reset-recurring`, `POST /lists/{id}/sections|items`, `PATCH|DELETE /list-sections|list-items/{id}`, `POST /list-sections|list-items/{id}/move`, `GET /lists/{id}/events` (SSE, `list` esemény). Korlátok: 100 lista / munkaterület, 50 szakasz és 500 tétel / lista. A kulcs hatóköre az alapszabály (olvasás `boards:read`, írás `boards:write`).
+- Valós idő: az `ActivityService.record` az opcionális `listId`-vel a lista saját SSE csatornájára is publikál (`EventBus.publishList`), a webhookoktól és a tábla-csatornától függetlenül; az írások a `activity_log`-ba kerülnek (`workspaceId`-val, `boardId` nélkül).
+- Frontend: `features/lists/` (`/w/:id/lists` áttekintés, `/l/:id` lista); tételek felvétele Enterrel, optimista pipálás, szerkesztő (szöveg, szakasz, ismétlődés; érintésre is jó), húzásos és Alt + nyíl (aria-live) sorrendezés, szakaszkezelés, „Ismétlődők visszaállítása” / „Kipipáltak törlése” / archiválás, archivált listák visszaállítása; `lists` i18n névtér.
+- Tesztek: unit (`listItems`, `listMoves`, `listCache`), integrációs és jogosultsági (`lists.integration.test.ts`, SSE-vel), E2E (`apps/e2e/tests/lists.spec.ts`).
+- Nem része az M8-nak: határidő/emlékeztető, mennyiség/egység, MCP-eszköz (lásd fent).
+
+**UI-fejlesztés (az M8 mellett, kész):**
+- Világos/sötét/rendszer téma (design tokenek `tokens.css`, `data-theme`, villanásmentes betöltés, `theme-color` meta); váltó a felhasználói menüben és a parancspalettán.
+- Gyors navigáció a felhasználói menüből (táblák, listák, munkaterületek) és parancspaletta (Ctrl/Cmd + K, ékezetfüggetlen keresés).
+- Toastok az `alert()` helyett, visszavonás kártya-archiváláskor, listatétel törlésekor és lista archiválásakor.
+- Mobilbarát elrendezés: törő fejléc, 44 px-es érintési felületek, biztonságos területek (notch), csökkentett mozgás támogatása, SVG harang ikon, egységes üres állapot.
+
+### M9 – Android: PWA + TWA, GitHub Release (opcionális, még nem ütemezett)
+
+Cél: a webes kliens mobilon is használható, és telepíthető Android appként. Play Store **nem** cél; az APK terjesztése GitHub Releases-en át történik.
+
+- Mobil responsive UI (tábla, kártyamodal, navigáció) és touch drag & drop (hosszú nyomás, görgetés-ütközés kezelése).
+- PWA alapok: manifest, maskable ikonok, service worker (app shell cache, offline jelzés), SSE újracsatlakozás háttér/előtér váltáskor.
+- TWA csomagolás Bubblewrappel (dev-eszköz, nem repo-függőség), `/.well-known/assetlinks.json` kiszolgálása a `web` konténerből az aláírókulcs SHA-256 ujjlenyomatával.
+- GitHub Actions: tag-re (`v*`) aláírt APK build és csatolás a Releasehez; a keystore és a jelszavak csak GitHub Secretsben.
+- Frissítés: a webes tartalom a szerverről frissül; az APK-frissítéshez ajánlott az Obtainium.
+- Opcionális, később: Web Push (VAPID; új függőség és migráció, egyeztetést igényel), mikrofon/hangasszisztens teszt TWA-ban.
+- Becslés: kb. 2 hét.
+
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 
 - Minden új végpont: Zod séma a `shared`-ben, integrációs teszt, jogosultsági teszt és OpenAPI-leírás.

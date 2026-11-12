@@ -25,8 +25,8 @@
   height: 24px;
   padding: 0 6px;
   border-radius: 12px;
-  background: rgba(148, 163, 184, 0.25);
-  color: #e5eefb;
+  background: rgb(var(--slate) / 0.25);
+  color: var(--text);
   font-size: 0.7rem;
   font-weight: 700;
 }

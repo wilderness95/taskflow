@@ -184,7 +184,14 @@ export function createAuthService(deps: {
         return null
       }
       const user = repo.findUserById(session.userId)
-      return user ? { type: 'user', id: user.id, isAdmin: user.isAdmin } : null
+      return user
+        ? {
+            type: 'user',
+            id: user.id,
+            isAdmin: user.isAdmin,
+            emailCleared: user.emailVerifiedAt !== null || user.isAdmin,
+          }
+        : null
     },
 
     me(actor: Actor): UserDto {

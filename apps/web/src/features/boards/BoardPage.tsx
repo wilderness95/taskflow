@@ -2,6 +2,8 @@ import { countActiveFilters, EMPTY_BOARD_FILTER, type BoardFilter } from '@taskf
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { showToast } from '../../shared/ui/toast'
+import { rememberWorkspace } from '../../shared/lib/lastWorkspace'
 import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
 import { BoardDialogs } from './BoardDialogs'
@@ -32,6 +34,10 @@ export function BoardPage() {
   const [filter, setFilter] = useState<BoardFilter>(EMPTY_BOARD_FILTER)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [dialog, setDialog] = useState<Dialog | null>(null)
+
+  useEffect(() => {
+    if (workspaceId) rememberWorkspace(workspaceId)
+  }, [workspaceId])
 
   const keyboard = useBoardKeyboard({
     columns,
@@ -90,7 +96,7 @@ export function BoardPage() {
 
   const handleDeleteColumn = (columnId: string) => {
     if (Object.keys(columns).length <= 1) {
-      window.alert(t('column:minOneColumn'))
+      showToast({ message: t('column:minOneColumn') })
       return
     }
     setDialog({ type: 'column-delete', columnId })

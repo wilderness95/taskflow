@@ -35,6 +35,7 @@ export default defineConfig({
         SEED: 'false',
         SESSION_SECRET: 'e2e-only-session-secret-not-a-real-secret-0123456789',
         REGISTRATION_MODE: 'open',
+        REQUIRE_EMAIL_VERIFICATION: 'false',
         MAIL_TRANSPORT: 'console',
         RATE_LIMIT_MAX: '100000',
         AUTH_RATE_LIMIT_MAX: '100000',

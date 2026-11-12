@@ -48,6 +48,7 @@ async function setup(
       NODE_ENV: 'test',
       APP_URL: ORIGIN,
       REGISTRATION_MODE: 'open',
+      REQUIRE_EMAIL_VERIFICATION: 'false',
       RATE_LIMIT_MAX: '100000',
       AUTH_RATE_LIMIT_MAX: '100000',
       ...opts.env,

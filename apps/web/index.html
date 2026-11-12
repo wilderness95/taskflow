@@ -3,8 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f172a" />
     <title>TaskFlow</title>
+    <script>
+      // Villanásmentes téma: a mentett (vagy rendszer-) beállítás a kirajzolás előtt érvényesül.
+      // A logika a src/shared/theme/theme.ts-ben is megvan (resolveTheme).
+      ;(function () {
+        try {
+          var pref = localStorage.getItem('taskflow.theme')
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          var theme = pref === 'light' || pref === 'dark' ? pref : dark ? 'dark' : 'light'
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

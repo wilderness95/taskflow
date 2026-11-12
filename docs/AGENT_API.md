@@ -120,6 +120,40 @@ curl -H "Authorization: Bearer $KEY" -o out.png $TF/attachments/$ATTACHMENT_ID/f
 A feltöltés legnagyobb mérete `MAX_UPLOAD_MB` (alapértelmezés: 10 MB), felette `413 payload_too_large`. A mentett szűrők
 személyesek, kulccsal nem érhetők el.
 
+## 6/c. Listák (teendő, bevásárlás)
+
+A listák munkaterület-szintűek (nem táblák): a hozzáférést a munkaterületi szerepkör adja (`owner`/`admin`/`member`
+írhat, `viewer` csak olvashat). Kulccsal az olvasás `boards:read`, az írás `boards:write` hatókört kér.
+
+```sh
+# lista létrehozása és a munkaterület listái (archivált: ?archived=true)
+curl -X POST $TF/workspaces/$WS_ID/lists -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"title":"Bevásárlás"}'
+curl -H "Authorization: Bearer $KEY" $TF/workspaces/$WS_ID/lists
+# a lista egyben: szakaszok és tételek (position szerint rendezve)
+curl -H "Authorization: Bearer $KEY" $TF/lists/$LIST_ID
+# szakasz és tétel felvétele (az `recurring` tétel a „visszaállításkor” újra nyílik)
+curl -X POST $TF/lists/$LIST_ID/sections -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"title":"Tejtermék"}'
+curl -X POST $TF/lists/$LIST_ID/items -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"text":"Tej","sectionId":"'$SECTION_ID'","recurring":true}'
+# kipipálás (opcionális `version`: 409 version_conflict eltérésnél) és áthelyezés egy tétel elé
+curl -X PATCH $TF/list-items/$ITEM_ID -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"done":true}'
+curl -X POST $TF/list-items/$ITEM_ID/move -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+  -d '{"sectionId":null,"beforeItemId":"'$OTHER_ID'"}'
+# a kipipált, nem ismétlődők törlése / a kipipált ismétlődők újranyitása
+curl -X POST $TF/lists/$LIST_ID/clear-done -H "Authorization: Bearer $KEY"
+curl -X POST $TF/lists/$LIST_ID/reset-recurring -H "Authorization: Bearer $KEY"
+# archiválás és visszaállítás (a lista nem törlődik véglegesen)
+curl -X POST $TF/lists/$LIST_ID/archive -H "Authorization: Bearer $KEY"
+curl -X POST $TF/lists/$LIST_ID/restore -H "Authorization: Bearer $KEY"
+```
+
+Korlátok: munkaterületenként 100 aktív lista, listánként 50 szakasz és 500 tétel (`422 too_many_lists` /
+`too_many_sections` / `too_many_items`). Szakasz törlésekor a tételei megmaradnak, szakasz nélkül. Valós idő:
+`GET /lists/{id}/events` (SSE, `list` esemény); az esemény csak jelzés, a listát újra kell olvasni.
+
 ## 7. Tevékenységnapló
 
 Minden írás naplózódik; `GET /boards/{id}/activity` megmutatja, ki végezte (`actorType`: `user` vagy `api_key`,
@@ -159,6 +193,8 @@ curl -N -H "Authorization: Bearer $KEY" $TF/boards/$BOARD_ID/events
 
 ## 9. Korlátok
 
+- Ha a szerveren kötelező az e-mail-megerősítés (`REQUIRE_EMAIL_VERIFICATION`, alapból igen), a megerősítetlen e-mail-című
+  tulajdonos kulcsa `403 email_not_verified`-et kap (a platform-admin és a meghívóval regisztráltak mentesek).
 - Kulcsonként percenként legfeljebb `API_KEY_RATE_LIMIT_MAX` kérés (alapértelmezés: 120); a `X-RateLimit-Limit` és
   `X-RateLimit-Remaining` fejléc mutatja az állást. Túllépés után `429` és `Retry-After`.
 - A visszavont kulcs azonnal érvénytelen. Kulcsot gyanú esetén vonj vissza, és hozz létre újat.
