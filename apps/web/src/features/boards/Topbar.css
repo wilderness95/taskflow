@@ -11,26 +11,40 @@
 .brand-wrap {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   padding-right: 4px;
+  color: #f1f5f9;
+  text-decoration: none;
+  border-radius: 10px;
+}
+
+.brand-wrap:hover,
+.brand-wrap:visited,
+.brand-wrap:active {
+  color: #f1f5f9;
+  text-decoration: none;
+}
+
+.brand-wrap:hover .brand-name {
+  color: #fff;
 }
 
 .brand-badge {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, #2563eb, #7c3aed);
   color: #fff;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 1rem;
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
 }
 
 .brand-name {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   letter-spacing: -0.02em;
 }
 
