@@ -163,3 +163,24 @@ curl -N -H "Authorization: Bearer $KEY" $TF/boards/$BOARD_ID/events
   `X-RateLimit-Remaining` fejléc mutatja az állást. Túllépés után `429` és `Retry-After`.
 - A visszavont kulcs azonnal érvénytelen. Kulcsot gyanú esetén vonj vissza, és hozz létre újat.
 - A kulcsot ne tedd repóba, logba vagy promptba; csak környezeti változóban tartsd.
+
+## MCP szerver (`apps/mcp`)
+
+Külső AI eszközhöz (Claude Desktop, Gemini CLI, OpenCode) stdio MCP szerver is van, ugyanazzal az API kulccsal:
+
+```json
+{
+  "mcpServers": {
+    "taskflow": {
+      "command": "npx",
+      "args": ["tsx", "apps/mcp/src/stdio.ts"],
+      "env": { "TASKFLOW_URL": "https://taskflow.example.com", "TASKFLOW_API_KEY": "tfk_..." }
+    }
+  }
+}
+```
+
+Eszközök: `list_boards`, `get_board_overview`, `create_card` (felelősök, címkék, checklist egy körben),
+`search_cards`, `move_card`, `update_card`, `add_comment`. Az oszlopok, címkék és személyek névvel is megadhatók
+(kis- és nagybetű, ékezet nem számít). Minden író hívás automatikus `Idempotency-Key`-t kap, hálózati hibánál
+ugyanazzal a kulccsal újrapróbál.
