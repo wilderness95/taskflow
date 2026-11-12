@@ -191,6 +191,14 @@ export function createAdminRepository(db: Db) {
         .innerJoin(users, eq(users.id, workspaceMembers.userId))
         .where(and(eq(workspaceMembers.workspaceId, workspaceId), eq(users.email, email)))
         .get() !== undefined,
+    /** Az adatbázis elérhetőségének ellenőrzése (egyszerű lekérdezés). */
+    ping: (): boolean => {
+      try {
+        return db.get<{ ok: number }>(sql`select 1 as ok`)?.ok === 1
+      } catch {
+        return false
+      }
+    },
     transaction: <T>(fn: () => T): T => db.transaction(fn),
   }
 }

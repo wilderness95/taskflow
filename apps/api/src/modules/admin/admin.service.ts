@@ -1,5 +1,7 @@
 import type {
   AdminInvitationDto,
+  AdminOverviewDto,
+  AuditQuery,
   AdminInvitationsQuery,
   AdminUserDetailDto,
   AdminUserDto,
@@ -250,6 +252,24 @@ export function createAdminService(deps: {
         targetUserId: id,
       })
       return detail(updated)
+    },
+
+    overview(actor: Actor): AdminOverviewDto {
+      requirePlatformAdmin(actor)
+      return {
+        users: repo.countUsers(),
+        pendingInvitations: repo.countPendingInvitations(new Date()),
+        health: {
+          database: repo.ping() ? 'ok' : 'error',
+          mailTransport: config.MAIL_TRANSPORT,
+        },
+        recentEvents: audit.recent(10),
+      }
+    },
+
+    listAudit(actor: Actor, query: AuditQuery) {
+      requirePlatformAdmin(actor)
+      return audit.list(query)
     },
 
     listInvitations(actor: Actor, query: AdminInvitationsQuery) {

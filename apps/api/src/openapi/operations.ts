@@ -1,5 +1,8 @@
 import { z } from 'zod'
 import {
+  adminOverviewSchema,
+  auditListSchema,
+  auditQuerySchema,
   adminInvitationListSchema,
   adminInvitationSchema,
   adminInvitationsQuerySchema,
@@ -1073,5 +1076,24 @@ export const operations: Operation[] = [
       'Revoke a pending invitation; 409 `invitation_not_pending` (platform admin, session only)',
     success: { status: 204 },
     errors: [403, 409],
+  },
+  {
+    ...admin,
+    method: 'get',
+    path: '/admin/overview',
+    summary:
+      'User and invitation counts, basic health (database, mail transport) and the latest audit events (platform admin, session only)',
+    success: { status: 200, schema: adminOverviewSchema },
+    errors: [403],
+  },
+  {
+    ...admin,
+    method: 'get',
+    path: '/admin/audit',
+    summary:
+      'Platform audit log, newest first; filter by `action`, `actorId`, `targetUserId` and the `from`/`to` ISO time range (platform admin, session only)',
+    query: auditQuerySchema,
+    success: { status: 200, schema: auditListSchema },
+    errors: [403],
   },
 ]

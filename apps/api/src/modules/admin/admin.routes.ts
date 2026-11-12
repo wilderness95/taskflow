@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import {
   adminInvitationsQuerySchema,
   adminUsersQuerySchema,
+  auditQuerySchema,
   createAdminInvitationSchema,
   idParamsSchema,
   setAdminRoleSchema,
@@ -14,6 +15,12 @@ export function adminRoutes(service: AdminService) {
   const userId = (req: { params: unknown }) => idParamsSchema.parse(req.params).id
 
   return async (app: FastifyInstance): Promise<void> => {
+    app.get('/api/v1/admin/overview', async (req) => service.overview(requireActor(req)))
+
+    app.get('/api/v1/admin/audit', async (req) =>
+      service.listAudit(requireActor(req), auditQuerySchema.parse(req.query)),
+    )
+
     app.get('/api/v1/admin/users', async (req) =>
       service.listUsers(requireActor(req), adminUsersQuerySchema.parse(req.query)),
     )
