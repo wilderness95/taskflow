@@ -267,6 +267,39 @@ export const cardAssignees = sqliteTable(
   ],
 )
 
+/** Kártya-hozzászólás; az `apiKeyId` jelzi, ha API kulcs írta a szerző nevében. */
+export const comments = sqliteTable(
+  'comments',
+  {
+    id: id(),
+    cardId: text('card_id')
+      .notNull()
+      .references(() => cards.id, { onDelete: 'cascade' }),
+    authorId: text('author_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    apiKeyId: text('api_key_id').references(() => apiKeys.id, { onDelete: 'set null' }),
+    viaApiKey: integer('via_api_key', { mode: 'boolean' }).notNull().default(false),
+    body: text('body').notNull(),
+    editedAt: integer('edited_at', { mode: 'timestamp_ms' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('comments_card_idx').on(t.cardId, t.id)],
+)
+
+export const commentMentions = sqliteTable(
+  'comment_mentions',
+  {
+    commentId: text('comment_id')
+      .notNull()
+      .references(() => comments.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.commentId, t.userId] })],
+)
+
 export const checklists = sqliteTable('checklists', {
   id: id(),
   cardId: text('card_id')

@@ -30,6 +30,9 @@ import { createChecklistsService } from './modules/checklists/checklists.service
 import { columnsRoutes } from './modules/columns/columns.routes.js'
 import { createColumnsRepository } from './modules/columns/columns.repository.js'
 import { createColumnsService } from './modules/columns/columns.service.js'
+import { commentsRoutes } from './modules/comments/comments.routes.js'
+import { createCommentsRepository } from './modules/comments/comments.repository.js'
+import { createCommentsService } from './modules/comments/comments.service.js'
 import { AppError } from './errors.js'
 import { openApiPlugin } from './openapi/openapi.plugin.js'
 import { createIdempotencyRepository } from './modules/idempotency/idempotency.repository.js'
@@ -98,6 +101,12 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     access,
     activity,
   })
+  const comments = createCommentsService({
+    repo: createCommentsRepository(db),
+    cards: cardsRepo,
+    access,
+    activity,
+  })
   const boards = createBoardsService(boardsRepo, cards, access, activity)
   const columns = createColumnsService(columnsRepo, access, activity)
   const checklists = createChecklistsService(checklistsRepo, cardsRepo, access, activity)
@@ -125,5 +134,6 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
   app.register(columnsRoutes(columns, cards))
   app.register(cardsRoutes(cards, checklists))
   app.register(checklistsRoutes(checklists))
+  app.register(commentsRoutes(comments))
   return app
 }

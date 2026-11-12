@@ -23,6 +23,7 @@ type BoardDialogsProps = {
   boardId: string
   workspaceId: string
   canManageMembers: boolean
+  isBoardAdmin: boolean
 }
 
 export function BoardDialogs({
@@ -36,6 +37,7 @@ export function BoardDialogs({
   boardId,
   workspaceId,
   canManageMembers,
+  isBoardAdmin,
 }: BoardDialogsProps) {
   const { t } = useTranslation(['card', 'column'])
 
@@ -71,6 +73,7 @@ export function BoardDialogs({
           }
           columns={columns}
           participants={participants}
+          discussion={isEdit ? { boardId, cardId: dialog.task.id, isBoardAdmin } : undefined}
           onSave={handleSave}
           onClose={onClose}
         />

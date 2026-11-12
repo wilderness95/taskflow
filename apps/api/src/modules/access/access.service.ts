@@ -72,6 +72,9 @@ export function createAccessService(repo: AccessRepository) {
   return {
     requireBoard,
     participants,
+    /** Pusztán lekérdezés (nem dob hibát): engedi-e a policy a műveletet az adott erőforráson. */
+    can: (actor: PolicyActor, action: BoardAction, resource: BoardResource): boolean =>
+      can(actor, action, resource),
     /** A résztvevők megjeleníthető adatokkal, név szerint rendezve. */
     participantProfiles(board: BoardRow) {
       const roles = new Map(participants(board).map((p) => [p.userId, p.role]))

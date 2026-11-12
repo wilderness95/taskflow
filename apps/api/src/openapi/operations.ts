@@ -19,6 +19,10 @@ import {
   checklistItemSchema,
   checklistSchema,
   columnSchema,
+  commentListSchema,
+  commentSchema,
+  createCommentSchema,
+  updateCommentSchema,
   createBoardSchema,
   createCardSchema,
   createChecklistItemSchema,
@@ -76,6 +80,7 @@ const board = { tag: 'Boards' }
 const column = { tag: 'Columns' }
 const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
+const comment = { tag: 'Comments' }
 const auth = { tag: 'Auth' }
 const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
@@ -489,6 +494,40 @@ export const operations: Operation[] = [
     summary: 'Create a checklist',
     body: createChecklistSchema,
     success: { status: 201, schema: checklistSchema },
+  },
+
+  {
+    ...comment,
+    method: 'get',
+    path: '/cards/{id}/comments',
+    summary: 'List the comments of a card, oldest first (cursor pagination)',
+    query: pageQuerySchema,
+    success: { status: 200, schema: commentListSchema },
+  },
+  {
+    ...comment,
+    method: 'post',
+    path: '/cards/{id}/comments',
+    summary: 'Comment on a card; mentionIds must be users with access to the board',
+    body: createCommentSchema,
+    success: { status: 201, schema: commentSchema },
+    errors: [422],
+  },
+  {
+    ...comment,
+    method: 'patch',
+    path: '/comments/{id}',
+    summary: 'Edit a comment (author only)',
+    body: updateCommentSchema,
+    success: { status: 200, schema: commentSchema },
+    errors: [422],
+  },
+  {
+    ...comment,
+    method: 'delete',
+    path: '/comments/{id}',
+    summary: 'Delete a comment (author or board admin)',
+    success: { status: 204 },
   },
 
   {

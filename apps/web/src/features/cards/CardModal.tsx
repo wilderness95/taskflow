@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Modal } from '../../shared/ui/Modal'
 import type { Assignee, Columns } from '../boards/types'
 import { AssigneePicker } from './AssigneePicker'
+import { CommentSection } from '../comments/CommentSection'
 import { ChecklistEditor } from './ChecklistEditor'
 import type { TaskDraft } from './taskDraft'
 import '../../shared/styles/buttons.css'
@@ -15,6 +16,8 @@ type CardModalProps = {
   initialDraft: TaskDraft
   columns: Columns
   participants: Assignee[]
+  /** Meglévő kártyánál a hozzászólás-szál adatai. */
+  discussion?: { boardId: string; cardId: string; isBoardAdmin: boolean }
   onSave: (draft: TaskDraft) => void
   onClose: () => void
 }
@@ -24,6 +27,7 @@ export function CardModal({
   initialDraft,
   columns,
   participants,
+  discussion,
   onSave,
   onClose,
 }: CardModalProps) {
@@ -151,6 +155,16 @@ export function CardModal({
           </button>
         </div>
       </form>
+
+      {discussion && (
+        <CommentSection
+          boardId={discussion.boardId}
+          cardId={discussion.cardId}
+          people={participants}
+          canComment
+          isBoardAdmin={discussion.isBoardAdmin}
+        />
+      )}
     </Modal>
   )
 }
