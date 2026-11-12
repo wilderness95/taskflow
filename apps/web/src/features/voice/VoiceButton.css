@@ -1,0 +1,58 @@
+.voice-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.voice-button {
+  color: #94a3b8;
+}
+
+.voice-connecting {
+  color: #facc15;
+}
+
+.voice-listening {
+  color: #22c55e;
+  animation: voice-pulse 1.6s ease-in-out infinite;
+}
+
+.voice-thinking {
+  color: #facc15;
+  animation: voice-pulse 0.8s ease-in-out infinite;
+}
+
+.voice-speaking {
+  color: #60a5fa;
+  animation: voice-pulse 0.5s ease-in-out infinite;
+}
+
+.voice-status,
+.voice-error {
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.voice-error {
+  color: #f87171;
+}
+
+.voice-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+@keyframes voice-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-button {
+    animation: none;
+  }
+}

@@ -176,7 +176,6 @@ export function buildApp(
   }
 
   app.register(openApiPlugin)
-  app.register(healthRoutes)
   const workspaces = createWorkspacesService({
     repo: createWorkspacesRepository(db),
     mailer,
@@ -224,6 +223,7 @@ export function buildApp(
     maxMinutes: config.VOICE_MAX_MINUTES,
     logger: app.log,
   })
+  app.register(healthRoutes({ voice: voice.available }))
   app.register(websocket, { options: { maxPayload: MAX_FRAME_BYTES } })
   app.register(voiceRoutes(voice, { allowedOrigin: new URL(config.APP_URL).origin }))
   return app
