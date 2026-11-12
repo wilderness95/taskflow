@@ -29,8 +29,8 @@
   font-size: 1.6rem;
   font-weight: 700;
   color: inherit;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgb(var(--surface) / 0.9);
+  border: 1px solid rgb(var(--slate) / 0.3);
   border-radius: 10px;
   padding: 4px 10px;
 }
@@ -54,10 +54,10 @@
 .list-item-editor input[type='text'],
 .list-item-editor select {
   box-sizing: border-box;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgb(var(--surface) / 0.9);
+  border: 1px solid rgb(var(--slate) / 0.2);
   border-radius: 10px;
-  color: #eff6ff;
+  color: var(--text);
   padding: 10px 12px;
   font: inherit;
 }
@@ -100,9 +100,9 @@
 .list-section-empty {
   margin: 0;
   padding: 12px;
-  border: 1px dashed rgba(148, 163, 184, 0.25);
+  border: 1px dashed rgb(var(--slate) / 0.25);
   border-radius: 10px;
-  color: rgba(226, 232, 240, 0.6);
+  color: rgb(var(--ink) / 0.6);
   font-size: 0.9rem;
 }
 
@@ -122,8 +122,8 @@
   gap: 8px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(148, 163, 184, 0.09);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgb(var(--slate) / 0.09);
+  border: 1px solid rgb(var(--slate) / 0.18);
 }
 
 .list-item[draggable='true'] {
@@ -136,7 +136,7 @@
 
 .list-item.is-done .list-item-text {
   text-decoration: line-through;
-  color: rgba(226, 232, 240, 0.5);
+  color: rgb(var(--ink) / 0.5);
 }
 
 .list-item-main {
@@ -149,7 +149,7 @@
 }
 
 .list-item-badge {
-  color: #93c5fd;
+  color: var(--accent-text);
 }
 
 .list-item-actions {
@@ -175,7 +175,7 @@
 }
 
 .list-item:focus-within {
-  border-color: rgba(147, 197, 253, 0.6);
+  border-color: rgb(var(--accent) / 0.6);
 }
 
 /* Halk ikongombok: egérrel csak ráállva/fókuszban látszanak, érintésen mindig. */
@@ -187,14 +187,14 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: rgba(226, 232, 240, 0.7);
+  color: rgb(var(--ink) / 0.7);
   font-size: 1rem;
   cursor: pointer;
 }
 
 .list-icon-button:hover,
 .list-icon-button:focus-visible {
-  background: rgba(148, 163, 184, 0.18);
+  background: rgb(var(--slate) / 0.18);
   color: #fff;
 }
 

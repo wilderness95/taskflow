@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 import { useDismiss } from '../../shared/hooks/useDismiss'
 import { Avatar } from './Avatar'
 import { ProfileModal } from './ProfileModal'
+import { ThemeSwitcher } from './ThemeSwitcher'
 import { UserMenuNav } from './UserMenuNav'
 import { useAuthActions, useCurrentUser } from './useSession'
 import '../../shared/styles/menu.css'
@@ -42,6 +43,7 @@ export function UserMenu() {
             <small>{user.email}</small>
           </div>
           <UserMenuNav onNavigate={() => setIsOpen(false)} />
+          <ThemeSwitcher />
           <button
             type="button"
             className="menu-item"

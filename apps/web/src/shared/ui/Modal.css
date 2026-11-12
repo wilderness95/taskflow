@@ -1,7 +1,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.72);
+  background: rgb(var(--shadow) / 0.72);
   backdrop-filter: blur(8px);
   display: grid;
   place-items: center;
@@ -12,11 +12,11 @@
 .modal-card {
   width: min(100%, 560px);
   max-height: calc(100vh - 40px);
-  background: rgba(15, 23, 42, 0.96);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--slate) / 0.2);
   border-radius: 24px;
   padding: 22px;
-  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.7);
+  box-shadow: 0 30px 80px rgb(var(--shadow) / 0.7);
   overflow-y: auto;
 }
 
@@ -29,7 +29,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: rgba(15, 23, 42, 0.96);
+  background: rgb(var(--surface));
   padding-bottom: 8px;
 }
 
@@ -40,7 +40,7 @@
 
 .confirm-copy {
   margin: 0 0 18px;
-  color: #dbeafe;
+  color: var(--text);
   line-height: 1.6;
 }
 
