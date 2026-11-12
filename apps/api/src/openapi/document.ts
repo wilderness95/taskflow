@@ -12,7 +12,7 @@ const jsonSchema = (schema: z.ZodType, io: 'input' | 'output'): Json => {
   return rest
 }
 
-const WRITE_TAGS = new Set(['Boards', 'Columns', 'Cards', 'Checklists'])
+const WRITE_TAGS = new Set(['Boards', 'Columns', 'Cards', 'Checklists', 'API keys'])
 
 const ERROR_DESCRIPTIONS: Record<number, string> = {
   400: 'Validation error or invalid token',
@@ -96,9 +96,16 @@ export function buildOpenApiDocument(): Json {
     },
     servers: [{ url: '/api/v1' }],
     paths,
-    security: [{ cookieAuth: [] }],
+    security: [{ cookieAuth: [] }, { bearerAuth: [] }],
     components: {
-      securitySchemes: { cookieAuth: { type: 'apiKey', in: 'cookie', name: 'tf_session' } },
+      securitySchemes: {
+        cookieAuth: { type: 'apiKey', in: 'cookie', name: 'tf_session' },
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          description: 'API key (`tfk_...`), created under Settings → API keys.',
+        },
+      },
       schemas: { ErrorResponse: jsonSchema(errorResponseSchema, 'output') },
     },
   }
