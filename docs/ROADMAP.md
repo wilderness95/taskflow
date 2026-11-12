@@ -398,7 +398,7 @@ Cél: a webes kliens mobilon is használható, és telepíthető Android appkén
 - Opcionális, később: Web Push (VAPID; új függőség és migráció, egyeztetést igényel), mikrofon/hangasszisztens teszt TWA-ban.
 - Becslés: kb. 2 hét.
 
-### M10 – Platform-adminisztráció (ütemezendő)
+### M10 – Platform-adminisztráció
 
 Cél: a rendszerszintű felhasználó- és meghívókezelés, valamint a biztonsági események áttekintése egy kizárólag platform-adminok számára látható felületen. Ez nem munkaterületi beállítás: a munkaterületi `owner` és `admin` szerepkör önmagában nem ad platform-admin jogosultságot.
 
@@ -420,6 +420,17 @@ Cél: a rendszerszintű felhasználó- és meghívókezelés, valamint a biztons
 **Nem része az első verziónak:** részletes analitika, tömeges felhasználókezelés, felhasználóként való belépés (impersonáció), illetve admin által végzett jelszóbeállítás vagy jelszómegtekintés. A felhasználói fiók törlése helyett első körben a felfüggesztés és a munkamenetek visszavonása használandó.
 
 **Kész, ha:** nem-admin felhasználó sem az admin UI-t, sem az admin API-t nem érheti el; a platform-admin kezelni tudja a felhasználók fiókállapotát, munkameneteit és a munkaterületi meghívókat; minden adminmódosítás és fontos biztonsági esemény visszakereshető, érzékeny hitelesítési titok naplózása nélkül.
+
+**Megvalósítás (kész):**
+- Jogosultság: `users.is_admin` marad a platform-admin jele; az `auth/actor.ts` `requirePlatformAdmin(actor)` a service-ek első sora minden admin műveletben (API kulcs sosem platform-admin). A `/api/v1/admin/**` útvonalak az `auth/scopes.ts`-ben session-only-k, így kulccsal `403 session_required`. A frontenden az `AdminLayout` csak kényelmi guard.
+- Adatmodell (migráció `0013`): `users.suspended_at`, `invitations.revoked_at` és az új `audit_log` tábla (`actor_id`, `action`, `target_type`, `target_id`, `target_user_id`, `ip`, `meta`; a hivatkozások `set null`-ra állnak, így a napló a fiók törlése után is megmarad). A munkaterületi meghívó visszavonása (`DELETE /workspaces/{id}/invitations/{id}`) is `revoked_at`-et állít.
+- Felfüggesztés: a felfüggesztett fiók nem léphet be (`403 account_suspended`, csak helyes jelszó után, hogy a fiók létezése ne derüljön ki), a meglévő munkamenetei megszűnnek, a session és az API kulcsai sem érvényesek. Saját fiók nem függeszthető fel (`409 cannot_suspend_self`), és az utolsó aktív platform-adminnak nem vehető el a joga, és nem is függeszthető fel (`409 last_admin`). Admin jogot csak megerősített, nem felfüggesztett fiók kaphat (a platform-admin mentesül az e-mail-megerősítés alól).
+- Auditnapló (`modules/audit/`): `AuditService.record({ actorId, action, targetType, targetUserId, ip, meta })`; a műveletek listája a `packages/shared/src/schemas/admin.ts`-ben (`AUDIT_ACTIONS`): `auth.registered`, `auth.login_succeeded`, `auth.login_failed`, `auth.login_blocked`, `auth.password_reset`, `admin.user_suspended|restored|sessions_revoked|admin_granted|admin_revoked|verification_resent`, `admin.invitation_created|resent|revoked`. A `meta` nem tartalmazhat titkot; a sikertelen belépés a megpróbált e-mail-címet rögzíti (jelszót nem). Az ismétlődő állapotváltás (pl. egy már felfüggesztett fiók újabb felfüggesztése) nem ír újabb bejegyzést.
+- API (`modules/admin/`, mind session + platform-admin): `GET /admin/overview`; `GET /admin/users` (`q`, `status=all|active|suspended|unverified`, cursor), `GET /admin/users/{id}`, `POST /admin/users/{id}/suspend|restore|revoke-sessions|resend-verification`, `PUT /admin/users/{id}/admin`; `GET /admin/workspaces`; `GET|POST /admin/invitations` (`status=pending|accepted|expired|revoked`), `POST /admin/invitations/{id}/resend`, `DELETE /admin/invitations/{id}`; `GET /admin/audit` (`action`, `actorId`, `targetUserId`, `from`, `to`, cursor). A jelszó nélküli seed felhasználó nem jelenik meg a listán.
+- Meghívók: a meghívó tokenje csak hash-ként él, ezért az „újraküldés” új meghívót ad ki (az új levél új tokennel megy ki), a régi lejár. A meghívó vagy platform-regisztrációs (munkaterület nélkül), vagy `workspaceId` + `role` együtt (munkaterületi; az elfogadás a meglévő folyamaton át megy). Az állapot származtatott: `pending`, `accepted`, `revoked`, `expired`.
+- Frontend (`features/admin/`, `admin` i18n névtér): `/admin` áttekintő, `/admin/users` (kereső, állapotszűrő, adatlap ablak, érzékeny műveletek `ConfirmModal`-lal, toast visszajelzés), `/admin/invitations` (küldés, állapotszűrő, újraküldés, visszavonás), `/admin/audit` (esemény- és időszak-szűrő, lapozás). Menüpont a felhasználói menüben és a parancspalettán csak platform-adminnak.
+- Tesztek: integrációs és jogosultsági (`modules/admin/*.integration.test.ts`, `modules/audit/`: névtelen, sima felhasználó és API kulcs is 401/403), a `scopes.test.ts` bővítve, unit (`adminErrors`, `auditEvents`, `dayRange`), E2E (`apps/e2e/tests/admin.spec.ts`: az első regisztrált felhasználó az admin, ezért a fájl ábécésorban az első).
+- Nem része az M10-nek: az auditnapló szűrése végrehajtó/érintett felhasználó szerint a felületen (az API támogatja), aktív munkamenetek listázása egyenként, az auditnapló megőrzési ideje és exportja.
 
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 

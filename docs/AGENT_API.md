@@ -154,6 +154,11 @@ Korlátok: munkaterületenként 100 aktív lista, listánként 50 szakasz és 50
 `too_many_sections` / `too_many_items`). Szakasz törlésekor a tételei megmaradnak, szakasz nélkül. Valós idő:
 `GET /lists/{id}/events` (SSE, `list` esemény); az esemény csak jelzés, a listát újra kell olvasni.
 
+## 6/d. Adminisztráció (nem agenteknek)
+
+A `/api/v1/admin/...` végpontok (felhasználók, meghívók, auditnapló) csak böngészős session-nel és platform-adminnal
+érhetők el. API kulccsal mindig `403 session_required`, ezért AI agent nem végezhet adminisztrációt.
+
 ## 7. Tevékenységnapló
 
 Minden írás naplózódik; `GET /boards/{id}/activity` megmutatja, ki végezte (`actorType`: `user` vagy `api_key`,
