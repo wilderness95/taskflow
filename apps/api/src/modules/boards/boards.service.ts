@@ -1,6 +1,10 @@
 import { generateKeyBetween } from 'fractional-indexing'
 import {
   effectiveBoardRole,
+  getChecklistProgress,
+  getDueDateState,
+  type BoardSnapshotDto,
+  type CardListQuery,
   type BoardDto,
   type BoardMemberDto,
   type BoardRole,
@@ -32,6 +36,9 @@ const toSummary = (r: BoardRow, myRole: BoardRole, starred: boolean): BoardSumma
   myRole,
   starred,
 })
+
+const SNAPSHOT_EXCERPT_LENGTH = 200
+const SNAPSHOT_ACTIVITY_LIMIT = 10
 
 export function createBoardsService(
   repo: BoardsRepository,
@@ -74,6 +81,74 @@ export function createBoardsService(
           ...toColumnDto(c),
           cards: allCards.filter((card) => card.columnId === c.id),
         })),
+      }
+    },
+
+    /** Kártyák szűrőkkel és cursor-lapozással (agenteknek: nem kell a teljes táblát letölteni). */
+    listCards: (actor: Actor, boardId: string, query: CardListQuery) =>
+      cards.listForBoard(actor, boardId, query),
+
+    /** Tömör, agent-barát összefoglaló: oszlopok, kártyák, határidők, statisztika és friss tevékenység. */
+    snapshot(actor: Actor, id: string): BoardSnapshotDto {
+      const { board, role } = access.requireBoard(actor, id, 'board:read')
+      const columns = repo.listColumns(id)
+      const labels = repo.listLabels(id)
+      const labelNames = new Map(labels.map((l) => [l.id, l.name]))
+      const allCards = cards.listForColumns(columns.map((c) => c.id))
+      const byPriority: Record<string, number> = { high: 0, medium: 0, low: 0 }
+      let doneCount = 0
+      let overdueCount = 0
+
+      const snapshotColumns = columns.map((column) => {
+        const inColumn = allCards.filter((card) => card.columnId === column.id)
+        return {
+          id: column.id,
+          title: column.title,
+          isDone: column.isDone,
+          cardCount: inColumn.length,
+          cards: inColumn.map((card) => {
+            const overdue = !column.isDone && getDueDateState(card.dueDate) === 'overdue'
+            byPriority[card.priority] = (byPriority[card.priority] ?? 0) + 1
+            if (column.isDone) doneCount += 1
+            if (overdue) overdueCount += 1
+            const progress = card.checklists.map((c) => getChecklistProgress(c))
+            return {
+              id: card.id,
+              title: card.title,
+              priority: card.priority,
+              dueDate: card.dueDate,
+              overdue,
+              labels: card.labelIds.flatMap((labelId) => labelNames.get(labelId) ?? []),
+              checklist: {
+                done: progress.reduce((sum, p) => sum + p.done, 0),
+                total: progress.reduce((sum, p) => sum + p.total, 0),
+              },
+              descriptionExcerpt: card.description.slice(0, SNAPSHOT_EXCERPT_LENGTH),
+              updatedAt: card.updatedAt,
+            }
+          }),
+        }
+      })
+
+      return {
+        generatedAt: new Date().toISOString(),
+        board: {
+          id: board.id,
+          workspaceId: board.workspaceId!,
+          title: board.title,
+          visibility: board.visibility,
+          myRole: role,
+        },
+        summary: {
+          columnCount: columns.length,
+          cardCount: allCards.length,
+          doneCount,
+          overdueCount,
+          byPriority,
+        },
+        labels: labels.map((l) => ({ ...l })),
+        columns: snapshotColumns,
+        recentActivity: activity.listForBoard(id, SNAPSHOT_ACTIVITY_LIMIT).data,
       }
     },
 

@@ -1,5 +1,11 @@
 import { generateKeyBetween } from 'fractional-indexing'
-import type { CardDto, CreateCardInput, MoveCardInput, UpdateCardInput } from '@taskflow/shared'
+import type {
+  CardDto,
+  CardListQuery,
+  CreateCardInput,
+  MoveCardInput,
+  UpdateCardInput,
+} from '@taskflow/shared'
 import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
 import { positionBefore } from '../../lib/position.js'
@@ -55,6 +61,21 @@ export function createCardsService(deps: {
 
   return {
     listForColumns: (columnIds: string[]): CardDto[] => hydrate(cards.listByColumnIds(columnIds)),
+
+    /** Egy tábla kártyái szűrőkkel és cursor-lapozással (ID szerint növekvő sorrend). */
+    listForBoard(actor: Actor, boardId: string, query: CardListQuery) {
+      access.requireBoard(actor, boardId, 'board:read')
+      const { limit, cursor, ...filter } = query
+      if (filter.columnId && columns.findById(filter.columnId)?.boardId !== boardId) {
+        throw notFound('Column')
+      }
+      const rows = cards.listForBoard(boardId, filter, limit + 1, cursor)
+      const page = rows.slice(0, limit)
+      return {
+        data: hydrate(page),
+        nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+      }
+    },
 
     get(actor: Actor, id: string): CardDto {
       access.requireCard(actor, id, 'board:read')
