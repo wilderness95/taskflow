@@ -9,6 +9,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
 COPY apps/mcp/package.json apps/mcp/
+COPY apps/e2e/package.json apps/e2e/
 COPY apps/web/package.json apps/web/
 COPY packages/shared/package.json packages/shared/
 RUN npm ci --omit=dev -w @taskflow/api --include-workspace-root=false

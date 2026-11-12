@@ -35,3 +35,7 @@ data/
 # TypeScript
 *.tsbuildinfo
 backups/
+
+# Playwright
+test-results/
+playwright-report/
