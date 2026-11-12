@@ -12,6 +12,35 @@ export function registerBoardTools({ define, api, snapshot, participants }: Tool
     return data.map((w) => ({ id: w.id, name: w.name, role: w.role }))
   })
 
+  define(
+    'create_workspace',
+    'Create a new workspace (the user becomes its owner), optionally with boards and their columns in one step. Needs a signed-in session (not available with API keys).',
+    {
+      name: z.string().min(1).max(100),
+      boards: z
+        .array(
+          z.object({
+            title: z.string().min(1).max(200),
+            columns: z.array(z.string().min(1)).optional().describe('Column names, in order'),
+          }),
+        )
+        .optional(),
+    },
+    async (a) => {
+      const ws = await api.post<{ id: string; name: string }>('/workspaces', { name: a.name })
+      const boards: { boardId: string; title: string }[] = []
+      for (const b of a.boards ?? []) {
+        const board = await api.post<{ id: string; title: string }>(`/workspaces/${ws.id}/boards`, {
+          title: b.title,
+        })
+        for (const title of b.columns ?? [])
+          await api.post(`/boards/${board.id}/columns`, { title })
+        boards.push({ boardId: board.id, title: board.title })
+      }
+      return { workspaceId: ws.id, name: ws.name, boards }
+    },
+  )
+
   define('list_boards', 'List the boards the user can access (id, title, role).', {}, async () => {
     const { data } = await api.get<{
       data: { id: string; title: string; myRole: string; workspaceId: string }[]
