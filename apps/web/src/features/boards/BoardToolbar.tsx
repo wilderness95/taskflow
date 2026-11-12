@@ -1,67 +1,33 @@
-import type { RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { BoardMeta } from './useBoardData'
 import '../../shared/styles/base.css'
 import './BoardToolbar.css'
 
 type BoardToolbarProps = {
-  meta: BoardMeta
-  searchQuery: string
-  onSearchChange: (query: string) => void
   /** A haladó szűrő aktív feltételeinek száma. */
-  /** A kereső mező (a `/` gyorsbillentyű ide viszi a fókuszt). */
-  searchInputRef?: RefObject<HTMLInputElement | null>
   activeFilterCount: number
   filtersOpen: boolean
   onToggleFilters: () => void
 }
 
+/** A tábla eszköztára: a haladó szűrők kapcsolója (a keresés a felső sávban van). */
 export function BoardToolbar({
-  meta,
-  searchQuery,
-  onSearchChange,
-  searchInputRef,
   activeFilterCount,
   filtersOpen,
   onToggleFilters,
 }: BoardToolbarProps) {
-  const { t } = useTranslation(['board', 'filters'])
+  const { t } = useTranslation('filters')
 
   return (
     <div className="board-toolbar">
-      <div className="board-filter-bar">
-        <span className="search-icon">⌕</span>
-        <input
-          ref={searchInputRef}
-          aria-keyshortcuts="/"
-          type="text"
-          placeholder={t('filter.placeholder')}
-          aria-label={t('filter.aria')}
-          value={searchQuery}
-          onChange={(event) => onSearchChange(event.target.value)}
-        />
-      </div>
-
       <button
         type="button"
         className="secondary-button"
         aria-expanded={filtersOpen}
         onClick={onToggleFilters}
+        aria-keyshortcuts="F"
       >
-        {activeFilterCount > 0
-          ? t('filters:openCount', { count: activeFilterCount })
-          : t('filters:open')}
+        {activeFilterCount > 0 ? t('openCount', { count: activeFilterCount }) : t('open')}
       </button>
-
-      <div className="board-meta">
-        <span className="meta-pill">
-          {t('meta.visibility', { label: t(`visibility.${meta.visibility}.label`) })}
-        </span>
-        <span className="meta-pill">{t(`views.${meta.activeView}.short`)}</span>
-        <span className="meta-pill">
-          {meta.isStarred ? t('meta.starred') : t('meta.notStarred')}
-        </span>
-      </div>
     </div>
   )
 }

@@ -1,0 +1,16 @@
+.more-menu-wrap {
+  position: relative;
+}
+
+.menu-panel.more-menu-panel {
+  min-width: 200px;
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: rgba(148, 163, 184, 0.14);
+}
+
+.more-menu-danger {
+  color: #fca5a5;
+}

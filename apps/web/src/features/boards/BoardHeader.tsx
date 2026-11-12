@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
+import { BoardMoreMenu } from './BoardMoreMenu'
 import { BoardTitle } from './BoardTitle'
 import type { BoardMeta } from './useBoardData'
 import { ViewSwitcher } from './ViewSwitcher'
@@ -59,31 +60,25 @@ export function BoardHeader({
         />
         <ViewSwitcher activeView={meta.activeView} onChange={meta.setActiveView} />
 
-        <button type="button" className="secondary-button" onClick={onMembers}>
-          {t('members.open')}
-        </button>
-        <button type="button" className="secondary-button" onClick={onActivity}>
-          {t('activity.open')}
-        </button>
-        <button
-          type="button"
-          className="secondary-button"
-          aria-keyshortcuts="?"
-          onClick={onShortcuts}
-        >
-          {t('shortcuts:open')}
-        </button>
-        <button type="button" className="secondary-button" onClick={onLabels}>
-          {t('labels:open')}
-        </button>
-        <button type="button" className="secondary-button" onClick={onArchive}>
-          {t('archive:open')}
-        </button>
-        {meta.permissions.update && (
-          <button type="button" className="secondary-button" onClick={onArchiveBoard}>
-            {t('archive:board.archive')}
-          </button>
-        )}
+        <BoardMoreMenu
+          items={[
+            { key: 'members', label: t('members.open'), onSelect: onMembers },
+            { key: 'activity', label: t('activity.open'), onSelect: onActivity },
+            { key: 'labels', label: t('labels:open'), onSelect: onLabels },
+            { key: 'archive', label: t('archive:open'), onSelect: onArchive },
+            { key: 'shortcuts', label: t('shortcuts:open'), onSelect: onShortcuts },
+            ...(meta.permissions.update
+              ? [
+                  {
+                    key: 'archive-board',
+                    label: t('archive:board.archive'),
+                    onSelect: onArchiveBoard,
+                    danger: true,
+                  },
+                ]
+              : []),
+          ]}
+        />
         {meta.permissions.write && (
           <button type="button" className="primary-button" onClick={onAddColumn}>
             {t('addColumn')}

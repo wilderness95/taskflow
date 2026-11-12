@@ -59,6 +59,9 @@
     "taskMoved": "„{{title}}” áthelyezve: {{column}}, {{position}}. hely a(z) {{total}} közül.",
     "columnMoved": "„{{title}}” oszlop áthelyezve: {{position}}. hely a(z) {{total}} közül."
   },
+  "more": {
+    "open": "Több ▾"
+  },
   "addColumn": "+ Új oszlop",
   "loading": "Tábla betöltése...",
   "loadError": "A tábla betöltése nem sikerült.",
