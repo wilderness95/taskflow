@@ -45,7 +45,8 @@ export interface LiveConnector {
 
 /** Gemini Live (`@google/genai`) megvalósítás. */
 export function createGeminiLiveConnector(opts: { apiKey: string; model: string }): LiveConnector {
-  const ai = new GoogleGenAI({ apiKey: opts.apiKey })
+  // A Live API a `v1beta` végponton él (az SDK alapértelmezett `v1`-je 404-et ad).
+  const ai = new GoogleGenAI({ apiKey: opts.apiKey, httpOptions: { apiVersion: 'v1beta' } })
   return {
     async connect(params, events) {
       const session = await ai.live.connect({
