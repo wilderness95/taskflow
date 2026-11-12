@@ -55,6 +55,10 @@
       "short": "Idővonal"
     }
   },
+  "a11y": {
+    "taskMoved": "„{{title}}” áthelyezve: {{column}}, {{position}}. hely a(z) {{total}} közül.",
+    "columnMoved": "„{{title}}” oszlop áthelyezve: {{position}}. hely a(z) {{total}} közül."
+  },
   "addColumn": "+ Új oszlop",
   "loading": "Tábla betöltése...",
   "loadError": "A tábla betöltése nem sikerült.",

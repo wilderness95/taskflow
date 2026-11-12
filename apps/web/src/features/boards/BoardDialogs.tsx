@@ -12,6 +12,7 @@ import { RenameColumnModal } from '../columns/RenameColumnModal'
 import { LabelsModal } from '../labels/LabelsModal'
 import { BoardArchiveModal } from '../archive/BoardArchiveModal'
 import { BoardActivityModal } from '../activity/BoardActivityModal'
+import { ShortcutsModal } from './ShortcutsModal'
 import { BoardMembersModal } from './BoardMembersModal'
 import type { Assignee, ColumnAccent, Columns, Dialog, Task } from './types'
 
@@ -124,6 +125,9 @@ export function BoardDialogs({
           onClose={onClose}
         />
       )
+
+    case 'shortcuts':
+      return <ShortcutsModal onClose={onClose} />
 
     case 'labels':
       return <LabelsModal boardId={boardId} canEdit={canWrite} onClose={onClose} />

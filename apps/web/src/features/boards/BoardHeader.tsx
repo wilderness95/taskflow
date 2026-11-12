@@ -14,6 +14,7 @@ type BoardHeaderProps = {
   onActivity: () => void
   onArchive: () => void
   onLabels: () => void
+  onShortcuts: () => void
   onArchiveBoard: () => void
   onAddColumn: () => void
 }
@@ -24,10 +25,11 @@ export function BoardHeader({
   onActivity,
   onArchive,
   onLabels,
+  onShortcuts,
   onArchiveBoard,
   onAddColumn,
 }: BoardHeaderProps) {
-  const { t } = useTranslation(['board', 'archive', 'labels'])
+  const { t } = useTranslation(['board', 'archive', 'labels', 'shortcuts'])
 
   return (
     <section className="board-header">
@@ -62,6 +64,14 @@ export function BoardHeader({
         </button>
         <button type="button" className="secondary-button" onClick={onActivity}>
           {t('activity.open')}
+        </button>
+        <button
+          type="button"
+          className="secondary-button"
+          aria-keyshortcuts="?"
+          onClick={onShortcuts}
+        >
+          {t('shortcuts:open')}
         </button>
         <button type="button" className="secondary-button" onClick={onLabels}>
           {t('labels:open')}
