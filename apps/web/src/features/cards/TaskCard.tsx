@@ -1,4 +1,4 @@
-import { getChecklistProgress, getDueDateState } from '@taskflow/shared'
+import { getChecklistsProgress, getDueDateState } from '@taskflow/shared'
 import { useTranslation } from 'react-i18next'
 import { formatShortDate } from '../../i18n/format'
 import { classNames } from '../../shared/lib/classNames'
@@ -32,7 +32,7 @@ export function TaskCard({
   readOnly = false,
 }: TaskCardProps) {
   const { t } = useTranslation('card')
-  const checklistProgress = getChecklistProgress(task.checklist)
+  const checklistProgress = getChecklistsProgress(task.checklists)
   const dueState = getDueDateState(task.dueDate)
 
   return (

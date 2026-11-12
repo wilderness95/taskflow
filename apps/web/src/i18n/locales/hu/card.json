@@ -34,11 +34,14 @@
   },
   "checklist": {
     "defaultTitle": "Content Checklist",
-    "toggleAria": "Checklist bejelölése",
-    "delete": "Delete",
+    "sectionAria": "Checklistek",
+    "titleAria": "Checklist címe",
+    "add": "+ Checklist hozzáadása",
+    "delete": "Törlés",
+    "deleteItemAria": "Tétel törlése",
     "empty": "Nincs elem a listában.",
-    "itemPlaceholder": "Add an item",
-    "addItem": "Add an item",
+    "itemPlaceholder": "Új tétel",
+    "addItem": "+ Tétel hozzáadása",
     "check": "Kijelölés",
     "uncheck": "Kijelölés megszüntetése"
   }

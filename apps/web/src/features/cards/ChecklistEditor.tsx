@@ -9,6 +9,7 @@ type ChecklistEditorProps = {
   items: ChecklistItem[]
   onTitleChange: (title: string) => void
   onItemsChange: (items: ChecklistItem[]) => void
+  onDelete: () => void
 }
 
 export function ChecklistEditor({
@@ -16,6 +17,7 @@ export function ChecklistEditor({
   items,
   onTitleChange,
   onItemsChange,
+  onDelete,
 }: ChecklistEditorProps) {
   const { t } = useTranslation('card')
   const { percent } = getChecklistProgress({ items })
@@ -33,20 +35,17 @@ export function ChecklistEditor({
   return (
     <div className="checklist-panel">
       <div className="checklist-title-row">
-        <button
-          type="button"
-          className="checklist-toggle-button"
-          aria-label={t('checklist.toggleAria')}
-        >
+        <span className="checklist-toggle-button" aria-hidden="true">
           ✓
-        </button>
+        </span>
         <input
           type="text"
           className="checklist-title-input"
           value={title}
+          aria-label={t('checklist.titleAria')}
           onChange={(event) => onTitleChange(event.target.value)}
         />
-        <button type="button" className="delete-checklist-button">
+        <button type="button" className="delete-checklist-button" onClick={onDelete}>
           {t('checklist.delete')}
         </button>
       </div>
@@ -80,6 +79,7 @@ export function ChecklistEditor({
             <button
               type="button"
               className="checklist-delete-item"
+              aria-label={t('checklist.deleteItemAria')}
               onClick={() => removeItem(index)}
             >
               ×

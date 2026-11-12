@@ -9,7 +9,6 @@ const toTask = (
   done: boolean,
   participants: Map<string, Assignee>,
 ): Task => {
-  const checklist = card.checklists[0]
   return {
     id: card.id,
     title: card.title,
@@ -26,10 +25,11 @@ const toTask = (
     coverImage: card.coverImage ?? undefined,
     done,
     version: card.version,
-    checklist: checklist && {
+    checklists: card.checklists.map((checklist) => ({
+      id: checklist.id,
       title: checklist.title,
       items: checklist.items.map(({ id, text, done: itemDone }) => ({ id, text, done: itemDone })),
-    },
+    })),
   }
 }
 

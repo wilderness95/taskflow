@@ -80,8 +80,8 @@ export function BoardDialogs({
           mode={isEdit ? 'edit' : 'create'}
           initialDraft={
             isEdit
-              ? createDraftFromTask(dialog.task, dialog.columnId, defaultChecklistTitle)
-              : createEmptyDraft(dialog.columnId, defaultChecklistTitle)
+              ? createDraftFromTask(dialog.task, dialog.columnId)
+              : createEmptyDraft(dialog.columnId)
           }
           columns={columns}
           participants={participants}

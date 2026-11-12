@@ -107,6 +107,9 @@ export const createChecklist = (cardId: string, input: CreateChecklistRequest) =
 export const updateChecklist = (checklistId: string, title: string) =>
   apiFetch<ChecklistDto>('PATCH', `/checklists/${checklistId}`, { title })
 
+export const deleteChecklist = (checklistId: string) =>
+  apiFetch('DELETE', `/checklists/${checklistId}`)
+
 export const createChecklistItem = (checklistId: string, input: CreateChecklistItemInput) =>
   apiFetch<ChecklistItemDto>('POST', `/checklists/${checklistId}/items`, input)
 

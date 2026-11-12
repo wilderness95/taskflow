@@ -6,7 +6,7 @@ import type { Assignee, Columns } from '../boards/types'
 import { AssigneePicker } from './AssigneePicker'
 import { CardActivity } from '../activity/CardActivity'
 import { CommentSection } from '../comments/CommentSection'
-import { ChecklistEditor } from './ChecklistEditor'
+import { ChecklistsSection } from './ChecklistsSection'
 import type { TaskDraft } from './taskDraft'
 import '../../shared/styles/buttons.css'
 import '../../shared/styles/form.css'
@@ -140,11 +140,10 @@ export function CardModal({
           />
         </label>
 
-        <ChecklistEditor
-          title={draft.checklistTitle}
-          items={draft.checklistItems}
-          onTitleChange={(title) => setField('checklistTitle', title)}
-          onItemsChange={(items) => setField('checklistItems', items)}
+        <ChecklistsSection
+          checklists={draft.checklists}
+          defaultTitle={t('card:checklist.defaultTitle')}
+          onChange={(checklists) => setField('checklists', checklists)}
         />
 
         <div className="modal-actions">

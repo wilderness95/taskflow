@@ -149,3 +149,8 @@
 .add-checklist-item-button:hover {
   transform: translateY(-1px);
 }
+
+.checklists-section {
+  display: grid;
+  gap: 12px;
+}

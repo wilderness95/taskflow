@@ -1,6 +1,6 @@
 import {
   TAG_COLORS,
-  type ChecklistLike,
+  type ChecklistItem,
   type Priority,
   type Tag,
   type TagColor,
@@ -13,6 +13,9 @@ export type ColumnAccent = TagColor
 /** A kártyához rendelt felhasználó megjelenítéshez szükséges adatai. */
 export type Assignee = { id: string; name: string; avatarUrl: string | null }
 
+/** A checklist a szerkesztő számára; az `id` szerveroldali, vagy (új listánál) kliensoldali ideiglenes. */
+export type TaskChecklist = { id: string; title: string; items: ChecklistItem[] }
+
 export type Task = {
   id: string
   title: string
@@ -22,7 +25,8 @@ export type Task = {
   dueDate?: string
   coverImage?: string
   done?: boolean
-  checklist?: ChecklistLike
+  /** A kártya checklistjei (több is lehet). */
+  checklists: TaskChecklist[]
   assignees: Assignee[]
   /** A kártya szerveroldali verziója a betöltéskor (optimista zároláshoz); új kártyának nincs. */
   version?: number

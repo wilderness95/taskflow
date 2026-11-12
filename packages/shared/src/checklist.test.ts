@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getChecklistProgress } from './checklist'
+import { getChecklistProgress, getChecklistsProgress } from './checklist'
 
 describe('getChecklistProgress', () => {
   it('hiányzó checklistre nullát ad', () => {
@@ -34,5 +34,26 @@ describe('getChecklistProgress', () => {
       done: 0,
       total: 0,
     })
+  })
+})
+
+describe('getChecklistsProgress', () => {
+  it('nincs checklist: nulla', () => {
+    expect(getChecklistsProgress([])).toEqual({ percent: 0, done: 0, total: 0 })
+  })
+
+  it('a checklistek tételeit együtt számolja', () => {
+    const progress = getChecklistsProgress([
+      { items: [{ text: 'a', done: true }] },
+      {
+        items: [
+          { text: 'b', done: false },
+          { text: 'c', done: false },
+          { text: 'd', done: true },
+        ],
+      },
+      undefined,
+    ])
+    expect(progress).toEqual({ percent: 50, done: 2, total: 4 })
   })
 })

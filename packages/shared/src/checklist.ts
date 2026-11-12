@@ -51,3 +51,13 @@ export const getChecklistProgress = (
     total,
   }
 }
+
+/** Több checklist együttes haladása (a kártyán megjelenő összesítő): a tételek összegéből számol. */
+export const getChecklistsProgress = (
+  checklists: readonly (ChecklistLike | null | undefined)[],
+): ChecklistProgress => {
+  const parts = checklists.map((checklist) => getChecklistProgress(checklist))
+  const total = parts.reduce((sum, part) => sum + part.total, 0)
+  const done = parts.reduce((sum, part) => sum + part.done, 0)
+  return total === 0 ? EMPTY_PROGRESS : { percent: Math.round((done / total) * 100), done, total }
+}
