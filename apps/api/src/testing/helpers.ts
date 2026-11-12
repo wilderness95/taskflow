@@ -57,15 +57,19 @@ export async function login(app: App, email: string, password = PASSWORD) {
 type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
 
 /** Egy bejelentkezett (vagy névtelen) kliens: JSON-t küld és vár vissza. */
-export function client(app: App, cookie?: string) {
+export function client(app: App, cookie?: string, headers: Record<string, string> = {}) {
   const call = async (method: Method, url: string, payload?: object) => {
     const res = await app.inject({
       method,
       url: `/api/v1${url}`,
       payload,
-      headers: cookie ? { cookie } : {},
+      headers: { ...(cookie ? { cookie } : {}), ...headers },
     })
-    return { status: res.statusCode, body: res.body ? (res.json() as any) : null } // eslint-disable-line @typescript-eslint/no-explicit-any
+    return {
+      status: res.statusCode,
+      headers: res.headers,
+      body: res.body ? (res.json() as any) : null, // eslint-disable-line @typescript-eslint/no-explicit-any
+    }
   }
   return {
     get: (url: string) => call('GET', url),
@@ -75,6 +79,10 @@ export function client(app: App, cookie?: string) {
     delete: (url: string) => call('DELETE', url),
   }
 }
+/** Egy API kulccsal (Bearer) hívó kliens; `extra`: további fejlécek (pl. Idempotency-Key). */
+export const bearer = (app: App, key: string, extra: Record<string, string> = {}) =>
+  client(app, undefined, { authorization: `Bearer ${key}`, ...extra })
+
 export type TestClient = ReturnType<typeof client>
 
 /** Új felhasználó regisztrálása (nyitott regisztrációs módú alkalmazásban) és bejelentkezett kliense. */

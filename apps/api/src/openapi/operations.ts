@@ -1,5 +1,8 @@
 import { z } from 'zod'
 import {
+  apiKeyListSchema,
+  createApiKeySchema,
+  createdApiKeySchema,
   boardListSchema,
   boardMemberListSchema,
   boardMemberSchema,
@@ -69,8 +72,31 @@ const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
 const auth = { tag: 'Auth' }
 const workspace = { tag: 'Workspaces' }
+const apiKey = { tag: 'API keys' }
 
 export const operations: Operation[] = [
+  {
+    ...apiKey,
+    method: 'get',
+    path: '/api-keys',
+    summary: 'List my API keys (session only)',
+    success: { status: 200, schema: apiKeyListSchema },
+  },
+  {
+    ...apiKey,
+    method: 'post',
+    path: '/api-keys',
+    summary: 'Create an API key; the secret `key` is returned only once (session only)',
+    body: createApiKeySchema,
+    success: { status: 201, schema: createdApiKeySchema },
+  },
+  {
+    ...apiKey,
+    method: 'delete',
+    path: '/api-keys/{id}',
+    summary: 'Revoke an API key (session only)',
+    success: { status: 204 },
+  },
   {
     ...workspace,
     method: 'get',

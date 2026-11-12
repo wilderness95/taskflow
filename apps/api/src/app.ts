@@ -1,6 +1,11 @@
 import rateLimit from '@fastify/rate-limit'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { clientIp, registerAuth } from './auth/auth.plugin.js'
+import { createActivityRepository } from './modules/activity/activity.repository.js'
+import { createActivityService } from './modules/activity/activity.service.js'
+import { apiKeysRoutes } from './modules/apikeys/apikeys.routes.js'
+import { createApiKeysRepository } from './modules/apikeys/apikeys.repository.js'
+import { createApiKeysService } from './modules/apikeys/apikeys.service.js'
 import { createMailer, type Mailer } from './mail/mailer.js'
 import { authRoutes } from './modules/auth/auth.routes.js'
 import { createAuthRepository } from './modules/auth/auth.repository.js'
@@ -61,13 +66,20 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
       }),
   })
   const mailer = deps.mailer ?? createMailer(config)
+  const authRepo = createAuthRepository(db)
   const auth = createAuthService({
-    repo: createAuthRepository(db),
+    repo: authRepo,
     mailer,
     config,
     logger: app.log,
   })
-  registerAuth(app, config, auth)
+  const activity = createActivityService(createActivityRepository(db))
+  const apiKeys = createApiKeysService({
+    repo: createApiKeysRepository(db),
+    users: authRepo,
+    activity,
+  })
+  registerAuth(app, config, auth, apiKeys)
 
   const boardsRepo = createBoardsRepository(db)
   const columnsRepo = createColumnsRepository(db)
@@ -102,6 +114,7 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     logger: app.log,
   })
   app.register(authRoutes(auth, config))
+  app.register(apiKeysRoutes(apiKeys))
   app.register(workspacesRoutes(workspaces, config))
   app.register(boardsRoutes(boards))
   app.register(columnsRoutes(columns, cards))
