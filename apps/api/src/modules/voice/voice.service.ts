@@ -100,7 +100,12 @@ export function createVoiceService(deps: VoiceServiceDeps) {
       io.close()
     }
     const fail = (code: string, err?: unknown) => {
-      if (err) deps.logger?.warn({ err, code }, 'voice session error')
+      // Csak az üzenet kerül a logba: az SDK hibaobjektuma az URL-ben az API kulcsot is tartalmazza.
+      if (err)
+        deps.logger?.warn(
+          { code, reason: err instanceof Error ? err.message : 'unknown' },
+          'voice session error',
+        )
       if (!closed) io.sendMessage({ type: 'error', code })
       close()
     }

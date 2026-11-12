@@ -70,7 +70,10 @@ export function voiceRoutes(service: VoiceService, deps: { allowedOrigin: string
           )
           for (const p of pending.splice(0)) dispatch(p.data, p.binary)
         } catch (err) {
-          app.log.warn({ err }, 'voice session failed to start')
+          app.log.warn(
+            { reason: err instanceof Error ? err.message : 'unknown' },
+            'voice session failed to start',
+          )
           socket.close()
         }
       },
