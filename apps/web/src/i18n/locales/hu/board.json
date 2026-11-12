@@ -65,6 +65,9 @@
   "notFound": "Ez a tábla nem létezik, vagy nincs hozzáférésed.",
   "backToWorkspace": "Vissza a munkaterülethez",
   "readOnly": "Csak olvasási jogod van ezen a táblán.",
+  "activity": {
+    "open": "Tevékenység"
+  },
   "members": {
     "open": "Tagok",
     "eyebrow": "Tábla",

@@ -103,6 +103,12 @@ export function createCardsService(deps: {
       }
     },
 
+    /** A kártya tevékenységnaplója (a kártya, a checklistjei és a kommentjei), legújabb elöl. */
+    activity(actor: Actor, id: string, query: { limit: number; cursor?: string }) {
+      const { board } = access.requireCard(actor, id, 'board:read')
+      return activity.listForCard(board.id, id, query.limit, query.cursor)
+    },
+
     get(actor: Actor, id: string): CardDto {
       access.requireCard(actor, id, 'board:read')
       return hydrate([require(id)])[0]!

@@ -90,6 +90,7 @@ export function BoardPage() {
             <BoardHeader
               meta={meta}
               onMembers={() => setDialog({ type: 'members' })}
+              onActivity={() => setDialog({ type: 'activity' })}
               onAddColumn={handleAddColumn}
             />
             {!meta.permissions.write && (

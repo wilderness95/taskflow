@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Modal } from '../../shared/ui/Modal'
 import type { Assignee, Columns } from '../boards/types'
 import { AssigneePicker } from './AssigneePicker'
+import { CardActivity } from '../activity/CardActivity'
 import { CommentSection } from '../comments/CommentSection'
 import { ChecklistEditor } from './ChecklistEditor'
 import type { TaskDraft } from './taskDraft'
@@ -165,6 +166,7 @@ export function CardModal({
           isBoardAdmin={discussion.isBoardAdmin}
         />
       )}
+      {discussion && <CardActivity boardId={discussion.boardId} cardId={discussion.cardId} />}
     </Modal>
   )
 }

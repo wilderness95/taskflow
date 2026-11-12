@@ -48,3 +48,4 @@ export type Dialog =
   | { type: 'column-rename'; columnId: string }
   | { type: 'column-delete'; columnId: string }
   | { type: 'members' }
+  | { type: 'activity' }

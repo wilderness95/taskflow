@@ -37,6 +37,14 @@ export const toActivityDto = (r: ActivityRow): ActivityDto => ({
   createdAt: r.createdAt.toISOString(),
 })
 
+const paginate = (rows: ActivityRow[], limit: number) => {
+  const page = rows.slice(0, limit)
+  return {
+    data: page.map(toActivityDto),
+    nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
+  }
+}
+
 /** Az írási műveletek naplója (`activity_log`): ki (ember vagy API kulcs) mit csinált. */
 export function createActivityService(repo: ActivityRepository) {
   return {
@@ -56,12 +64,10 @@ export function createActivityService(repo: ActivityRepository) {
     },
     listForBoard(boardId: string, limit: number, cursor?: string) {
       // Egyel többet kérünk le, hogy kiderüljön, van-e következő oldal.
-      const rows = repo.listForBoard(boardId, limit + 1, cursor)
-      const page = rows.slice(0, limit)
-      return {
-        data: page.map(toActivityDto),
-        nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
-      }
+      return paginate(repo.listForBoard(boardId, limit + 1, cursor), limit)
+    },
+    listForCard(boardId: string, cardId: string, limit: number, cursor?: string) {
+      return paginate(repo.listForCard(boardId, cardId, limit + 1, cursor), limit)
     },
   }
 }
