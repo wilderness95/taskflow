@@ -3,10 +3,14 @@ import { boardRoleCan, type BoardDto } from '@taskflow/shared'
 import { useMemo, useState } from 'react'
 import * as api from '../../api/boards'
 import { ApiError } from '../../api/client'
+import { useBoardEvents } from './useBoardEvents'
 import { saveCard, type SaveCardInput } from '../cards/saveCard'
 import { moveCardInBoard, moveColumnInBoard } from './boardCache'
 import { toColumns } from './boardMapper'
-import type { BoardView, ColumnAccent, Visibility } from './types'
+import type { Assignee, BoardView, ColumnAccent, Visibility } from './types'
+
+const findCardVersion = (board: BoardDto | undefined, cardId: string): number | undefined =>
+  board?.columns.flatMap((column) => column.cards).find((card) => card.id === cardId)?.version
 
 const boardKey = (boardId: string) => ['board', boardId] as const
 
@@ -21,6 +25,22 @@ export function useBoardData(boardId: string) {
     retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 1,
   })
   const board = boardQuery.data
+  // Más felhasználók és agentek módosításai élőben jelennek meg.
+  useBoardEvents(boardId, Boolean(board))
+  const participantsQuery = useQuery({
+    queryKey: [...boardKey(boardId), 'participants'],
+    queryFn: () => api.listBoardParticipants(boardId),
+    enabled: Boolean(board),
+  })
+  const participants = useMemo<Assignee[]>(
+    () =>
+      (participantsQuery.data ?? []).map(({ userId, name, avatarUrl }) => ({
+        id: userId,
+        name,
+        avatarUrl,
+      })),
+    [participantsQuery.data],
+  )
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ['boards'] })
@@ -85,7 +105,12 @@ export function useBoardData(boardId: string) {
       taskId: string
       toColumnId: string
       targetTaskId: string | null
-    }) => api.moveCard(taskId, { columnId: toColumnId, beforeCardId: targetTaskId }),
+    }) =>
+      api.moveCard(taskId, {
+        columnId: toColumnId,
+        beforeCardId: targetTaskId,
+        version: findCardVersion(board, taskId),
+      }),
     (current, { taskId, toColumnId, targetTaskId }) =>
       moveCardInBoard(current, taskId, toColumnId, targetTaskId),
   )
@@ -93,7 +118,10 @@ export function useBoardData(boardId: string) {
     api.updateBoard(boardId, input),
   )
 
-  const columns = useMemo(() => (board ? toColumns(board) : {}), [board])
+  const columns = useMemo(
+    () => (board ? toColumns(board, participants) : {}),
+    [board, participants],
+  )
 
   // A nézetválasztó egyelőre kliensoldali állapot.
   const [activeView, setActiveView] = useState<BoardView>('kanban')
@@ -124,6 +152,7 @@ export function useBoardData(boardId: string) {
     retry: () => void boardQuery.refetch(),
     workspaceId: board?.workspaceId,
     columns,
+    participants,
     meta: {
       title: board?.title ?? '',
       setTitle: (title: string) => updateBoard.mutate({ title }),

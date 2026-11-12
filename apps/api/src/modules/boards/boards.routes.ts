@@ -96,6 +96,10 @@ export function boardsRoutes(service: BoardsService) {
       ),
     )
 
+    app.get('/api/v1/boards/:id/participants', async (req) => ({
+      data: service.listParticipants(requireActor(req), idParamsSchema.parse(req.params).id),
+    }))
+
     app.get('/api/v1/boards/:id/members', async (req) => ({
       data: service.listMembers(requireActor(req), idParamsSchema.parse(req.params).id),
     }))

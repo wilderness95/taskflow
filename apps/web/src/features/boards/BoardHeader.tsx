@@ -11,10 +11,11 @@ import './BoardHeader.css'
 type BoardHeaderProps = {
   meta: BoardMeta
   onMembers: () => void
+  onActivity: () => void
   onAddColumn: () => void
 }
 
-export function BoardHeader({ meta, onMembers, onAddColumn }: BoardHeaderProps) {
+export function BoardHeader({ meta, onMembers, onActivity, onAddColumn }: BoardHeaderProps) {
   const { t } = useTranslation('board')
 
   return (
@@ -47,6 +48,9 @@ export function BoardHeader({ meta, onMembers, onAddColumn }: BoardHeaderProps) 
 
         <button type="button" className="secondary-button" onClick={onMembers}>
           {t('members.open')}
+        </button>
+        <button type="button" className="secondary-button" onClick={onActivity}>
+          {t('activity.open')}
         </button>
         {meta.permissions.write && (
           <button type="button" className="primary-button" onClick={onAddColumn}>

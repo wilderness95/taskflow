@@ -15,6 +15,7 @@ import type { AccessService } from '../access/access.service.js'
 import type { BoardsRepository } from '../boards/boards.repository.js'
 import type { ChecklistsRepository } from '../checklists/checklists.repository.js'
 import { toChecklistDto } from '../checklists/checklists.service.js'
+import type { NotificationsService } from '../notifications/notifications.service.js'
 import type { ColumnsRepository } from '../columns/columns.repository.js'
 import type { CardRow, CardsRepository } from './cards.repository.js'
 
@@ -25,12 +26,14 @@ export function createCardsService(deps: {
   checklists: ChecklistsRepository
   access: AccessService
   activity: ActivityService
+  notifications: NotificationsService
 }) {
-  const { cards, columns, boards, checklists, access, activity } = deps
+  const { cards, columns, boards, checklists, access, activity, notifications } = deps
 
   const hydrate = (rows: CardRow[]): CardDto[] => {
     const ids = rows.map((r) => r.id)
     const labelIds = cards.labelIdsByCard(ids)
+    const assignees = cards.assigneeIdsByCard(ids)
     const lists = checklists.listByCardIds(ids)
     return rows.map((r) => ({
       id: r.id,
@@ -42,6 +45,7 @@ export function createCardsService(deps: {
       coverImage: r.coverImage,
       position: r.position,
       labelIds: labelIds.get(r.id) ?? [],
+      assigneeIds: assignees.get(r.id) ?? [],
       checklists: lists.filter((l) => l.cardId === r.id).map(toChecklistDto),
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
@@ -58,6 +62,30 @@ export function createCardsService(deps: {
   }
 
   const require = (id: string): CardRow => orNotFound(cards.findById(id), 'Card')
+
+  /** A hozzárendelt felhasználóknak a tábla résztvevői közül kell kikerülniük. */
+  const assertAssignees = (
+    board: Parameters<AccessService['participants']>[0],
+    userIds: string[],
+  ) => {
+    const unique = [...new Set(userIds)]
+    const allowed = new Set(access.participants(board).map((p) => p.userId))
+    if (unique.some((id) => !allowed.has(id))) {
+      throw new AppError(422, 'invalid_assignee', 'Assignees must have access to the board', {
+        assigneeIds: userIds,
+      })
+    }
+    return unique
+  }
+
+  /** Optimista zárolás: ha a kliens `version`-t küldött, annak egyeznie kell a mentettel. */
+  const assertVersion = (card: CardRow, expected: number | undefined) => {
+    if (expected === undefined || expected === card.version) return
+    throw new AppError(409, 'version_conflict', 'The card was modified by someone else', {
+      currentVersion: card.version,
+      card: hydrate([card])[0],
+    })
+  }
 
   return {
     listForColumns: (columnIds: string[]): CardDto[] => hydrate(cards.listByColumnIds(columnIds)),
@@ -77,6 +105,12 @@ export function createCardsService(deps: {
       }
     },
 
+    /** A kártya tevékenységnaplója (a kártya, a checklistjei és a kommentjei), legújabb elöl. */
+    activity(actor: Actor, id: string, query: { limit: number; cursor?: string }) {
+      const { board } = access.requireCard(actor, id, 'board:read')
+      return activity.listForCard(board.id, id, query.limit, query.cursor)
+    },
+
     get(actor: Actor, id: string): CardDto {
       access.requireCard(actor, id, 'board:read')
       return hydrate([require(id)])[0]!
@@ -87,6 +121,7 @@ export function createCardsService(deps: {
       const column = columns.findById(columnId)
       if (!column) throw notFound('Column')
       const labelIds = assertLabels(column.boardId, input.labelIds)
+      const assigneeIds = assertAssignees(board, input.assigneeIds)
       const id = cards.transaction(() => {
         const row = cards.insert({
           id: newId(),
@@ -100,6 +135,7 @@ export function createCardsService(deps: {
           createdBy: actor.id,
         })
         cards.setLabels(row.id, labelIds)
+        cards.setAssignees(row.id, assigneeIds)
         return row.id
       })
       activity.record(actor, {
@@ -107,7 +143,13 @@ export function createCardsService(deps: {
         action: 'card.created',
         entityType: 'card',
         entityId: id,
-        meta: { title: input.title, columnId },
+        meta: { title: input.title, columnId, assigneeIds },
+      })
+      notifications.notify(actor, {
+        type: 'assigned',
+        userIds: assigneeIds,
+        boardId: board.id,
+        cardId: id,
       })
       return hydrate([require(id)])[0]!
     },
@@ -115,8 +157,12 @@ export function createCardsService(deps: {
     update(actor: Actor, id: string, input: UpdateCardInput): CardDto {
       const { board } = access.requireCard(actor, id, 'board:write')
       const card = require(id)
-      const { labelIds, ...fields } = input
+      assertVersion(card, input.version)
+      const { labelIds, assigneeIds, version: _version, ...fields } = input
+      const before = cards.assigneeIdsByCard([id]).get(id) ?? []
+      const assigned = assigneeIds ? assertAssignees(board, assigneeIds) : undefined
       cards.transaction(() => {
+        if (assigned) cards.setAssignees(id, assigned)
         if (labelIds) {
           const column = columns.findById(card.columnId)!
           cards.setLabels(id, assertLabels(column.boardId, labelIds))
@@ -128,8 +174,27 @@ export function createCardsService(deps: {
         action: 'card.updated',
         entityType: 'card',
         entityId: id,
-        meta: { title: card.title, fields: Object.keys(input) },
+        meta: {
+          title: card.title,
+          fields: Object.keys(fields)
+            .concat(labelIds ? ['labelIds'] : [])
+            .concat(assigned ? ['assigneeIds'] : []),
+          ...(assigned
+            ? {
+                assignedIds: assigned.filter((u) => !before.includes(u)),
+                unassignedIds: before.filter((u) => !assigned.includes(u)),
+              }
+            : {}),
+        },
       })
+      if (assigned) {
+        notifications.notify(actor, {
+          type: 'assigned',
+          userIds: assigned.filter((u) => !before.includes(u)),
+          boardId: board.id,
+          cardId: id,
+        })
+      }
       return hydrate([require(id)])[0]!
     },
 
@@ -137,6 +202,7 @@ export function createCardsService(deps: {
     move(actor: Actor, id: string, input: MoveCardInput): CardDto {
       const { board } = access.requireCard(actor, id, 'board:write')
       const card = require(id)
+      assertVersion(card, input.version)
       const target = columns.findById(input.columnId)
       const source = columns.findById(card.columnId)!
       if (!target || target.boardId !== source.boardId) throw notFound('Column')

@@ -2,7 +2,10 @@ import { isPriority, parseTags, PRIORITIES } from '@taskflow/shared'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal } from '../../shared/ui/Modal'
-import type { Columns } from '../boards/types'
+import type { Assignee, Columns } from '../boards/types'
+import { AssigneePicker } from './AssigneePicker'
+import { CardActivity } from '../activity/CardActivity'
+import { CommentSection } from '../comments/CommentSection'
 import { ChecklistEditor } from './ChecklistEditor'
 import type { TaskDraft } from './taskDraft'
 import '../../shared/styles/buttons.css'
@@ -13,11 +16,22 @@ type CardModalProps = {
   mode: 'create' | 'edit'
   initialDraft: TaskDraft
   columns: Columns
+  participants: Assignee[]
+  /** Meglévő kártyánál a hozzászólás-szál adatai. */
+  discussion?: { boardId: string; cardId: string; isBoardAdmin: boolean }
   onSave: (draft: TaskDraft) => void
   onClose: () => void
 }
 
-export function CardModal({ mode, initialDraft, columns, onSave, onClose }: CardModalProps) {
+export function CardModal({
+  mode,
+  initialDraft,
+  columns,
+  participants,
+  discussion,
+  onSave,
+  onClose,
+}: CardModalProps) {
   const { t } = useTranslation(['card', 'common'])
   const [draft, setDraft] = useState(initialDraft)
   const isCreate = mode === 'create'
@@ -111,6 +125,12 @@ export function CardModal({ mode, initialDraft, columns, onSave, onClose }: Card
           </div>
         </label>
 
+        <AssigneePicker
+          participants={participants}
+          selectedIds={draft.assigneeIds}
+          onChange={(ids) => setField('assigneeIds', ids)}
+        />
+
         <label className="single-field">
           {t('card:fields.dueDate')}
           <input
@@ -136,6 +156,17 @@ export function CardModal({ mode, initialDraft, columns, onSave, onClose }: Card
           </button>
         </div>
       </form>
+
+      {discussion && (
+        <CommentSection
+          boardId={discussion.boardId}
+          cardId={discussion.cardId}
+          people={participants}
+          canComment
+          isBoardAdmin={discussion.isBoardAdmin}
+        />
+      )}
+      {discussion && <CardActivity boardId={discussion.boardId} cardId={discussion.cardId} />}
     </Modal>
   )
 }

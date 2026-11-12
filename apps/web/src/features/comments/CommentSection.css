@@ -1,0 +1,35 @@
+.comment-section {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.comment-section h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.comment-empty {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.comment-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comment-form {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.comment-form .mention-textarea {
+  width: 100%;
+}

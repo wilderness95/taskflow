@@ -26,6 +26,11 @@
     "tagsPlaceholder": "UI, UX, Marketing",
     "dueDate": "Határidő"
   },
+  "assignees": {
+    "label": "Felelősök",
+    "empty": "Nincs hozzárendelhető felhasználó.",
+    "stackAria": "Felelősök: {{names}}"
+  },
   "checklist": {
     "defaultTitle": "Content Checklist",
     "toggleAria": "Checklist bejelölése",

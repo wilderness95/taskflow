@@ -30,6 +30,15 @@ import { createChecklistsService } from './modules/checklists/checklists.service
 import { columnsRoutes } from './modules/columns/columns.routes.js'
 import { createColumnsRepository } from './modules/columns/columns.repository.js'
 import { createColumnsService } from './modules/columns/columns.service.js'
+import { commentsRoutes } from './modules/comments/comments.routes.js'
+import { createCommentsRepository } from './modules/comments/comments.repository.js'
+import { createCommentsService } from './modules/comments/comments.service.js'
+import { createEventBus } from './events/eventBus.js'
+import { eventsRoutes } from './modules/events/events.routes.js'
+import { createEventsService } from './modules/events/events.service.js'
+import { notificationsRoutes } from './modules/notifications/notifications.routes.js'
+import { createNotificationsRepository } from './modules/notifications/notifications.repository.js'
+import { createNotificationsService } from './modules/notifications/notifications.service.js'
 import { AppError } from './errors.js'
 import { openApiPlugin } from './openapi/openapi.plugin.js'
 import { createIdempotencyRepository } from './modules/idempotency/idempotency.repository.js'
@@ -39,6 +48,8 @@ import { registerErrorHandler } from './plugins/errorHandler.js'
 declare module 'fastify' {
   interface FastifyInstance {
     routeList: string[]
+    /** Határidő-emlékeztetők kiadása (az időzítő hívja; tesztben közvetlenül). Visszaadja az új értesítések számát. */
+    sendDueReminders: (now?: Date) => number
   }
 }
 
@@ -75,7 +86,8 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     config,
     logger: app.log,
   })
-  const activity = createActivityService(createActivityRepository(db))
+  const bus = createEventBus()
+  const activity = createActivityService(createActivityRepository(db), bus)
   const apiKeys = createApiKeysService({
     repo: createApiKeysRepository(db),
     users: authRepo,
@@ -89,7 +101,13 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
   const cardsRepo = createCardsRepository(db)
   const checklistsRepo = createChecklistsRepository(db)
 
-  const access = createAccessService(createAccessRepository(db))
+  const accessRepo = createAccessRepository(db)
+  const access = createAccessService(accessRepo)
+  const notifications = createNotificationsService({
+    repo: createNotificationsRepository(db),
+    access,
+    findBoard: accessRepo.findActiveBoard,
+  })
   const cards = createCardsService({
     cards: cardsRepo,
     columns: columnsRepo,
@@ -97,6 +115,14 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     checklists: checklistsRepo,
     access,
     activity,
+    notifications,
+  })
+  const comments = createCommentsService({
+    repo: createCommentsRepository(db),
+    cards: cardsRepo,
+    access,
+    activity,
+    notifications,
   })
   const boards = createBoardsService(boardsRepo, cards, access, activity)
   const columns = createColumnsService(columnsRepo, access, activity)
@@ -108,6 +134,25 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
     for (const m of [r.method].flat()) routes.push(`${m} ${r.url}`)
   })
   app.decorate('routeList', routes)
+  app.decorate('sendDueReminders', (now?: Date) => notifications.notifyDueSoon(now))
+
+  // Időzített emlékeztetők: induláskor és utána időközönként (tesztben nem fut magától).
+  if (config.NODE_ENV !== 'test' && config.DUE_REMINDER_INTERVAL_MINUTES > 0) {
+    let timer: ReturnType<typeof setInterval> | undefined
+    const run = () => {
+      try {
+        app.sendDueReminders()
+      } catch (err) {
+        app.log.error({ err }, 'due date reminders failed')
+      }
+    }
+    app.addHook('onReady', async () => {
+      run()
+      timer = setInterval(run, config.DUE_REMINDER_INTERVAL_MINUTES * 60_000)
+      timer.unref()
+    })
+    app.addHook('onClose', async () => clearInterval(timer))
+  }
 
   app.register(openApiPlugin)
   app.register(healthRoutes)
@@ -125,5 +170,8 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
   app.register(columnsRoutes(columns, cards))
   app.register(cardsRoutes(cards, checklists))
   app.register(checklistsRoutes(checklists))
+  app.register(commentsRoutes(comments))
+  app.register(notificationsRoutes(notifications))
+  app.register(eventsRoutes(createEventsService(bus, access)))
   return app
 }

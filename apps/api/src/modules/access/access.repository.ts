@@ -1,5 +1,5 @@
 import type { BoardRole, WorkspaceRole } from '@taskflow/shared'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
 import {
   boardMembers,
@@ -8,6 +8,7 @@ import {
   checklistItems,
   checklists,
   columns,
+  users,
   workspaceMembers,
 } from '../../db/schema.js'
 
@@ -36,6 +37,31 @@ export function createAccessRepository(db: Db) {
         .from(boardMembers)
         .where(and(eq(boardMembers.boardId, boardId), eq(boardMembers.userId, userId)))
         .get()?.role ?? null,
+    workspaceMemberRoles: (workspaceId: string): { userId: string; role: WorkspaceRole }[] =>
+      db
+        .select({ userId: workspaceMembers.userId, role: workspaceMembers.role })
+        .from(workspaceMembers)
+        .where(eq(workspaceMembers.workspaceId, workspaceId))
+        .all(),
+    boardMemberRoles: (boardId: string): { userId: string; role: BoardRole }[] =>
+      db
+        .select({ userId: boardMembers.userId, role: boardMembers.role })
+        .from(boardMembers)
+        .where(eq(boardMembers.boardId, boardId))
+        .all(),
+    usersByIds: (ids: string[]) =>
+      ids.length === 0
+        ? []
+        : db
+            .select({
+              id: users.id,
+              name: users.name,
+              email: users.email,
+              avatarUrl: users.avatarUrl,
+            })
+            .from(users)
+            .where(inArray(users.id, ids))
+            .all(),
     boardIdOfColumn: (columnId: string): string | undefined =>
       db.select({ id: columns.boardId }).from(columns).where(eq(columns.id, columnId)).get()?.id,
     boardIdOfCard: (cardId: string): string | undefined =>

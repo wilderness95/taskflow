@@ -9,12 +9,14 @@ import {
   type TaskDraft,
 } from '../cards/taskDraft'
 import { RenameColumnModal } from '../columns/RenameColumnModal'
+import { BoardActivityModal } from '../activity/BoardActivityModal'
 import { BoardMembersModal } from './BoardMembersModal'
-import type { ColumnAccent, Columns, Dialog, Task } from './types'
+import type { Assignee, ColumnAccent, Columns, Dialog, Task } from './types'
 
 type BoardDialogsProps = {
   dialog: Dialog | null
   columns: Columns
+  participants: Assignee[]
   onClose: () => void
   onSaveTask: (task: Task, columnId: string, originalColumnId?: string) => void
   onUpdateColumn: (columnId: string, title: string, accent: ColumnAccent) => void
@@ -22,11 +24,13 @@ type BoardDialogsProps = {
   boardId: string
   workspaceId: string
   canManageMembers: boolean
+  isBoardAdmin: boolean
 }
 
 export function BoardDialogs({
   dialog,
   columns,
+  participants,
   onClose,
   onSaveTask,
   onUpdateColumn,
@@ -34,6 +38,7 @@ export function BoardDialogs({
   boardId,
   workspaceId,
   canManageMembers,
+  isBoardAdmin,
 }: BoardDialogsProps) {
   const { t } = useTranslation(['card', 'column'])
 
@@ -53,8 +58,14 @@ export function BoardDialogs({
           id: isEdit ? dialog.task.id : createId('task'),
           done: Boolean(columns[draft.column]?.done),
           defaultChecklistTitle,
+          participants,
         })
-        onSaveTask(task, draft.column, isEdit ? dialog.columnId : undefined)
+        // A szerkesztés a megnyitáskor látott verzióra épül: közbeni módosításnál konfliktus lesz.
+        onSaveTask(
+          isEdit ? { ...task, version: dialog.task.version } : task,
+          draft.column,
+          isEdit ? dialog.columnId : undefined,
+        )
         onClose()
       }
 
@@ -67,6 +78,8 @@ export function BoardDialogs({
               : createEmptyDraft(dialog.columnId, defaultChecklistTitle)
           }
           columns={columns}
+          participants={participants}
+          discussion={isEdit ? { boardId, cardId: dialog.task.id, isBoardAdmin } : undefined}
           onSave={handleSave}
           onClose={onClose}
         />
@@ -105,6 +118,9 @@ export function BoardDialogs({
           onClose={onClose}
         />
       )
+
+    case 'activity':
+      return <BoardActivityModal boardId={boardId} onClose={onClose} />
 
     case 'members':
       return (

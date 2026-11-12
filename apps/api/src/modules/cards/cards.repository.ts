@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lte, or, sql } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
-import { cardLabels, cards, columns } from '../../db/schema.js'
+import { cardAssignees, cardLabels, cards, columns } from '../../db/schema.js'
 
 export type CardRow = typeof cards.$inferSelect
 export type CardFilter = {
@@ -78,6 +78,27 @@ export function createCardsRepository(db: Db) {
         map.set(r.cardId, [...(map.get(r.cardId) ?? []), r.labelId])
       }
       return map
+    },
+    assigneeIdsByCard: (cardIds: string[]): Map<string, string[]> => {
+      const map = new Map<string, string[]>()
+      if (cardIds.length === 0) return map
+      for (const r of db
+        .select()
+        .from(cardAssignees)
+        .where(inArray(cardAssignees.cardId, cardIds))
+        .orderBy(sql`rowid`)
+        .all()) {
+        map.set(r.cardId, [...(map.get(r.cardId) ?? []), r.userId])
+      }
+      return map
+    },
+    setAssignees: (cardId: string, userIds: string[]): void => {
+      db.delete(cardAssignees).where(eq(cardAssignees.cardId, cardId)).run()
+      if (userIds.length > 0) {
+        db.insert(cardAssignees)
+          .values(userIds.map((userId) => ({ cardId, userId })))
+          .run()
+      }
     },
     listPositions: (columnId: string): { id: string; position: string }[] =>
       db

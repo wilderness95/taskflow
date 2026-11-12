@@ -41,6 +41,13 @@ export const checklistSchema = z.object({
 })
 export type ChecklistDto = z.infer<typeof checklistSchema>
 
+/**
+ * Optimista zárolás: ha a kérés megadja a kártya általa ismert `version`-jét, és az már nem
+ * egyezik a szerveren lévővel, a módosítás 409 `version_conflict` hibával elutasított.
+ * Elhagyva a módosítás feltétel nélkül érvényes (agent-barát, utolsó írás nyer).
+ */
+export const versionSchema = z.number().int().min(1).optional()
+
 export const cardSchema = z.object({
   id: idSchema,
   columnId: idSchema,
@@ -51,6 +58,8 @@ export const cardSchema = z.object({
   coverImage: z.string().nullable(),
   position: z.string(),
   labelIds: z.array(idSchema),
+  /** A kártyához rendelt felhasználók (a tábla résztvevői közül). */
+  assigneeIds: z.array(idSchema),
   checklists: z.array(checklistSchema),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -120,6 +129,7 @@ export const createCardSchema = z.object({
   dueDate: dateSchema.nullish(),
   coverImage: httpUrlSchema.nullish(),
   labelIds: z.array(idSchema).default([]),
+  assigneeIds: z.array(idSchema).default([]),
 })
 export type CreateCardInput = z.infer<typeof createCardSchema>
 export const updateCardSchema = z
@@ -130,9 +140,11 @@ export const updateCardSchema = z
     dueDate: dateSchema.nullable(),
     coverImage: httpUrlSchema.nullable(),
     labelIds: z.array(idSchema),
+    assigneeIds: z.array(idSchema),
   })
   .partial()
-  .refine((v) => Object.keys(v).length > 0, 'empty_update')
+  .extend({ version: versionSchema })
+  .refine((v) => Object.keys(v).filter((k) => k !== 'version').length > 0, 'empty_update')
 export type UpdateCardInput = z.infer<typeof updateCardSchema>
 
 export const createChecklistSchema = z.object({ title: titleSchema.default('Checklist') })
@@ -151,6 +163,7 @@ export type UpdateChecklistItemInput = z.infer<typeof updateChecklistItemSchema>
 export const moveCardSchema = z.object({
   columnId: idSchema,
   beforeCardId: idSchema.nullish(),
+  version: versionSchema,
 })
 export type MoveCardInput = z.infer<typeof moveCardSchema>
 
@@ -178,3 +191,6 @@ export const boardMemberListSchema = z.object({ data: z.array(boardMemberSchema)
 
 export const setBoardMemberSchema = z.object({ role: boardRoleSchema })
 export type SetBoardMemberInput = z.infer<typeof setBoardMemberSchema>
+
+/** A tábla résztvevői: akik (munkaterületi vagy tábla-szerepkörrel) olvashatják a táblát; hozzárendelhetők és megemlíthetők. */
+export const boardParticipantListSchema = boardMemberListSchema

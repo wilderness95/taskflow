@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
+import { NotificationBell } from '../notifications/NotificationBell'
 import { UserMenu } from '../auth/UserMenu'
 import { WorkspaceSwitcher } from './WorkspaceSwitcher'
 import '../../shared/styles/base.css'
@@ -18,6 +19,7 @@ export function WorkspaceTopbar({ workspaceId }: { workspaceId: string }) {
       </Link>
       <WorkspaceSwitcher currentWorkspaceId={workspaceId} />
       <div className="topbar-actions">
+        <NotificationBell />
         <UserMenu />
       </div>
     </header>

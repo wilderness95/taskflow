@@ -84,3 +84,33 @@ describe('activity log', () => {
     expect(await owner.api.delete(`/workspaces/${ws.id}`)).toMatchObject({ status: 204 })
   })
 })
+
+describe('card activity', () => {
+  it('lists the events of one card including its comments and checklists', async () => {
+    const owner = await signUp(t.app, 'owner@example.com', 'Olga')
+    const stranger = await signUp(t.app, 's@example.com')
+    const ws = (await owner.api.get('/workspaces')).body.data[0]
+    const board = (await owner.api.post(`/workspaces/${ws.id}/boards`, { title: 'T' })).body
+    const col = (await owner.api.post(`/boards/${board.id}/columns`, { title: 'Todo' })).body
+    const a = (await owner.api.post(`/columns/${col.id}/cards`, { title: 'A' })).body
+    const b = (await owner.api.post(`/columns/${col.id}/cards`, { title: 'B' })).body
+    await owner.api.post(`/cards/${a.id}/comments`, { body: 'Hello' })
+    await owner.api.post(`/cards/${a.id}/checklists`, {})
+    await owner.api.patch(`/cards/${a.id}`, { priority: 'high' })
+    await owner.api.patch(`/cards/${b.id}`, { priority: 'low' })
+
+    const log = await owner.api.get(`/cards/${a.id}/activity`)
+    expect(log.status).toBe(200)
+    expect(log.body.data.map((e: { action: string }) => e.action)).toEqual([
+      'card.updated',
+      'checklist.created',
+      'comment.created',
+      'card.created',
+    ])
+    const page = (await owner.api.get(`/cards/${a.id}/activity?limit=3`)).body
+    expect(page.data).toHaveLength(3)
+    expect(page.nextCursor).toBeTruthy()
+
+    expect((await stranger.api.get(`/cards/${a.id}/activity`)).status).toBe(404)
+  })
+})

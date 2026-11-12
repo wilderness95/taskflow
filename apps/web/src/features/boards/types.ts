@@ -10,6 +10,9 @@ export const COLUMN_ACCENTS = TAG_COLORS
 
 export type ColumnAccent = TagColor
 
+/** A kártyához rendelt felhasználó megjelenítéshez szükséges adatai. */
+export type Assignee = { id: string; name: string; avatarUrl: string | null }
+
 export type Task = {
   id: string
   title: string
@@ -20,6 +23,9 @@ export type Task = {
   coverImage?: string
   done?: boolean
   checklist?: ChecklistLike
+  assignees: Assignee[]
+  /** A kártya szerveroldali verziója a betöltéskor (optimista zároláshoz); új kártyának nincs. */
+  version?: number
 }
 
 export type Column = {
@@ -44,3 +50,4 @@ export type Dialog =
   | { type: 'column-rename'; columnId: string }
   | { type: 'column-delete'; columnId: string }
   | { type: 'members' }
+  | { type: 'activity' }

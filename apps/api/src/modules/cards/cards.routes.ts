@@ -3,6 +3,7 @@ import {
   createChecklistSchema,
   idParamsSchema,
   moveCardSchema,
+  pageQuerySchema,
   updateCardSchema,
 } from '@taskflow/shared'
 import { requireActor } from '../../auth/auth.plugin.js'
@@ -13,6 +14,14 @@ export function cardsRoutes(service: CardsService, checklists: ChecklistsService
   return async (app: FastifyInstance): Promise<void> => {
     app.get('/api/v1/cards/:id', async (req) =>
       service.get(requireActor(req), idParamsSchema.parse(req.params).id),
+    )
+
+    app.get('/api/v1/cards/:id/activity', async (req) =>
+      service.activity(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        pageQuerySchema.parse(req.query),
+      ),
     )
 
     app.patch('/api/v1/cards/:id', async (req) =>

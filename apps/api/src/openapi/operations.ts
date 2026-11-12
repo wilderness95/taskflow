@@ -10,6 +10,7 @@ import {
   pageQuerySchema,
   boardListSchema,
   boardMemberListSchema,
+  boardParticipantListSchema,
   boardMemberSchema,
   setBoardMemberSchema,
   boardSchema,
@@ -18,6 +19,13 @@ import {
   checklistItemSchema,
   checklistSchema,
   columnSchema,
+  notificationListSchema,
+  notificationQuerySchema,
+  notificationSchema,
+  commentListSchema,
+  commentSchema,
+  createCommentSchema,
+  updateCommentSchema,
   createBoardSchema,
   createCardSchema,
   createChecklistItemSchema,
@@ -69,12 +77,16 @@ export type Operation = {
   public?: boolean
   /** A műveletre jellemző hibakódok a 400/404 mellett. */
   errors?: number[]
+  /** A sikeres válasz nem JSON, hanem esemény-folyam (`text/event-stream`). */
+  stream?: boolean
 }
 
 const board = { tag: 'Boards' }
 const column = { tag: 'Columns' }
 const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
+const comment = { tag: 'Comments' }
+const notification = { tag: 'Notifications' }
 const auth = { tag: 'Auth' }
 const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
@@ -357,6 +369,23 @@ export const operations: Operation[] = [
   },
   {
     ...board,
+    method: 'get',
+    path: '/boards/{id}/events',
+    summary:
+      'Server-Sent Events stream of board changes (event `board`, data: BoardEvent JSON); re-read the changed resource, then reconnect on drop',
+    success: { status: 200 },
+    stream: true,
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/participants',
+    summary:
+      'List everyone with access to the board (assignable to cards, mentionable in comments)',
+    success: { status: 200, schema: boardParticipantListSchema },
+  },
+  {
+    ...board,
     method: 'put',
     path: '/boards/{id}/members/{userId}',
     summary: 'Give a workspace member an explicit board role (board admin)',
@@ -448,21 +477,31 @@ export const operations: Operation[] = [
   },
   {
     ...card,
+    method: 'get',
+    path: '/cards/{id}/activity',
+    summary: 'Card activity log (card, checklist and comment events), newest first',
+    query: pageQuerySchema,
+    success: { status: 200, schema: activityListSchema },
+  },
+  {
+    ...card,
     method: 'patch',
     path: '/cards/{id}',
-    summary: 'Update a card',
+    summary:
+      'Update a card (optional `version` enables optimistic locking: 409 version_conflict on mismatch)',
     body: updateCardSchema,
     success: { status: 200, schema: cardSchema },
-    errors: [422],
+    errors: [409, 422],
   },
   {
     ...card,
     method: 'post',
     path: '/cards/{id}/move',
-    summary: 'Move a card to a column, before another card (or to the end)',
+    summary:
+      'Move a card to a column, before another card (or to the end); optional `version` enables optimistic locking',
     body: moveCardSchema,
     success: { status: 200, schema: cardSchema },
-    errors: [422],
+    errors: [409, 422],
   },
   {
     ...card,
@@ -478,6 +517,63 @@ export const operations: Operation[] = [
     summary: 'Create a checklist',
     body: createChecklistSchema,
     success: { status: 201, schema: checklistSchema },
+  },
+
+  {
+    ...notification,
+    method: 'get',
+    path: '/notifications',
+    summary:
+      'Notifications of the current user (assigned, mentioned, due soon), newest first; session only',
+    query: notificationQuerySchema,
+    success: { status: 200, schema: notificationListSchema },
+  },
+  {
+    ...notification,
+    method: 'post',
+    path: '/notifications/read-all',
+    summary: 'Mark all notifications as read; session only',
+    success: { status: 204 },
+  },
+  {
+    ...notification,
+    method: 'post',
+    path: '/notifications/{id}/read',
+    summary: 'Mark a notification as read; session only',
+    success: { status: 200, schema: notificationSchema },
+  },
+  {
+    ...comment,
+    method: 'get',
+    path: '/cards/{id}/comments',
+    summary: 'List the comments of a card, oldest first (cursor pagination)',
+    query: pageQuerySchema,
+    success: { status: 200, schema: commentListSchema },
+  },
+  {
+    ...comment,
+    method: 'post',
+    path: '/cards/{id}/comments',
+    summary: 'Comment on a card; mentionIds must be users with access to the board',
+    body: createCommentSchema,
+    success: { status: 201, schema: commentSchema },
+    errors: [422],
+  },
+  {
+    ...comment,
+    method: 'patch',
+    path: '/comments/{id}',
+    summary: 'Edit a comment (author only)',
+    body: updateCommentSchema,
+    success: { status: 200, schema: commentSchema },
+    errors: [422],
+  },
+  {
+    ...comment,
+    method: 'delete',
+    path: '/comments/{id}',
+    summary: 'Delete a comment (author or board admin)',
+    success: { status: 204 },
   },
 
   {
