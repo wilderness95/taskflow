@@ -41,6 +41,13 @@ export const checklistSchema = z.object({
 })
 export type ChecklistDto = z.infer<typeof checklistSchema>
 
+/**
+ * Optimista zárolás: ha a kérés megadja a kártya általa ismert `version`-jét, és az már nem
+ * egyezik a szerveren lévővel, a módosítás 409 `version_conflict` hibával elutasított.
+ * Elhagyva a módosítás feltétel nélkül érvényes (agent-barát, utolsó írás nyer).
+ */
+export const versionSchema = z.number().int().min(1).optional()
+
 export const cardSchema = z.object({
   id: idSchema,
   columnId: idSchema,
@@ -132,7 +139,8 @@ export const updateCardSchema = z
     labelIds: z.array(idSchema),
   })
   .partial()
-  .refine((v) => Object.keys(v).length > 0, 'empty_update')
+  .extend({ version: versionSchema })
+  .refine((v) => Object.keys(v).filter((k) => k !== 'version').length > 0, 'empty_update')
 export type UpdateCardInput = z.infer<typeof updateCardSchema>
 
 export const createChecklistSchema = z.object({ title: titleSchema.default('Checklist') })
@@ -151,6 +159,7 @@ export type UpdateChecklistItemInput = z.infer<typeof updateChecklistItemSchema>
 export const moveCardSchema = z.object({
   columnId: idSchema,
   beforeCardId: idSchema.nullish(),
+  version: versionSchema,
 })
 export type MoveCardInput = z.infer<typeof moveCardSchema>
 

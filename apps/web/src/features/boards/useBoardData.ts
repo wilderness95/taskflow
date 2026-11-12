@@ -8,6 +8,9 @@ import { moveCardInBoard, moveColumnInBoard } from './boardCache'
 import { toColumns } from './boardMapper'
 import type { BoardView, ColumnAccent, Visibility } from './types'
 
+const findCardVersion = (board: BoardDto | undefined, cardId: string): number | undefined =>
+  board?.columns.flatMap((column) => column.cards).find((card) => card.id === cardId)?.version
+
 const boardKey = (boardId: string) => ['board', boardId] as const
 
 /** Egy tábla adatai és műveletei; a tábla azonosítóját az útvonal adja. */
@@ -85,7 +88,12 @@ export function useBoardData(boardId: string) {
       taskId: string
       toColumnId: string
       targetTaskId: string | null
-    }) => api.moveCard(taskId, { columnId: toColumnId, beforeCardId: targetTaskId }),
+    }) =>
+      api.moveCard(taskId, {
+        columnId: toColumnId,
+        beforeCardId: targetTaskId,
+        version: findCardVersion(board, taskId),
+      }),
     (current, { taskId, toColumnId, targetTaskId }) =>
       moveCardInBoard(current, taskId, toColumnId, targetTaskId),
   )
