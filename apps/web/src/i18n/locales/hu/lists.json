@@ -74,5 +74,9 @@
     "archiveTitle": "Lista archiválása",
     "archiveMessage": "A(z) „{{title}}” lista archiválódik; az Archivált listák között bármikor visszaállítható.",
     "confirm": "Megerősítés"
+  },
+  "toast": {
+    "itemDeleted": "„{{text}}” törölve",
+    "listArchived": "A(z) „{{title}}” lista archiválva"
   }
 }

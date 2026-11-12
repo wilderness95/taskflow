@@ -2,6 +2,10 @@ import { clearableItems, resettableItems, type ListDetailDto } from '@taskflow/s
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { restoreList } from '../../api/lists'
+import { showToast } from '../../shared/ui/toast'
+import { LISTS_KEY } from './useLists'
 import { ConfirmModal } from '../../shared/ui/ConfirmModal'
 import { AddSectionForm } from './AddSectionForm'
 import type { ListMutations } from './useListMutations'
@@ -10,8 +14,9 @@ type Props = { list: ListDetailDto; mutations: ListMutations }
 
 /** A lista műveletei: szakasz felvétele, ismétlődők visszaállítása, kipipáltak törlése, archiválás. */
 export function ListToolbar({ list, mutations }: Props) {
-  const { t } = useTranslation('lists')
+  const { t } = useTranslation(['lists', 'common'])
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [confirm, setConfirm] = useState<'clear' | 'archive' | null>(null)
   const clearable = clearableItems(list.items).length
   const resettable = resettableItems(list.items).length
@@ -61,7 +66,19 @@ export function ListToolbar({ list, mutations }: Props) {
           onClose={() => setConfirm(null)}
           onConfirm={() =>
             mutations.archive.mutate(undefined, {
-              onSuccess: () => navigate(`/w/${list.workspaceId}/lists`),
+              onSuccess: () => {
+                navigate(`/w/${list.workspaceId}/lists`)
+                showToast({
+                  message: t('toast.listArchived', { title: list.title }),
+                  action: {
+                    label: t('common:undo'),
+                    run: () =>
+                      void restoreList(list.id).then(() =>
+                        queryClient.invalidateQueries({ queryKey: LISTS_KEY }),
+                      ),
+                  },
+                })
+              },
             })
           }
         />

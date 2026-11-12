@@ -13,6 +13,7 @@ import { ListPage } from '../features/lists/ListPage'
 import { ListsPage } from '../features/lists/ListsPage'
 import { WorkspaceMembersPage } from '../features/workspaces/WorkspaceMembersPage'
 import { WorkspacePage } from '../features/workspaces/WorkspacePage'
+import { ToastHost } from '../shared/ui/ToastHost'
 import { RootRedirect } from './RootRedirect'
 import { queryClient } from './queryClient'
 
@@ -41,6 +42,7 @@ export default function App() {
           </Route>
         </Routes>
       </BrowserRouter>
+      <ToastHost />
     </QueryClientProvider>
   )
 }

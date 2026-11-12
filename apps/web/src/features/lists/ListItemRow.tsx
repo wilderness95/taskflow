@@ -106,7 +106,7 @@ export function ListItemRow({
                 className="list-icon-button"
                 aria-label={t('item.deleteAria', { text: item.text })}
                 title={t('item.delete')}
-                onClick={() => mutations.deleteItem.mutate(item.id)}
+                onClick={() => mutations.deleteItemUndoable(item)}
               >
                 <span aria-hidden="true">✕</span>
               </button>
