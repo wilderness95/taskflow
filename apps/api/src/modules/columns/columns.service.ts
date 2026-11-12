@@ -2,6 +2,8 @@ import { generateKeyBetween } from 'fractional-indexing'
 import type { ColumnDto, MoveColumnInput, UpdateColumnInput } from '@taskflow/shared'
 import { positionBefore } from '../../lib/position.js'
 import { AppError, orNotFound } from '../../errors.js'
+import type { Actor } from '../../auth/actor.js'
+import type { AccessService } from '../access/access.service.js'
 import type { ColumnRow, ColumnsRepository } from './columns.repository.js'
 
 export const toColumnDto = (r: ColumnRow): ColumnDto => ({
@@ -13,23 +15,26 @@ export const toColumnDto = (r: ColumnRow): ColumnDto => ({
   position: r.position,
 })
 
-export function createColumnsService(repo: ColumnsRepository) {
+export function createColumnsService(repo: ColumnsRepository, access: AccessService) {
   const require = (id: string): ColumnRow => orNotFound(repo.findById(id), 'Column')
 
   return {
-    update(id: string, input: UpdateColumnInput): ColumnDto {
+    update(actor: Actor, id: string, input: UpdateColumnInput): ColumnDto {
+      access.requireColumn(actor, id, 'board:write')
       require(id)
       return toColumnDto(repo.update(id, input)!)
     },
 
-    move(id: string, input: MoveColumnInput): ColumnDto {
+    move(actor: Actor, id: string, input: MoveColumnInput): ColumnDto {
+      access.requireColumn(actor, id, 'board:write')
       const column = require(id)
       const position = positionBefore(repo.listPositions(column.boardId), id, input.beforeColumnId)
       return toColumnDto(repo.update(id, { position })!)
     },
 
     /** Ha az oszlopban vannak kártyák, `moveCardsTo` kötelező: a kártyák a cél oszlop végére kerülnek. */
-    remove(id: string, moveCardsTo?: string): void {
+    remove(actor: Actor, id: string, moveCardsTo?: string): void {
+      access.requireColumn(actor, id, 'board:write')
       const column = require(id)
       repo.transaction(() => {
         if (repo.countCards(id) > 0) {

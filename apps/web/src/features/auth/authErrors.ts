@@ -10,6 +10,11 @@ const KNOWN_CODES = [
   'validation_error',
   'forbidden',
   'unauthenticated',
+  'already_member',
+  'last_owner',
+  'workspace_not_empty',
+  'invitation_email_mismatch',
+  'not_workspace_member',
 ] as const
 
 export type AuthErrorKey = (typeof KNOWN_CODES)[number] | 'unknown'

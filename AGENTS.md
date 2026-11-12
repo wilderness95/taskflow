@@ -10,7 +10,7 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
   - `apps/api`: Node.js + Fastify, Drizzle ORM, SQLite (WAL), Zod, Nodemailer, argon2 (megvan).
   - `packages/shared`: tiszta segédfüggvények, típusok, enumok (megvan); Zod sémák, DTO-k (megvan); hibakódok (tervezett).
 - Üzemeltetés: Docker Compose (`web` + `api` + `cloudflared`) a házi szerveren, Cloudflare Tunnelen, saját domainnel.
-- Aktuális állapot: az M0 (refaktor) és az M1 (backend, perzisztencia, API, Docker Compose) kész; az M2 (felhasználókezelés és authentikáció) készül az `m2-auth` branchen. Az API-hoz bejelentkezés kell (session cookie); a hozzáférés még nem munkaterület-/szerepkör-alapú (M3).
+- Aktuális állapot: az M0 (refaktor), az M1 (backend, perzisztencia, API, Docker Compose) és az M2 (felhasználókezelés, authentikáció) kész; az M3 (munkaterületek, tagság, authorizáció) készül az `m3-workspaces` branchen. Az API-hoz bejelentkezés kell (session cookie); a hozzáférést a munkaterületi és tábla-szerepkörök adják (policy: `packages/shared/src/authz.ts`).
 
 ## Parancsok
 - Fejlesztés: `npm run dev`
@@ -22,7 +22,7 @@ A teljes terv és a mérföldkövek: `docs/ROADMAP.md`. Az ott rögzített dönt
 ## Architektúra és rétegek
 - **Backend modulonként:** `*.routes.ts` → `*.service.ts` → `*.repository.ts`. A függés csak ebben az irányban mehet.
   - **Route:** HTTP, séma-validáció, auth guard; nincs benne üzleti logika.
-  - **Service:** üzleti logika és jogosultság-ellenőrzés a központi policy-val (`can(actor, action, resource)`); nincs benne SQL és HTTP-objektum.
+  - **Service:** üzleti logika és jogosultság-ellenőrzés a központi policy-val (`can(actor, action, resource)`, a `packages/shared`-ben, a service-ek az `AccessService`-en át hívják); nincs benne SQL és HTTP-objektum.
   - **Repository:** csak DB-hozzáférés (Drizzle).
 - Session és API kulcs egyaránt `Actor`-rá képződik le; a service nem tudja, honnan jön a kérés.
 - Minden API-szerződés (request/response) Zod sémája a `packages/shared`-ben van; a frontend és a backend is ezt használja.

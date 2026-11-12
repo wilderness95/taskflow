@@ -15,6 +15,8 @@ type TaskCardProps = {
   isDropTarget: boolean
   onEdit: () => void
   onDelete: () => void
+  /** Olvasási jog: nincs szerkesztés és törlés. */
+  readOnly?: boolean
 }
 
 export function TaskCard({
@@ -24,6 +26,7 @@ export function TaskCard({
   isDropTarget,
   onEdit,
   onDelete,
+  readOnly = false,
 }: TaskCardProps) {
   const { t } = useTranslation('card')
   const checklistProgress = getChecklistProgress(task.checklist)
@@ -36,7 +39,7 @@ export function TaskCard({
         isDragging && 'is-dragging',
         isDropTarget && 'is-over-target',
       )}
-      onDoubleClick={onEdit}
+      onDoubleClick={readOnly ? undefined : onEdit}
       {...dragProps}
     >
       {isDropTarget && <div className="insert-indicator" aria-hidden="true" />}
@@ -45,17 +48,19 @@ export function TaskCard({
         <span className={`priority-pill priority-${task.priority}`}>
           {t(`priority.${task.priority}`)}
         </span>
-        <button
-          type="button"
-          className="delete-button"
-          aria-label={t('deleteAria', { title: task.title })}
-          onClick={(event) => {
-            event.stopPropagation()
-            onDelete()
-          }}
-        >
-          ×
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            className="delete-button"
+            aria-label={t('deleteAria', { title: task.title })}
+            onClick={(event) => {
+              event.stopPropagation()
+              onDelete()
+            }}
+          >
+            ×
+          </button>
+        )}
       </div>
 
       <h3>{task.title}</h3>

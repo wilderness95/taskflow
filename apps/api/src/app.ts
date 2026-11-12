@@ -8,9 +8,14 @@ import { createAuthService } from './modules/auth/auth.service.js'
 import type { Config } from './config.js'
 import type { Db } from './db/client.js'
 import { healthRoutes } from './health.routes.js'
+import { createAccessRepository } from './modules/access/access.repository.js'
+import { createAccessService } from './modules/access/access.service.js'
 import { boardsRoutes } from './modules/boards/boards.routes.js'
 import { createBoardsRepository } from './modules/boards/boards.repository.js'
 import { createBoardsService } from './modules/boards/boards.service.js'
+import { createWorkspacesRepository } from './modules/workspaces/workspaces.repository.js'
+import { createWorkspacesService } from './modules/workspaces/workspaces.service.js'
+import { workspacesRoutes } from './modules/workspaces/workspaces.routes.js'
 import { cardsRoutes } from './modules/cards/cards.routes.js'
 import { createCardsRepository } from './modules/cards/cards.repository.js'
 import { createCardsService } from './modules/cards/cards.service.js'
@@ -55,9 +60,10 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
         retryAfterSeconds: Math.ceil(context.ttl / 1000),
       }),
   })
+  const mailer = deps.mailer ?? createMailer(config)
   const auth = createAuthService({
     repo: createAuthRepository(db),
-    mailer: deps.mailer ?? createMailer(config),
+    mailer,
     config,
     logger: app.log,
   })
@@ -68,15 +74,17 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
   const cardsRepo = createCardsRepository(db)
   const checklistsRepo = createChecklistsRepository(db)
 
+  const access = createAccessService(createAccessRepository(db))
   const cards = createCardsService({
     cards: cardsRepo,
     columns: columnsRepo,
     boards: boardsRepo,
     checklists: checklistsRepo,
+    access,
   })
-  const boards = createBoardsService(boardsRepo, cards)
-  const columns = createColumnsService(columnsRepo)
-  const checklists = createChecklistsService(checklistsRepo, cardsRepo)
+  const boards = createBoardsService(boardsRepo, cards, access)
+  const columns = createColumnsService(columnsRepo, access)
+  const checklists = createChecklistsService(checklistsRepo, cardsRepo, access)
 
   // Az összes route-ot gyűjti, hogy a teszt ellenőrizhesse az OpenAPI-lefedettséget.
   const routes: string[] = []
@@ -87,7 +95,14 @@ export function buildApp(config: Config, db: Db, deps: { mailer?: Mailer } = {})
 
   app.register(openApiPlugin)
   app.register(healthRoutes)
+  const workspaces = createWorkspacesService({
+    repo: createWorkspacesRepository(db),
+    mailer,
+    config,
+    logger: app.log,
+  })
   app.register(authRoutes(auth, config))
+  app.register(workspacesRoutes(workspaces, config))
   app.register(boardsRoutes(boards))
   app.register(columnsRoutes(columns, cards))
   app.register(cardsRoutes(cards, checklists))

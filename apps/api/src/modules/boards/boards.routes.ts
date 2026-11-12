@@ -1,36 +1,64 @@
 import type { FastifyInstance } from 'fastify'
-import { requireActor } from '../../auth/auth.plugin.js'
 import {
+  boardMemberParamsSchema,
   createBoardSchema,
   createColumnSchema,
   createLabelSchema,
   idParamsSchema,
+  setBoardMemberSchema,
   updateBoardSchema,
 } from '@taskflow/shared'
+import { requireActor } from '../../auth/auth.plugin.js'
 import type { BoardsService } from './boards.service.js'
 
 export function boardsRoutes(service: BoardsService) {
   return async (app: FastifyInstance): Promise<void> => {
-    app.get('/api/v1/boards', async () => ({ data: service.list() }))
+    app.get('/api/v1/boards', async (req) => ({ data: service.list(requireActor(req)) }))
 
-    app.post('/api/v1/boards', async (req, reply) => {
-      const board = service.create(requireActor(req), createBoardSchema.parse(req.body))
+    app.get('/api/v1/workspaces/:id/boards', async (req) => ({
+      data: service.list(requireActor(req), idParamsSchema.parse(req.params).id),
+    }))
+
+    app.post('/api/v1/workspaces/:id/boards', async (req, reply) => {
+      const board = service.create(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        createBoardSchema.parse(req.body),
+      )
       return reply.status(201).send(board)
     })
 
-    app.get('/api/v1/boards/:id', async (req) => service.get(idParamsSchema.parse(req.params).id))
+    // Névtelenül is hívható: a `public` táblát bárki olvashatja (a policy dönt, nem a route).
+    app.get('/api/v1/boards/:id', async (req) =>
+      service.get(req.actor, idParamsSchema.parse(req.params).id),
+    )
 
     app.patch('/api/v1/boards/:id', async (req) =>
-      service.update(idParamsSchema.parse(req.params).id, updateBoardSchema.parse(req.body)),
+      service.update(
+        requireActor(req),
+        idParamsSchema.parse(req.params).id,
+        updateBoardSchema.parse(req.body),
+      ),
     )
 
     app.delete('/api/v1/boards/:id', async (req, reply) => {
-      service.remove(idParamsSchema.parse(req.params).id)
+      service.remove(requireActor(req), idParamsSchema.parse(req.params).id)
+      return reply.status(204).send()
+    })
+
+    app.put('/api/v1/boards/:id/star', async (req, reply) => {
+      service.star(requireActor(req), idParamsSchema.parse(req.params).id)
+      return reply.status(204).send()
+    })
+
+    app.delete('/api/v1/boards/:id/star', async (req, reply) => {
+      service.unstar(requireActor(req), idParamsSchema.parse(req.params).id)
       return reply.status(204).send()
     })
 
     app.post('/api/v1/boards/:id/columns', async (req, reply) => {
       const column = service.createColumn(
+        requireActor(req),
         idParamsSchema.parse(req.params).id,
         createColumnSchema.parse(req.body),
       )
@@ -39,10 +67,26 @@ export function boardsRoutes(service: BoardsService) {
 
     app.post('/api/v1/boards/:id/labels', async (req, reply) => {
       const label = service.createLabel(
+        requireActor(req),
         idParamsSchema.parse(req.params).id,
         createLabelSchema.parse(req.body),
       )
       return reply.status(201).send(label)
+    })
+
+    app.get('/api/v1/boards/:id/members', async (req) => ({
+      data: service.listMembers(requireActor(req), idParamsSchema.parse(req.params).id),
+    }))
+
+    app.put('/api/v1/boards/:id/members/:userId', async (req) => {
+      const { id, userId } = boardMemberParamsSchema.parse(req.params)
+      return service.setMember(requireActor(req), id, userId, setBoardMemberSchema.parse(req.body))
+    })
+
+    app.delete('/api/v1/boards/:id/members/:userId', async (req, reply) => {
+      const { id, userId } = boardMemberParamsSchema.parse(req.params)
+      service.removeMember(requireActor(req), id, userId)
+      return reply.status(204).send()
     })
   }
 }

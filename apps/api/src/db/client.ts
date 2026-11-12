@@ -3,6 +3,7 @@ import { dirname } from 'node:path'
 import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
+import { backfillWorkspaces } from './backfill.js'
 import * as schema from './schema.js'
 
 export type Db = ReturnType<typeof createDb>['db']
@@ -21,4 +22,5 @@ export const MIGRATIONS_FOLDER = new URL('../../drizzle', import.meta.url).pathn
 
 export function runMigrations(db: Db): void {
   migrate(db, { migrationsFolder: MIGRATIONS_FOLDER })
+  backfillWorkspaces(db)
 }

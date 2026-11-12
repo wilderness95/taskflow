@@ -56,11 +56,30 @@
       "short": "Idővonal"
     }
   },
-  "invite": "+ Meghívás",
   "addColumn": "+ Új oszlop",
   "loading": "Tábla betöltése...",
   "loadError": "A tábla betöltése nem sikerült.",
   "retry": "Újrapróbálás",
-  "empty": "Még nincs tábla.",
-  "saveError": "A mentés nem sikerült, a tábla frissült a szerver állapotával."
+  "saveError": "A mentés nem sikerült, a tábla frissült a szerver állapotával.",
+  "notFound": "Ez a tábla nem létezik, vagy nincs hozzáférésed.",
+  "backToWorkspace": "Vissza a munkaterülethez",
+  "readOnly": "Csak olvasási jogod van ezen a táblán.",
+  "members": {
+    "open": "Tagok",
+    "eyebrow": "Tábla",
+    "title": "Tábla tagjai",
+    "hint": "Az itt megadott szerepkör a munkaterületi jogosultság mellett érvényes; privát tábla csak innen érhető el.",
+    "empty": "Nincs külön megadott tag.",
+    "remove": "Eltávolítás",
+    "add": "Hozzáadás",
+    "pick": "Válassz tagot...",
+    "pickAria": "Munkaterület-tag kiválasztása",
+    "newRoleAria": "Új szerepkör",
+    "roleAria": "{{name}} szerepköre",
+    "roles": {
+      "admin": "Tábla-admin",
+      "editor": "Szerkesztő",
+      "viewer": "Megtekintő"
+    }
+  }
 }

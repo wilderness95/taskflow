@@ -15,6 +15,13 @@
       "when": 1794429752051,
       "tag": "0001_normal_johnny_blaze",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794431554234,
+      "tag": "0002_ordinary_kulan_gath",
+      "breakpoints": true
     }
   ]
 }

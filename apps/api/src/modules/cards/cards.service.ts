@@ -4,6 +4,7 @@ import type { Actor } from '../../auth/actor.js'
 import { newId } from '../../db/ids.js'
 import { positionBefore } from '../../lib/position.js'
 import { AppError, notFound, orNotFound } from '../../errors.js'
+import type { AccessService } from '../access/access.service.js'
 import type { BoardsRepository } from '../boards/boards.repository.js'
 import type { ChecklistsRepository } from '../checklists/checklists.repository.js'
 import { toChecklistDto } from '../checklists/checklists.service.js'
@@ -15,8 +16,9 @@ export function createCardsService(deps: {
   columns: ColumnsRepository
   boards: BoardsRepository
   checklists: ChecklistsRepository
+  access: AccessService
 }) {
-  const { cards, columns, boards, checklists } = deps
+  const { cards, columns, boards, checklists, access } = deps
 
   const hydrate = (rows: CardRow[]): CardDto[] => {
     const ids = rows.map((r) => r.id)
@@ -52,9 +54,13 @@ export function createCardsService(deps: {
   return {
     listForColumns: (columnIds: string[]): CardDto[] => hydrate(cards.listByColumnIds(columnIds)),
 
-    get: (id: string): CardDto => hydrate([require(id)])[0]!,
+    get(actor: Actor, id: string): CardDto {
+      access.requireCard(actor, id, 'board:read')
+      return hydrate([require(id)])[0]!
+    },
 
     create(actor: Actor, columnId: string, input: CreateCardInput): CardDto {
+      access.requireColumn(actor, columnId, 'board:write')
       const column = columns.findById(columnId)
       if (!column) throw notFound('Column')
       const labelIds = assertLabels(column.boardId, input.labelIds)
@@ -76,7 +82,8 @@ export function createCardsService(deps: {
       return hydrate([require(id)])[0]!
     },
 
-    update(id: string, input: UpdateCardInput): CardDto {
+    update(actor: Actor, id: string, input: UpdateCardInput): CardDto {
+      access.requireCard(actor, id, 'board:write')
       const card = require(id)
       const { labelIds, ...fields } = input
       cards.transaction(() => {
@@ -90,7 +97,8 @@ export function createCardsService(deps: {
     },
 
     /** Egyetlen sor frissítése: az új `position` a szomszédok közé esik. */
-    move(id: string, input: MoveCardInput): CardDto {
+    move(actor: Actor, id: string, input: MoveCardInput): CardDto {
+      access.requireCard(actor, id, 'board:write')
       const card = require(id)
       const target = columns.findById(input.columnId)
       const source = columns.findById(card.columnId)!
@@ -105,7 +113,8 @@ export function createCardsService(deps: {
       return hydrate([require(id)])[0]!
     },
 
-    remove(id: string): void {
+    remove(actor: Actor, id: string): void {
+      access.requireCard(actor, id, 'board:write')
       require(id)
       cards.delete(id)
     },
