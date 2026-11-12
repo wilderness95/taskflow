@@ -299,6 +299,15 @@ Sprinthossz: 2 hét (egy fejlesztővel + AI asszisztenssel reális becslés). Mi
 - archiválás és visszaállítás (kártya, oszlop, tábla);
 - billentyűparancsok, akadálymentesítés (drag & drop billentyűzettel is).
 
+**Megvalósítás (kész):**
+- Archiválás: `POST /cards|columns/{id}/archive|restore`, `POST /boards/{id}/restore`, `GET /boards/{id}/archive` (az archivált kártyák és oszlopok), `GET /workspaces/{id}/boards?archived=true` (a visszaállítható táblák). Az archivált oszlop a kártyáival együtt eltűnik; kártya csak aktív oszlopba állítható vissza (`409 column_archived`). A tábla archiválása a meglévő `DELETE /boards/{id}`.
+- Címkék: `PATCH|DELETE /labels/{id}` (a név táblánként egyedi, `409 label_name_taken`; törléskor a kártyákról is lekerül). Címkekezelő ablak a táblán.
+- Több checklist: a backend eddig is támogatta, a szerkesztő és a mentés most kezeli (hozzáadás, törlés, átnevezés).
+- Csatolmányok: `attachments` tábla, `FileStore` felület (lokális fájltár: `UPLOAD_DIR`, `MAX_UPLOAD_MB`; S3-kompatibilis megvalósítás ugyanezen a felületen később). Feltöltés nyers törzzsel (`POST /cards/{id}/attachments?name=...`, a `Content-Type` a fájl típusa; nincs multipart függőség), letöltés `GET /attachments/{id}/file` (csak PNG/JPEG/GIF/WebP jelenik meg a böngészőben, minden más letöltés; `nosniff` + `sandbox` CSP). Borító: `coverAttachmentId` a kártyán.
+- Szűrés: a kártyalistán új `assigneeId` szűrő; a UI haladó szűrője (prioritás, címke, felelős, határidő-állapot) kliensoldali, tiszta függvényekkel (`packages/shared/src/boardFilter.ts`). Mentett szűrők felhasználónként és táblánként (`GET|POST /boards/{id}/filters`, `DELETE /filters/{id}`, csak session).
+- Nézetek: Lista (táblázat), Naptár (hónap, hétfői kezdéssel) és Idővonal (sáv a létrehozástól a határidőig; legfeljebb 120 napos tengely); a Kanban szűrői mindegyikre érvényesek.
+- Billentyűzet és akadálymentesség: gyorsbillentyűk (`N`, `/`, `F`, `?`, `1`-`4`), kártya és oszlop áthelyezése Alt + nyíllal (aria-live felolvasással), `Enter` a kártya megnyitása; a párbeszédablak `role="dialog"`, Escape zárja, fókuszcsapda és fókuszvisszaadás.
+
 ### M7 – AI integráció és üzemeltetés (Sprint 12)
 - **MCP szerver** csomag (`apps/mcp`): eszközök: `list_boards`, `get_board`, `create_card`, `move_card`, `update_card`, `add_comment`;
 - webhookok HMAC-aláírással (opcionális);
