@@ -64,6 +64,10 @@ describe('tools', () => {
       const path = u.pathname.replace('/api/v1', '')
       const body = init?.body ? JSON.parse(String(init.body)) : undefined
       log.push({ method, path, body })
+      if (path === '/workspaces' && method === 'POST')
+        return json({ id: 'w1', name: 'Család' }, 201)
+      if (path === '/workspaces/w1/boards') return json({ id: 'b9', title: 'Bevásárlás' }, 201)
+      if (path === '/boards/b9/columns') return json({ id: 'cx' }, 201)
       if (path === '/boards/b1/snapshot') return json(snapshot)
       if (path === '/boards/b1/participants') return json(people)
       if (path === '/columns/c1/cards') return json({ id: CARD, title: body.title }, 201)
@@ -98,6 +102,7 @@ describe('tools', () => {
     const names = (await client.listTools()).tools.map((t) => t.name)
     expect(names).toEqual(
       expect.arrayContaining([
+        'create_workspace',
         'create_board',
         'update_board',
         'archive_board',
@@ -114,6 +119,22 @@ describe('tools', () => {
       ]),
     )
     expect(names.length).toBeGreaterThanOrEqual(25)
+  })
+
+  it('create_workspace creates the workspace, its boards and columns', async () => {
+    const { client, log } = await setup()
+    const res = await client.callTool({
+      name: 'create_workspace',
+      arguments: { name: 'Család', boards: [{ title: 'Bevásárlás', columns: ['Kell', 'Megvan'] }] },
+    })
+    expect(res.isError).toBeFalsy()
+    const posts = log.filter((l) => l.method === 'POST').map((l) => l.path)
+    expect(posts).toEqual([
+      '/workspaces',
+      '/workspaces/w1/boards',
+      '/boards/b9/columns',
+      '/boards/b9/columns',
+    ])
   })
 
   it('create_card resolves names and creates labels, assignees and checklist in one call', async () => {
