@@ -6,6 +6,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/web/package.json apps/web/
 COPY apps/api/package.json apps/api/
+COPY apps/mcp/package.json apps/mcp/
 COPY packages/shared/package.json packages/shared/
 # A gyökér devDependency-k (typescript) is kellenek a build-hez; a natív api-függőség nem.
 RUN npm ci -w @taskflow/web --include-workspace-root --ignore-scripts

@@ -69,6 +69,7 @@ import {
   resetPasswordSchema,
   updateProfileSchema,
   userSchema,
+  voiceQuerySchema,
   verifyEmailSchema,
 } from '@taskflow/shared'
 
@@ -81,7 +82,7 @@ export type Operation = {
   query?: z.ZodObject
   body?: z.ZodType
   /** Sikeres státusz és válasz; séma nélkül nincs törzs (204). */
-  success: { status: 200 | 201 | 202 | 204; schema?: z.ZodType }
+  success: { status: 101 | 200 | 201 | 202 | 204; schema?: z.ZodType }
   /** Nyilvános végpont: nem kell hozzá bejelentkezés. */
   public?: boolean
   /** A műveletre jellemző hibakódok a 400/404 mellett. */
@@ -92,6 +93,8 @@ export type Operation = {
   upload?: boolean
   /** A sikeres válasz a fájl nyers tartalma. */
   download?: boolean
+  /** Hosszabb leírás (pl. a WebSocket protokoll; ilyenkor a sikeres válasz a 101). */
+  description?: string
 }
 
 const board = { tag: 'Boards' }
@@ -105,8 +108,21 @@ const notification = { tag: 'Notifications' }
 const auth = { tag: 'Auth' }
 const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
+const voice = { tag: 'Voice' }
 
 export const operations: Operation[] = [
+  {
+    ...voice,
+    method: 'get',
+    path: '/voice/live',
+    summary:
+      'Live voice assistant over WebSocket (session only; Origin must match the app). Binary frames: raw PCM, 16-bit LE mono (client -> server 16 kHz, server -> client 24 kHz). Text frames: JSON VoiceServerMessage / VoiceClientMessage',
+    description:
+      'Upgrade to WebSocket. Server text frames: `ready`, `state` (listening|thinking|speaking), `interrupted`, `tool`, `transcript`, `error` (code). Client text frame: `{"type":"audio_end"}`. 503 `voice_unavailable` when GEMINI_API_KEY is not configured, 429 `too_many_sessions` over the per-user limit.',
+    query: voiceQuerySchema,
+    success: { status: 101 },
+    errors: [403, 429, 503],
+  },
   {
     ...board,
     method: 'get',

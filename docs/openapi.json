@@ -11,6 +11,83 @@
     }
   ],
   "paths": {
+    "/voice/live": {
+      "get": {
+        "tags": [
+          "Voice"
+        ],
+        "summary": "Live voice assistant over WebSocket (session only; Origin must match the app). Binary frames: raw PCM, 16-bit LE mono (client -> server 16 kHz, server -> client 24 kHz). Text frames: JSON VoiceServerMessage / VoiceClientMessage",
+        "description": "Upgrade to WebSocket. Server text frames: `ready`, `state` (listening|thinking|speaking), `interrupted`, `tool`, `transcript`, `error` (code). Client text frame: `{\"type\":\"audio_end\"}`. 503 `voice_unavailable` when GEMINI_API_KEY is not configured, 429 `too_many_sessions` over the per-user limit.",
+        "operationId": "get_voice_live",
+        "parameters": [
+          {
+            "name": "boardId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching Protocols"
+          },
+          "400": {
+            "description": "Validation error or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/boards/{id}/snapshot": {
       "get": {
         "tags": [

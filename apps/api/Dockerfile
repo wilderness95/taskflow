@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 make g+
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
+COPY apps/mcp/package.json apps/mcp/
 COPY apps/web/package.json apps/web/
 COPY packages/shared/package.json packages/shared/
 RUN npm ci --omit=dev -w @taskflow/api --include-workspace-root=false
@@ -21,6 +22,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY packages/shared packages/shared
+COPY apps/mcp apps/mcp
 COPY apps/api apps/api
 RUN mkdir -p /data && chown node:node /data
 USER node
