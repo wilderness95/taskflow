@@ -75,6 +75,21 @@ import {
   updateProfileSchema,
   userSchema,
   voiceQuerySchema,
+  createListItemSchema,
+  createListSchema,
+  createListSectionSchema,
+  listBulkResultSchema,
+  listDetailSchema,
+  listItemSchema,
+  listQuerySchema,
+  listSectionSchema,
+  listSummaryListSchema,
+  listSummarySchema,
+  moveListItemSchema,
+  moveListSectionSchema,
+  updateListItemSchema,
+  updateListSchema,
+  updateListSectionSchema,
   verifyEmailSchema,
 } from '@taskflow/shared'
 
@@ -93,7 +108,7 @@ export type Operation = {
   /** A műveletre jellemző hibakódok a 400/404 mellett. */
   errors?: number[]
   /** A sikeres válasz nem JSON, hanem esemény-folyam (`text/event-stream`). */
-  stream?: boolean
+  stream?: boolean | 'list'
   /** A kérés törzse a fájl nyers tartalma (`application/octet-stream`). */
   upload?: boolean
   /** A sikeres válasz a fájl nyers tartalma. */
@@ -115,8 +130,154 @@ const workspace = { tag: 'Workspaces' }
 const apiKey = { tag: 'API keys' }
 const voice = { tag: 'Voice' }
 const webhook = { tag: 'Webhooks' }
+const list = { tag: 'Lists' }
 
 export const operations: Operation[] = [
+  {
+    ...list,
+    method: 'get',
+    path: '/workspaces/{id}/lists',
+    summary: 'List the to-do / shopping lists of a workspace (`archived=true`: the archived ones)',
+    query: listQuerySchema,
+    success: { status: 200, schema: listSummaryListSchema },
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/workspaces/{id}/lists',
+    summary: 'Create a list (workspace owner, admin or member)',
+    body: createListSchema,
+    success: { status: 201, schema: listSummarySchema },
+    errors: [403, 422],
+  },
+  {
+    ...list,
+    method: 'get',
+    path: '/lists/{id}',
+    summary: 'A list with its sections and items',
+    success: { status: 200, schema: listDetailSchema },
+  },
+  {
+    ...list,
+    method: 'patch',
+    path: '/lists/{id}',
+    summary: 'Rename a list',
+    body: updateListSchema,
+    success: { status: 200, schema: listSummarySchema },
+    errors: [403],
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/lists/{id}/archive',
+    summary: 'Archive a list (never deleted; restorable)',
+    success: { status: 200, schema: listSummarySchema },
+    errors: [403],
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/lists/{id}/restore',
+    summary: 'Restore an archived list',
+    success: { status: 200, schema: listSummarySchema },
+    errors: [403, 422],
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/lists/{id}/clear-done',
+    summary: 'Delete the done items that are not recurring',
+    success: { status: 200, schema: listBulkResultSchema },
+    errors: [403],
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/lists/{id}/reset-recurring',
+    summary: 'Reopen the done recurring items',
+    success: { status: 200, schema: listBulkResultSchema },
+    errors: [403],
+  },
+  {
+    ...list,
+    method: 'get',
+    path: '/lists/{id}/events',
+    summary:
+      'Server-Sent Events stream of list changes (event `list`, data: ListEvent JSON); re-read the list, then reconnect on drop',
+    success: { status: 200 },
+    stream: 'list',
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/lists/{id}/sections',
+    summary: 'Add a section (e.g. a shop category) to a list',
+    body: createListSectionSchema,
+    success: { status: 201, schema: listSectionSchema },
+    errors: [403, 422],
+  },
+  {
+    ...list,
+    method: 'patch',
+    path: '/list-sections/{id}',
+    summary: 'Rename a section',
+    body: updateListSectionSchema,
+    success: { status: 200, schema: listSectionSchema },
+    errors: [403],
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/list-sections/{id}/move',
+    summary: 'Move a section before another one (or to the end)',
+    body: moveListSectionSchema,
+    success: { status: 200, schema: listSectionSchema },
+    errors: [403, 422],
+  },
+  {
+    ...list,
+    method: 'delete',
+    path: '/list-sections/{id}',
+    summary: 'Delete a section; its items stay on the list, without a section',
+    success: { status: 204 },
+    errors: [403],
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/lists/{id}/items',
+    summary: 'Add an item (to the end of the section, or of the section-less items)',
+    body: createListItemSchema,
+    success: { status: 201, schema: listItemSchema },
+    errors: [403, 422],
+  },
+  {
+    ...list,
+    method: 'patch',
+    path: '/list-items/{id}',
+    summary:
+      'Update an item: text, done, recurring (optional `version`: 409 version_conflict on mismatch)',
+    body: updateListItemSchema,
+    success: { status: 200, schema: listItemSchema },
+    errors: [403, 409],
+  },
+  {
+    ...list,
+    method: 'post',
+    path: '/list-items/{id}/move',
+    summary: 'Move an item into a section (or none) before another item, or to the end',
+    body: moveListItemSchema,
+    success: { status: 200, schema: listItemSchema },
+    errors: [403, 409, 422],
+  },
+  {
+    ...list,
+    method: 'delete',
+    path: '/list-items/{id}',
+    summary: 'Delete an item',
+    success: { status: 204 },
+    errors: [403],
+  },
   {
     ...webhook,
     method: 'get',

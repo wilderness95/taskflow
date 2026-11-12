@@ -17,6 +17,8 @@ export type WorkspaceAction =
 export type BoardAction =
   'board:read' | 'board:write' | 'board:update' | 'board:delete' | 'board:manage_members'
 
+export type ListAction = Extract<WorkspaceAction, 'list:read' | 'list:write'>
+
 export type Action = WorkspaceAction | BoardAction
 
 export type WorkspaceResource = { type: 'workspace'; role: WorkspaceRole | null }
