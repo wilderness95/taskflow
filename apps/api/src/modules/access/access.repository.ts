@@ -8,6 +8,7 @@ import {
   checklistItems,
   checklists,
   columns,
+  labels,
   users,
   workspaceMembers,
 } from '../../db/schema.js'
@@ -84,6 +85,8 @@ export function createAccessRepository(db: Db) {
         .innerJoin(columns, eq(columns.id, cards.columnId))
         .where(and(eq(cards.id, cardId), isNull(cards.archivedAt)))
         .get()?.id,
+    boardIdOfLabel: (labelId: string): string | undefined =>
+      db.select({ id: labels.boardId }).from(labels).where(eq(labels.id, labelId)).get()?.id,
     boardIdOfChecklist: (checklistId: string): string | undefined =>
       db
         .select({ id: columns.boardId })

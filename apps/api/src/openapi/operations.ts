@@ -39,6 +39,7 @@ import {
   moveCardSchema,
   moveColumnSchema,
   updateBoardSchema,
+  updateLabelSchema,
   updateCardSchema,
   updateChecklistItemSchema,
   updateChecklistSchema,
@@ -448,6 +449,22 @@ export const operations: Operation[] = [
     summary: 'Create a label',
     body: createLabelSchema,
     success: { status: 201, schema: labelSchema },
+  },
+  {
+    ...board,
+    method: 'patch',
+    path: '/labels/{id}',
+    summary: 'Rename or recolor a label (names are unique per board)',
+    body: updateLabelSchema,
+    success: { status: 200, schema: labelSchema },
+    errors: [409],
+  },
+  {
+    ...board,
+    method: 'delete',
+    path: '/labels/{id}',
+    summary: 'Delete a label (it is removed from all cards)',
+    success: { status: 204 },
   },
 
   {

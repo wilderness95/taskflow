@@ -22,6 +22,10 @@ export const createLabelSchema = z.object({
   color: tagColorSchema,
 })
 export type CreateLabelInput = z.infer<typeof createLabelSchema>
+export const updateLabelSchema = createLabelSchema
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, 'empty_update')
+export type UpdateLabelInput = z.infer<typeof updateLabelSchema>
 
 export const checklistItemSchema = z.object({
   id: idSchema,

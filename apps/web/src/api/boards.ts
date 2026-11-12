@@ -27,6 +27,7 @@ import {
   type UpdateCardInput,
   type UpdateChecklistItemInput,
   type UpdateColumnInput,
+  type UpdateLabelInput,
 } from '@taskflow/shared'
 import { apiFetch } from './client'
 
@@ -71,6 +72,11 @@ export const updateBoard = (boardId: string, input: UpdateBoardInput) =>
 
 export const createLabel = (boardId: string, input: CreateLabelInput) =>
   apiFetch<LabelDto>('POST', `/boards/${boardId}/labels`, input)
+
+export const updateLabel = (labelId: string, input: UpdateLabelInput) =>
+  apiFetch<LabelDto>('PATCH', `/labels/${labelId}`, input)
+
+export const deleteLabel = (labelId: string) => apiFetch('DELETE', `/labels/${labelId}`)
 
 export const createColumn = (boardId: string, input: CreateColumnRequest) =>
   apiFetch<ColumnDto>('POST', `/boards/${boardId}/columns`, input)

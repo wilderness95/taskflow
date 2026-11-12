@@ -52,4 +52,5 @@ export type Dialog =
   | { type: 'members' }
   | { type: 'activity' }
   | { type: 'archive' }
+  | { type: 'labels' }
   | { type: 'board-archive' }

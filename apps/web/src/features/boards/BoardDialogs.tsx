@@ -9,6 +9,7 @@ import {
   type TaskDraft,
 } from '../cards/taskDraft'
 import { RenameColumnModal } from '../columns/RenameColumnModal'
+import { LabelsModal } from '../labels/LabelsModal'
 import { BoardArchiveModal } from '../archive/BoardArchiveModal'
 import { BoardActivityModal } from '../activity/BoardActivityModal'
 import { BoardMembersModal } from './BoardMembersModal'
@@ -123,6 +124,9 @@ export function BoardDialogs({
           onClose={onClose}
         />
       )
+
+    case 'labels':
+      return <LabelsModal boardId={boardId} canEdit={canWrite} onClose={onClose} />
 
     case 'archive':
       return <BoardArchiveModal boardId={boardId} canRestore={canWrite} onClose={onClose} />
