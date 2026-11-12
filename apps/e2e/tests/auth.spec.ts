@@ -64,3 +64,33 @@ test.describe('zárt regisztráció', () => {
     await expect(page.getByLabel('E-mail-cím')).toHaveValue('meghivott@example.com')
   })
 })
+
+test.describe('kötelező e-mail-megerősítés', () => {
+  test('a megerősítetlen felhasználó csak a megerősítő oldalt látja', async ({ page, request }) => {
+    // Biztosan legyen admin (mentes) az adatbázisban; a vizsgált felhasználó sima tag.
+    await request.post('/api/v1/auth/register', {
+      data: { name: 'Admin', email: uniqueEmail('admin'), password: PASSWORD },
+    })
+    const email = await register(page, 'Vera')
+    await page.route('**/api/v1/health', async (route) => {
+      const response = await route.fetch()
+      await route.fulfill({
+        response,
+        json: { ...(await response.json()), emailVerificationRequired: true },
+      })
+    })
+    await page.reload()
+    await expect(
+      page.getByRole('heading', { name: 'Erősítsd meg az e-mail-címedet' }),
+    ).toBeVisible()
+    await expect(page.getByText(email)).toBeVisible()
+
+    await page.getByRole('button', { name: 'Már megerősítettem' }).click()
+    await expect(page.getByText('A cím még nincs megerősítve.')).toBeVisible()
+    await page.getByRole('button', { name: 'Levél újraküldése' }).click()
+    await expect(page.getByText('Elküldtük a levelet.')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Kijelentkezés' }).click()
+    await expect(page).toHaveURL(/\/login/)
+  })
+})
