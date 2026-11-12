@@ -19,7 +19,7 @@ export interface ToolHost {
  */
 export async function createToolHost(
   app: FastifyInstance,
-  opts: { cookie: string; clientIp?: string; defaultBoardId: string },
+  opts: { cookie: string; clientIp?: string; defaultBoardId?: string; defaultWorkspaceId?: string },
 ): Promise<ToolHost> {
   const api = createApiClient({
     baseUrl: 'http://taskflow.internal/api/v1',
@@ -51,19 +51,26 @@ export async function createToolHost(
     const { $schema: _omit, ...schema } = t.inputSchema as Record<string, unknown>
     return { name: t.name, description: t.description, parametersJsonSchema: schema }
   })
-  const withBoard = new Set(
-    listed.tools
-      .filter((t) => 'boardId' in ((t.inputSchema.properties as object | undefined) ?? {}))
-      .map((t) => t.name),
-  )
+  const hasParam = (param: string) =>
+    new Set(
+      listed.tools
+        .filter((t) => param in ((t.inputSchema.properties as object | undefined) ?? {}))
+        .map((t) => t.name),
+    )
+  const withBoard = hasParam('boardId')
+  const withWorkspace = hasParam('workspace')
 
   return {
     tools,
     async call(name, args) {
-      const finalArgs =
-        withBoard.has(name) && args.boardId === undefined
-          ? { ...args, boardId: opts.defaultBoardId }
-          : args
+      // A nem megadott `boardId`/`workspace` helyére a nézett tábla/munkaterület kerül.
+      const finalArgs = { ...args }
+      if (opts.defaultBoardId && withBoard.has(name) && finalArgs.boardId === undefined) {
+        finalArgs.boardId = opts.defaultBoardId
+      }
+      if (opts.defaultWorkspaceId && withWorkspace.has(name) && finalArgs.workspace === undefined) {
+        finalArgs.workspace = opts.defaultWorkspaceId
+      }
       const res = await client.callTool({ name, arguments: finalArgs })
       const text = (res.content as { type: string; text?: string }[])
         .map((c) => c.text ?? '')

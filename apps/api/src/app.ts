@@ -228,7 +228,12 @@ export function buildApp(
             })
           : null,
     createToolHost: (o) =>
-      createToolHost(app, { cookie: o.cookie, clientIp: o.clientIp, defaultBoardId: o.boardId }),
+      createToolHost(app, {
+        cookie: o.cookie,
+        clientIp: o.clientIp,
+        defaultBoardId: o.boardId,
+        defaultWorkspaceId: o.workspaceId,
+      }),
     maxSessionsPerUser: config.VOICE_MAX_SESSIONS_PER_USER,
     maxMinutes: config.VOICE_MAX_MINUTES,
     logger: app.log,

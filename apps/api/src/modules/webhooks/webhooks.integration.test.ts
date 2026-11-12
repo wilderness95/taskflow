@@ -205,8 +205,13 @@ describe('webhooks (private targets blocked by default)', () => {
       expect(res.body.error.code).toBe('webhook_url_blocked')
     }
     expect(
-      (await owner.api.post(`/boards/${board.id}/webhooks`, { url: 'https://hooks.invalid/x' }))
-        .status,
+      (
+        await owner.api.post(`/boards/${board.id}/webhooks`, {
+          url: 'https://hooks.invalid/x',
+          // Nincs illeszkedő esemény: a teszt ne végezzen valódi DNS-feloldást.
+          events: ['card.moved'],
+        })
+      ).status,
     ).toBe(201)
     await strict.app.close()
   })

@@ -17,6 +17,12 @@ export interface VoiceIo {
   close(): void
 }
 
+/** A munkamenet kontextusa: a nézett tábla és/vagy munkaterület (mindkettő hiányozhat). */
+export interface VoiceScope {
+  boardId?: string
+  workspaceId?: string
+}
+
 /** A kapcsolat adatai, amivel az eszközök a felhasználó nevében hívják az API-t. */
 export interface VoiceConnectionContext {
   cookie: string
@@ -35,7 +41,9 @@ export interface VoiceServiceDeps {
   access: AccessService
   /** `null`: nincs Gemini API kulcs, a hangvégpont nem elérhető. */
   connector: LiveConnector | null
-  createToolHost: (opts: VoiceConnectionContext & { boardId: string }) => Promise<ToolHost>
+  createToolHost: (
+    opts: VoiceConnectionContext & { boardId?: string; workspaceId?: string },
+  ) => Promise<ToolHost>
   maxSessionsPerUser: number
   maxMinutes: number
   now?: () => Date
@@ -46,7 +54,7 @@ export function createVoiceService(deps: VoiceServiceDeps) {
   const open = new Map<string, number>()
 
   /** Csatlakozás előtti ellenőrzés (az upgrade előtt hívva, így normál HTTP-hibaként megy ki). */
-  function check(actor: Actor, boardId: string) {
+  function check(actor: Actor, scope: VoiceScope) {
     if (actor.type !== 'user') {
       throw new AppError(
         403,
@@ -57,7 +65,12 @@ export function createVoiceService(deps: VoiceServiceDeps) {
     if (!deps.connector) {
       throw new AppError(503, 'voice_unavailable', 'The voice assistant is not configured')
     }
-    const { board } = deps.access.requireBoard(actor, boardId, 'board:read')
+    const board = scope.boardId
+      ? deps.access.requireBoard(actor, scope.boardId, 'board:read').board
+      : undefined
+    if (!board && scope.workspaceId) {
+      deps.access.requireWorkspace(actor, scope.workspaceId, 'workspace:read')
+    }
     if ((open.get(actor.id) ?? 0) >= deps.maxSessionsPerUser) {
       throw new AppError(429, 'too_many_sessions', 'Too many open voice sessions')
     }
@@ -66,11 +79,11 @@ export function createVoiceService(deps: VoiceServiceDeps) {
 
   async function start(
     actor: Actor,
-    boardId: string,
+    scope: VoiceScope,
     io: VoiceIo,
     ctx: VoiceConnectionContext,
   ): Promise<VoiceSession> {
-    const board = check(actor, boardId)
+    const board = check(actor, scope)
     open.set(actor.id, (open.get(actor.id) ?? 0) + 1)
 
     let closed = false
@@ -132,11 +145,16 @@ export function createVoiceService(deps: VoiceServiceDeps) {
     }
 
     try {
-      host = await deps.createToolHost({ ...ctx, boardId: board.id })
+      host = await deps.createToolHost({
+        ...ctx,
+        boardId: board?.id,
+        workspaceId: board?.workspaceId ?? scope.workspaceId,
+      })
       const instruction = buildSystemInstruction({
         now: (deps.now ?? (() => new Date()))(),
-        boardId: board.id,
-        boardTitle: board.title,
+        boardId: board?.id,
+        boardTitle: board?.title,
+        workspaceId: board?.workspaceId ?? scope.workspaceId ?? undefined,
       })
       live = await deps.connector!.connect(
         { systemInstruction: instruction, tools: host.tools },

@@ -26,13 +26,12 @@ export function voiceRoutes(service: VoiceService, deps: { allowedOrigin: string
           if (!origin || new URL(origin).origin !== deps.allowedOrigin) {
             throw new AppError(403, 'invalid_origin', 'Request origin is not allowed')
           }
-          const { boardId } = voiceQuerySchema.parse(req.query)
-          service.check(requireActor(req), boardId)
+          service.check(requireActor(req), voiceQuerySchema.parse(req.query))
         },
       },
       async (socket, req) => {
         const actor = requireActor(req)
-        const { boardId } = voiceQuerySchema.parse(req.query)
+        const scope = voiceQuerySchema.parse(req.query)
         // A hívások a felhasználó sessionjével futnak: a cookie-t továbbadjuk.
         const ctx = { cookie: req.headers.cookie ?? '', clientIp: clientIp(req) }
 
@@ -60,7 +59,7 @@ export function voiceRoutes(service: VoiceService, deps: { allowedOrigin: string
         try {
           session = await service.start(
             actor,
-            boardId,
+            scope,
             {
               sendAudio: (pcm) => socket.send(pcm, { binary: true }),
               sendMessage: (m) => socket.send(JSON.stringify(m)),

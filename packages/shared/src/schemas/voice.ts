@@ -1,8 +1,14 @@
 import { z } from 'zod'
 import { idSchema } from './common'
 
-/** `WS /api/v1/voice/live?boardId=...` lekérdezése. */
-export const voiceQuerySchema = z.object({ boardId: idSchema })
+/**
+ * `WS /api/v1/voice/live` lekérdezése: a kontextus a nézett tábla (`boardId`) vagy munkaterület
+ * (`workspaceId`); mindkettő hiányozhat (pl. a főoldalon).
+ */
+export const voiceQuerySchema = z.object({
+  boardId: idSchema.optional(),
+  workspaceId: idSchema.optional(),
+})
 
 /** A mikrofon nyers PCM-je: 16 bites, little-endian, mono, 16 kHz. */
 export const VOICE_INPUT_SAMPLE_RATE = 16000

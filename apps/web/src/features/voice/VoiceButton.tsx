@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { useVoiceAssistant } from './useVoiceAssistant'
+import { useVoiceAssistant, type VoiceScope } from './useVoiceAssistant'
 import '../../shared/styles/buttons.css'
 import './VoiceButton.css'
 
 /** A Topbar mikrofon gombja: elindítja/leállítja az élő hangasszisztenst, és jelzi az állapotát. */
-export function VoiceButton({ boardId }: { boardId: string }) {
+export function VoiceButton(scope: VoiceScope) {
   const { t } = useTranslation('voice')
-  const { status, error, start, stop, interrupt } = useVoiceAssistant(boardId)
+  const { status, error, start, stop, interrupt } = useVoiceAssistant(scope)
   const active = status !== 'idle'
 
   const errorKey = error && `errors.${error}`

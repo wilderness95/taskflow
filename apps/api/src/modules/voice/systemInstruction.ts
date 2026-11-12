@@ -1,7 +1,9 @@
 export interface VoiceContext {
   now: Date
-  boardId: string
-  boardTitle: string
+  /** A nézett tábla; hiányzik, ha a felhasználó a munkaterület-listán vagy a főoldalon van. */
+  boardId?: string
+  boardTitle?: string
+  workspaceId?: string
   userName?: string
 }
 
@@ -18,7 +20,9 @@ export function buildSystemInstruction(ctx: VoiceContext): string {
   return [
     'You are the voice assistant of TaskFlow, a Kanban board app. You manage cards for the user via the provided tools.',
     `Today is ${WEEKDAYS[d.getDay()]}, ${date}. Convert relative dates ("tomorrow", "next Friday") to YYYY-MM-DD for the tools.`,
-    `The user is looking at the board "${ctx.boardTitle}" (boardId: ${ctx.boardId}). Use this boardId unless the user asks about another board; call list_boards if they do.`,
+    ctx.boardId
+      ? `The user is looking at the board "${ctx.boardTitle}" (boardId: ${ctx.boardId}). Use this boardId unless the user asks about another board; call list_boards if they do.`
+      : `The user is not looking at a board${ctx.workspaceId ? ` but at the board list of workspace ${ctx.workspaceId}; new boards go there unless told otherwise` : ''}. Call list_boards or list_workspaces to find what they mean, and pass boardId explicitly.`,
     ...(ctx.userName ? [`The user's name is ${ctx.userName}.`] : []),
     'Answer in the language the user speaks (default Hungarian). Keep replies very short and natural for speech: no lists, no markdown, no ids.',
     'Before creating or changing anything, call get_board_overview if you do not know the column, label or people names yet. Prefer names over ids in tools.',
