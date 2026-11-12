@@ -25,6 +25,7 @@ services:
       SEED: ${SEED:-true}
       SESSION_SECRET: ${SESSION_SECRET:?Állíts be egy legalább 32 karakteres SESSION_SECRET-et a .env fájlban}
       REGISTRATION_MODE: ${REGISTRATION_MODE:-invite}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-true}
       MAIL_TRANSPORT: smtp
       MAIL_FROM: ${MAIL_FROM:?Állítsd be a MAIL_FROM-ot a .env fájlban}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}

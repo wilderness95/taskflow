@@ -18,6 +18,12 @@ const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
   /** `invite`: az első felhasználó (admin) szabadon regisztrálhat, utána csak meghívóval; `open`: bárki. */
   REGISTRATION_MODE: z.enum(['invite', 'open']).default('invite'),
+  /**
+   * Megerősítetlen e-mail-című felhasználó (a platform-admin kivételével) csak a fiókkezelő végpontokat
+   * éri el (`403 email_not_verified`), amíg a levélben kapott hivatkozást meg nem nyitja.
+   * A meghívóval regisztráltak megerősítettnek számítanak (a meghívó igazolja a címet).
+   */
+  REQUIRE_EMAIL_VERIFICATION: z.stringbool().default(true),
   /** Kérés/perc IP-nként (a kliens IP-je a `CF-Connecting-IP` fejlécből jön). */
   RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(300),
   /** Kérés/perc IP-nként a érzékeny auth végpontokra (login, regisztráció, jelszó-visszaállítás...). */
