@@ -44,3 +44,23 @@ test.describe('hitelesítés', () => {
     await expect(page.getByRole('alert')).toContainText('már regisztráltak')
   })
 })
+
+test.describe('zárt regisztráció', () => {
+  test('meghívó nélkül a „csak meghívóval” oldal jön, meghívó-hivatkozással az űrlap', async ({
+    page,
+  }) => {
+    await page.route('**/api/v1/health', (route) =>
+      route.fulfill({ json: { status: 'ok', voice: false, registrationOpen: false } }),
+    )
+    await page.goto('/login')
+    await page.getByRole('link', { name: 'Regisztráció' }).click()
+    await expect(page.getByRole('heading', { name: 'Regisztráció csak meghívással' })).toBeVisible()
+    await expect(page.getByLabel('Jelszó')).toHaveCount(0)
+    await page.getByRole('link', { name: 'Már van fiókod? Belépés' }).click()
+    await expect(page).toHaveURL(/\/login/)
+
+    await page.goto('/register?invite=abc&email=meghivott%40example.com')
+    await expect(page.getByLabel('Jelszó')).toBeVisible()
+    await expect(page.getByLabel('E-mail-cím')).toHaveValue('meghivott@example.com')
+  })
+})
