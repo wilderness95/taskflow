@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import {
   BOARD_ROLES,
   BOARD_VISIBILITIES,
@@ -70,6 +70,62 @@ export const invitations = sqliteTable('invitations', {
   acceptedAt: integer('accepted_at', { mode: 'timestamp_ms' }),
   createdAt: createdAt(),
 })
+
+/** API kulcs: csak a SHA-256 hash tárolt; a `prefix` a kulcs eleje az azonosításhoz. */
+export const apiKeys = sqliteTable('api_keys', {
+  id: id(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  prefix: text('prefix').notNull(),
+  keyHash: text('key_hash').notNull().unique(),
+  /** JSON tömb (`ApiKeyScope[]`). */
+  scopes: text('scopes').notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
+  revokedAt: integer('revoked_at', { mode: 'timestamp_ms' }),
+  lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
+  createdAt: createdAt(),
+})
+
+/** Írási műveletek naplója; az `actorType` megkülönbözteti az embert és az API kulcsot. */
+export const activityLog = sqliteTable(
+  'activity_log',
+  {
+    id: id(),
+    boardId: text('board_id').references(() => boards.id, { onDelete: 'cascade' }),
+    workspaceId: text('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }),
+    actorType: text('actor_type', { enum: ['user', 'api_key'] }).notNull(),
+    actorId: text('actor_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    apiKeyId: text('api_key_id').references(() => apiKeys.id, { onDelete: 'set null' }),
+    action: text('action').notNull(),
+    entityType: text('entity_type').notNull(),
+    entityId: text('entity_id').notNull(),
+    /** JSON objektum. */
+    meta: text('meta').notNull().default('{}'),
+    createdAt: createdAt(),
+  },
+  (t) => [index('activity_log_board_idx').on(t.boardId, t.id)],
+)
+
+/** `Idempotency-Key` fejléc: a korábbi válasz újrajátszásához. */
+export const idempotencyKeys = sqliteTable(
+  'idempotency_keys',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    key: text('key').notNull(),
+    /** A kérés (metódus, útvonal, törzs) ujjlenyomata; eltérő kérés ugyanazzal a kulccsal hiba. */
+    fingerprint: text('fingerprint').notNull(),
+    status: integer('status'),
+    response: text('response'),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.key] })],
+)
 
 export const workspaces = sqliteTable('workspaces', {
   id: id(),
