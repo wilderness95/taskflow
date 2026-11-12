@@ -4,13 +4,15 @@ import {
   type BoardAction,
   type BoardResource,
   type BoardRole,
+  type ListAction,
   type PolicyActor,
   type WorkspaceAction,
   type WorkspaceRole,
 } from '@taskflow/shared'
 import { AppError, notFound } from '../../errors.js'
-import type { AccessRepository, BoardRow } from './access.repository.js'
+import type { AccessRepository, BoardRow, ListRow } from './access.repository.js'
 
+export type ListAccess = { list: ListRow; role: WorkspaceRole }
 export type BoardAccess = { board: BoardRow; role: BoardRole; resource: BoardResource }
 
 const forbidden = () => new AppError(403, 'forbidden', 'You are not allowed to do this')
@@ -77,8 +79,40 @@ export function createAccessService(repo: AccessRepository) {
     return result
   }
 
+  /**
+   * Lista: a munkaterületi szerepkör szabja (nem tagnak 404, tiltott műveletre 403). Az archivált
+   * lista csak `archived: true`-val oldható fel (visszaállításhoz), az aktívra ekkor 404.
+   */
+  const requireList = (
+    actor: PolicyActor,
+    listId: string,
+    action: ListAction,
+    archived = false,
+  ): ListAccess => {
+    const list = repo.findList(listId)
+    if (!list || Boolean(list.archivedAt) !== archived) throw notFound('List')
+    const role = actor ? repo.workspaceRole(list.workspaceId, actor.id) : null
+    if (!role) throw notFound('List')
+    if (!can(actor, action, { type: 'workspace', role })) throw forbidden()
+    return { list, role }
+  }
+  const viaListId = (
+    actor: PolicyActor,
+    listId: string | undefined,
+    action: ListAction,
+    what: string,
+  ) => {
+    if (!listId) throw notFound(what)
+    return requireList(actor, listId, action)
+  }
+
   return {
     requireBoard,
+    requireList,
+    requireListSection: (actor: PolicyActor, sectionId: string, action: ListAction) =>
+      viaListId(actor, repo.listIdOfSection(sectionId), action, 'List section'),
+    requireListItem: (actor: PolicyActor, itemId: string, action: ListAction) =>
+      viaListId(actor, repo.listIdOfItem(itemId), action, 'List item'),
     /** Az archivált táblára (visszaállítás); az aktívra 404. */
     requireArchivedBoard: (actor: PolicyActor, boardId: string, action: BoardAction) =>
       resolveBoard(actor, boardId, action, true),
