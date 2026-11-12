@@ -27,6 +27,23 @@
     "tagsPlaceholder": "UI, UX, Marketing",
     "dueDate": "Határidő"
   },
+  "attachments": {
+    "count_one": "{{count, number}} csatolmány",
+    "count_other": "{{count, number}} csatolmány",
+    "title": "Csatolmányok",
+    "upload": "Fájl csatolása",
+    "uploading": "Feltöltés...",
+    "empty": "Nincs csatolmány.",
+    "download": "Letöltés: {{name}}",
+    "delete": "Törlés",
+    "deleteAria": "Csatolmány törlése: {{name}}",
+    "makeCover": "Legyen borító",
+    "removeCover": "Borító levétele",
+    "cover": "Borító",
+    "tooLarge": "A fájl túl nagy.",
+    "uploadError": "A feltöltés nem sikerült.",
+    "loadError": "A csatolmányok betöltése nem sikerült."
+  },
   "assignees": {
     "label": "Felelősök",
     "empty": "Nincs hozzárendelhető felhasználó.",

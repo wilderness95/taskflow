@@ -1,4 +1,5 @@
 import { generateKeyBetween } from 'fractional-indexing'
+import { isImageMimeType } from '@taskflow/shared'
 import type {
   CardDto,
   CardListQuery,
@@ -12,6 +13,8 @@ import { positionBefore } from '../../lib/position.js'
 import { AppError, notFound, orNotFound } from '../../errors.js'
 import type { ActivityService } from '../activity/activity.service.js'
 import type { AccessService } from '../access/access.service.js'
+import type { FileStore } from '../../files/fileStore.js'
+import type { AttachmentsRepository } from '../attachments/attachments.repository.js'
 import type { BoardsRepository } from '../boards/boards.repository.js'
 import type { ChecklistsRepository } from '../checklists/checklists.repository.js'
 import { toChecklistDto } from '../checklists/checklists.service.js'
@@ -20,6 +23,8 @@ import type { ColumnsRepository } from '../columns/columns.repository.js'
 import type { CardRow, CardsRepository } from './cards.repository.js'
 
 export function createCardsService(deps: {
+  attachments: AttachmentsRepository
+  files: FileStore
   cards: CardsRepository
   columns: ColumnsRepository
   boards: BoardsRepository
@@ -29,12 +34,14 @@ export function createCardsService(deps: {
   notifications: NotificationsService
 }) {
   const { cards, columns, boards, checklists, access, activity, notifications } = deps
+  const { attachments, files } = deps
 
   const hydrate = (rows: CardRow[]): CardDto[] => {
     const ids = rows.map((r) => r.id)
     const labelIds = cards.labelIdsByCard(ids)
     const assignees = cards.assigneeIdsByCard(ids)
     const lists = checklists.listByCardIds(ids)
+    const attachmentCounts = attachments.countByCard(ids)
     return rows.map((r) => ({
       id: r.id,
       columnId: r.columnId,
@@ -43,6 +50,8 @@ export function createCardsService(deps: {
       priority: r.priority,
       dueDate: r.dueDate,
       coverImage: r.coverImage,
+      coverAttachmentId: r.coverAttachmentId,
+      attachmentCount: attachmentCounts.get(r.id) ?? 0,
       position: r.position,
       labelIds: labelIds.get(r.id) ?? [],
       assigneeIds: assignees.get(r.id) ?? [],
@@ -159,6 +168,19 @@ export function createCardsService(deps: {
       const card = require(id)
       assertVersion(card, input.version)
       const { labelIds, assigneeIds, version: _version, ...fields } = input
+      if (fields.coverAttachmentId) {
+        const cover = attachments.findById(fields.coverAttachmentId)
+        if (cover?.cardId !== id || !isImageMimeType(cover.mimeType)) {
+          throw new AppError(
+            422,
+            'invalid_cover',
+            'The cover must be an image attached to this card',
+            {
+              coverAttachmentId: fields.coverAttachmentId,
+            },
+          )
+        }
+      }
       const before = cards.assigneeIdsByCard([id]).get(id) ?? []
       const assigned = assigneeIds ? assertAssignees(board, assigneeIds) : undefined
       cards.transaction(() => {
@@ -275,7 +297,10 @@ export function createCardsService(deps: {
     remove(actor: Actor, id: string): void {
       const { board } = access.requireCard(actor, id, 'board:write')
       const card = require(id)
+      const storageKeys = attachments.listForCard(id).map((a) => a.storageKey)
       cards.delete(id)
+      // A fájlok törlése hiba esetén sem akaszthatja meg a kártya törlését (legfeljebb árva fájl marad).
+      for (const key of storageKeys) void files.delete(key).catch(() => undefined)
       activity.record(actor, {
         boardId: board.id,
         action: 'card.deleted',

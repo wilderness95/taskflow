@@ -60,6 +60,8 @@ export const buildTaskFromDraft = (
   description: draft.description.trim(),
   priority: draft.priority,
   done,
+  // A piszkozatból épülő feladat csak mentéshez kell; a csatolmányokat külön végpontok kezelik.
+  attachmentCount: 0,
   dueDate: draft.dueDate,
   tags: parseTags(draft.tags),
   assignees: draft.assigneeIds.map(

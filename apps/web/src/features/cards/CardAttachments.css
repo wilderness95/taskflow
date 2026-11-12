@@ -1,0 +1,27 @@
+.card-attachments {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.card-attachments-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.card-attachments-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.card-attachment-thumb {
+  width: 48px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 6px;
+}

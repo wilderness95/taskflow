@@ -7,6 +7,10 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   APP_URL: z.url().default('http://localhost:5173'),
   DATABASE_URL: z.string().default('./data/taskflow.db'),
+  /** A csatolmányok könyvtára (lokális fájltár); Dockerben a compose a `/data/uploads`-ra állítja. */
+  UPLOAD_DIR: z.string().default('./data/uploads'),
+  /** Egy feltöltött fájl legnagyobb mérete MB-ban (a Cloudflare free csomag kéréslimitje 100 MB). */
+  MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(100).default(10),
   // A seed felhasználó nem tud belépni; az első regisztrált felhasználó átveszi az adatait.
   SEED: z.stringbool().default(true),
   /** Cookie-aláíró titok; élesben kötelező, legalább 32 karakter. */

@@ -60,6 +60,9 @@ export const cardSchema = z.object({
   priority: prioritySchema,
   dueDate: dateSchema.nullable(),
   coverImage: z.string().nullable(),
+  /** A borítóként használt csatolmány (kép); a `coverImage` URL mellett érvényes. */
+  coverAttachmentId: idSchema.nullable(),
+  attachmentCount: z.number().int(),
   position: z.string(),
   labelIds: z.array(idSchema),
   /** A kártyához rendelt felhasználók (a tábla résztvevői közül). */
@@ -143,6 +146,7 @@ export const updateCardSchema = z
     priority: prioritySchema,
     dueDate: dateSchema.nullable(),
     coverImage: httpUrlSchema.nullable(),
+    coverAttachmentId: idSchema.nullable(),
     labelIds: z.array(idSchema),
     assigneeIds: z.array(idSchema),
   })

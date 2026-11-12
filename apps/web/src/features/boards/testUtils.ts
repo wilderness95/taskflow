@@ -8,6 +8,7 @@ export const makeTask = (id: string, overrides: Partial<Task> = {}): Task => ({
   tags: [],
   assignees: [],
   checklists: [],
+  attachmentCount: 0,
   ...overrides,
 })
 

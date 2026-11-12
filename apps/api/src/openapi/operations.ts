@@ -8,6 +8,9 @@ import {
   cardListQuerySchema,
   cardListSchema,
   pageQuerySchema,
+  attachmentListSchema,
+  attachmentSchema,
+  uploadAttachmentQuerySchema,
   boardArchiveSchema,
   boardListQuerySchema,
   boardListSchema,
@@ -82,12 +85,17 @@ export type Operation = {
   errors?: number[]
   /** A sikeres válasz nem JSON, hanem esemény-folyam (`text/event-stream`). */
   stream?: boolean
+  /** A kérés törzse a fájl nyers tartalma (`application/octet-stream`). */
+  upload?: boolean
+  /** A sikeres válasz a fájl nyers tartalma. */
+  download?: boolean
 }
 
 const board = { tag: 'Boards' }
 const column = { tag: 'Columns' }
 const card = { tag: 'Cards' }
 const checklist = { tag: 'Checklists' }
+const attachment = { tag: 'Attachments' }
 const comment = { tag: 'Comments' }
 const notification = { tag: 'Notifications' }
 const auth = { tag: 'Auth' }
@@ -541,6 +549,39 @@ export const operations: Operation[] = [
     body: updateCardSchema,
     success: { status: 200, schema: cardSchema },
     errors: [409, 422],
+  },
+  {
+    ...attachment,
+    method: 'get',
+    path: '/cards/{id}/attachments',
+    summary: 'List the attachments of a card',
+    success: { status: 200, schema: attachmentListSchema },
+  },
+  {
+    ...attachment,
+    method: 'post',
+    path: '/cards/{id}/attachments',
+    summary:
+      'Attach a file: the raw file as the body (`Content-Type` = file type), the file name in `name`',
+    query: uploadAttachmentQuerySchema,
+    upload: true,
+    success: { status: 201, schema: attachmentSchema },
+    errors: [413, 415],
+  },
+  {
+    ...attachment,
+    method: 'get',
+    path: '/attachments/{id}/file',
+    summary: 'Download the file (images inline, everything else as a download)',
+    download: true,
+    success: { status: 200 },
+  },
+  {
+    ...attachment,
+    method: 'delete',
+    path: '/attachments/{id}',
+    summary: 'Delete an attachment (clears the card cover if it was the cover)',
+    success: { status: 204 },
   },
   {
     ...card,

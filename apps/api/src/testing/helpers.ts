@@ -2,6 +2,7 @@ import type { LightMyRequestResponse } from 'fastify'
 import { buildApp } from '../app.js'
 import { loadConfig } from '../config.js'
 import { createDb, runMigrations } from '../db/client.js'
+import { createMemoryFileStore } from '../files/fileStore.js'
 import { MemoryMailer } from '../mail/mailer.js'
 
 export const PASSWORD = 'correct-horse-battery'
@@ -10,6 +11,7 @@ export function createTestApp(env: Record<string, string> = {}) {
   const { db } = createDb(':memory:')
   runMigrations(db)
   const mailer = new MemoryMailer()
+  const files = createMemoryFileStore()
   const app = buildApp(
     loadConfig({
       NODE_ENV: 'test',
@@ -19,9 +21,9 @@ export function createTestApp(env: Record<string, string> = {}) {
       ...env,
     }),
     db,
-    { mailer },
+    { mailer, fileStore: files },
   )
-  return { app, db, mailer }
+  return { app, db, mailer, files }
 }
 
 type App = ReturnType<typeof createTestApp>['app']
