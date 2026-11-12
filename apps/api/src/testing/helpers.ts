@@ -21,6 +21,8 @@ export function createTestApp(
       // A tesztek sok kérést küldenek ugyanarról az IP-ről; a limitet külön tesztek szűkítik.
       RATE_LIMIT_MAX: '100000',
       AUTH_RATE_LIMIT_MAX: '100000',
+      // A tesztek megerősítetlen fiókokkal dolgoznak; a kötelezést külön teszt kapcsolja be.
+      REQUIRE_EMAIL_VERIFICATION: 'false',
       ...env,
     }),
     db,

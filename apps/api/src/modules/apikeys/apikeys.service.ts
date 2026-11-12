@@ -93,7 +93,8 @@ export function createApiKeysService(deps: {
       if (!row || row.revokedAt) return null
       const now = Date.now()
       if (row.expiresAt && row.expiresAt.getTime() <= now) return null
-      if (users.findUserById(row.userId) === undefined) return null
+      const owner = users.findUserById(row.userId)
+      if (owner === undefined) return null
       if (!row.lastUsedAt || now - row.lastUsedAt.getTime() >= TOUCH_INTERVAL_MS) {
         repo.update(row.id, { lastUsedAt: new Date(now) })
       }
@@ -101,6 +102,7 @@ export function createApiKeysService(deps: {
         type: 'api_key',
         id: row.userId,
         isAdmin: false,
+        emailCleared: owner.emailVerifiedAt !== null || owner.isAdmin,
         keyId: row.id,
         scopes: parseScopes(row.scopes),
       }

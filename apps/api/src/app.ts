@@ -246,6 +246,7 @@ export function buildApp(
   app.register(
     healthRoutes({
       voice: voice.available,
+      emailVerificationRequired: config.REQUIRE_EMAIL_VERIFICATION,
       registrationOpen: () =>
         config.REGISTRATION_MODE === 'open' || authRepo.countLoginUsers() === 0,
     }),
