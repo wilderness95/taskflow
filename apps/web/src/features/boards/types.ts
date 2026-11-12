@@ -51,3 +51,5 @@ export type Dialog =
   | { type: 'column-delete'; columnId: string }
   | { type: 'members' }
   | { type: 'activity' }
+  | { type: 'archive' }
+  | { type: 'board-archive' }

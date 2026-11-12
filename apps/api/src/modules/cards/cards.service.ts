@@ -119,7 +119,7 @@ export function createCardsService(deps: {
     create(actor: Actor, columnId: string, input: CreateCardInput): CardDto {
       const { board } = access.requireColumn(actor, columnId, 'board:write')
       const column = columns.findById(columnId)
-      if (!column) throw notFound('Column')
+      if (!column || column.archivedAt) throw notFound('Column')
       const labelIds = assertLabels(column.boardId, input.labelIds)
       const assigneeIds = assertAssignees(board, input.assigneeIds)
       const id = cards.transaction(() => {
@@ -205,7 +205,9 @@ export function createCardsService(deps: {
       assertVersion(card, input.version)
       const target = columns.findById(input.columnId)
       const source = columns.findById(card.columnId)!
-      if (!target || target.boardId !== source.boardId) throw notFound('Column')
+      if (!target || target.archivedAt || target.boardId !== source.boardId) {
+        throw notFound('Column')
+      }
       const position = positionBefore(cards.listPositions(target.id), id, input.beforeCardId)
       cards.update(id, {
         columnId: target.id,
@@ -221,6 +223,53 @@ export function createCardsService(deps: {
         meta: { title: card.title, fromColumnId: card.columnId, toColumnId: target.id },
       })
       return hydrate([require(id)])[0]!
+    },
+
+    /** Archiválás: a kártya eltűnik a tábláról és a listákból, de visszaállítható. */
+    archive(actor: Actor, id: string): CardDto {
+      const { board } = access.requireCard(actor, id, 'board:write')
+      const card = require(id)
+      cards.update(id, { archivedAt: new Date(), updatedAt: new Date(), version: card.version + 1 })
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'card.archived',
+        entityType: 'card',
+        entityId: id,
+        meta: { title: card.title },
+      })
+      return hydrate([cards.findAnyById(id)!])[0]!
+    },
+
+    /** Visszaállítás az eredeti oszlopba (a végére); ha az oszlop archivált, előbb azt kell visszaállítani. */
+    restore(actor: Actor, id: string): CardDto {
+      const { board } = access.requireArchivedCard(actor, id, 'board:write')
+      const card = orNotFound(cards.findAnyById(id), 'Card')
+      const column = columns.findById(card.columnId)!
+      if (column.archivedAt) {
+        throw new AppError(409, 'column_archived', 'Restore the column first', {
+          columnId: column.id,
+        })
+      }
+      cards.update(id, {
+        archivedAt: null,
+        position: generateKeyBetween(cards.lastPosition(column.id), null),
+        updatedAt: new Date(),
+        version: card.version + 1,
+      })
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'card.restored',
+        entityType: 'card',
+        entityId: id,
+        meta: { title: card.title },
+      })
+      return hydrate([require(id)])[0]!
+    },
+
+    /** A tábla archivált kártyái (legutóbb archivált elöl). */
+    listArchived(actor: Actor, boardId: string): CardDto[] {
+      access.requireBoard(actor, boardId, 'board:read')
+      return hydrate(cards.listArchivedForBoard(boardId))
     },
 
     remove(actor: Actor, id: string): void {

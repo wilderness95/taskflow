@@ -8,6 +8,8 @@ import {
   cardListQuerySchema,
   cardListSchema,
   pageQuerySchema,
+  boardArchiveSchema,
+  boardListQuerySchema,
   boardListSchema,
   boardMemberListSchema,
   boardParticipantListSchema,
@@ -327,7 +329,9 @@ export const operations: Operation[] = [
     ...board,
     method: 'get',
     path: '/workspaces/{id}/boards',
-    summary: 'List the boards I can read in a workspace',
+    summary:
+      'List the boards I can read in a workspace (`archived=true`: the archived boards I can restore)',
+    query: boardListQuerySchema,
     success: { status: 200, schema: boardListSchema },
   },
   {
@@ -418,6 +422,20 @@ export const operations: Operation[] = [
   {
     ...board,
     method: 'post',
+    path: '/boards/{id}/restore',
+    summary: 'Restore an archived board (board admin)',
+    success: { status: 200, schema: boardSummarySchema },
+  },
+  {
+    ...board,
+    method: 'get',
+    path: '/boards/{id}/archive',
+    summary: 'List the archived cards and columns of a board',
+    success: { status: 200, schema: boardArchiveSchema },
+  },
+  {
+    ...board,
+    method: 'post',
     path: '/boards/{id}/columns',
     summary: 'Create a column at the end of the board',
     body: createColumnSchema,
@@ -438,6 +456,20 @@ export const operations: Operation[] = [
     path: '/columns/{id}',
     summary: 'Update a column',
     body: updateColumnSchema,
+    success: { status: 200, schema: columnSchema },
+  },
+  {
+    ...column,
+    method: 'post',
+    path: '/columns/{id}/archive',
+    summary: 'Archive a column together with its cards',
+    success: { status: 200, schema: columnSchema },
+  },
+  {
+    ...column,
+    method: 'post',
+    path: '/columns/{id}/restore',
+    summary: 'Restore an archived column',
     success: { status: 200, schema: columnSchema },
   },
   {
@@ -492,6 +524,21 @@ export const operations: Operation[] = [
     body: updateCardSchema,
     success: { status: 200, schema: cardSchema },
     errors: [409, 422],
+  },
+  {
+    ...card,
+    method: 'post',
+    path: '/cards/{id}/archive',
+    summary: 'Archive a card (hidden from the board, restorable)',
+    success: { status: 200, schema: cardSchema },
+  },
+  {
+    ...card,
+    method: 'post',
+    path: '/cards/{id}/restore',
+    summary: 'Restore an archived card to the end of its column',
+    success: { status: 200, schema: cardSchema },
+    errors: [409],
   },
   {
     ...card,

@@ -16,6 +16,7 @@ type TaskCardProps = {
   isDropTarget: boolean
   onEdit: () => void
   onDelete: () => void
+  onArchive: () => void
   /** Olvasási jog: nincs szerkesztés és törlés. */
   readOnly?: boolean
 }
@@ -27,6 +28,7 @@ export function TaskCard({
   isDropTarget,
   onEdit,
   onDelete,
+  onArchive,
   readOnly = false,
 }: TaskCardProps) {
   const { t } = useTranslation('card')
@@ -50,17 +52,30 @@ export function TaskCard({
           {t(`priority.${task.priority}`)}
         </span>
         {!readOnly && (
-          <button
-            type="button"
-            className="delete-button"
-            aria-label={t('deleteAria', { title: task.title })}
-            onClick={(event) => {
-              event.stopPropagation()
-              onDelete()
-            }}
-          >
-            ×
-          </button>
+          <div className="task-card-tools">
+            <button
+              type="button"
+              className="archive-button"
+              aria-label={t('archiveAria', { title: task.title })}
+              onClick={(event) => {
+                event.stopPropagation()
+                onArchive()
+              }}
+            >
+              🗄
+            </button>
+            <button
+              type="button"
+              className="delete-button"
+              aria-label={t('deleteAria', { title: task.title })}
+              onClick={(event) => {
+                event.stopPropagation()
+                onDelete()
+              }}
+            >
+              ×
+            </button>
+          </div>
         )}
       </div>
 

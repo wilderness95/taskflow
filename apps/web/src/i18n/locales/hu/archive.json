@@ -1,0 +1,24 @@
+{
+  "eyebrow": "Tábla",
+  "title": "Archívum",
+  "open": "Archívum",
+  "loading": "Archívum betöltése...",
+  "loadError": "Az archívum betöltése nem sikerült.",
+  "empty": "Nincs archivált elem.",
+  "columns": "Oszlopok",
+  "cards": "Kártyák",
+  "restore": "Visszaállítás",
+  "columnArchived": "A kártya oszlopa archivált, előbb azt állítsd vissza.",
+  "board": {
+    "archive": "Tábla archiválása",
+    "eyebrow": "Tábla archiválása",
+    "title": "Biztos vagy benne?",
+    "message": "Az archivált tábla eltűnik a listáról, de a tartalma megmarad, és a munkaterületről visszaállítható.",
+    "confirm": "Archiválás"
+  },
+  "boards": {
+    "title": "Archivált táblák",
+    "restore": "Visszaállítás",
+    "restoreAria": "Tábla visszaállítása: {{title}}"
+  }
+}

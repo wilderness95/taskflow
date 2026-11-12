@@ -5,6 +5,7 @@
     "low": "Alacsony"
   },
   "noDescription": "Nincs hozzácsatolt leírás.",
+  "archiveAria": "Archiváld a {{title}} feladatot",
   "deleteAria": "Töröld a {{title}} feladatot",
   "dueLabel": "Határidő",
   "modal": {

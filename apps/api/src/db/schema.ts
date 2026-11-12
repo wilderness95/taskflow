@@ -205,6 +205,7 @@ export const columns = sqliteTable('columns', {
   accent: text('accent', { enum: TAG_COLORS }).notNull(),
   isDone: integer('is_done', { mode: 'boolean' }).notNull().default(false),
   position: text('position').notNull(),
+  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
 })
 
 export const cards = sqliteTable('cards', {

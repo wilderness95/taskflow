@@ -2,6 +2,7 @@
   "defaultTitle": "Új oszlop {{number}}",
   "minOneColumn": "Legalább egy oszlopnak maradnia kell.",
   "renameAria": "Oszlop átnevezése: {{title}}",
+  "archiveAria": "Oszlop archiválása: {{title}}",
   "deleteAria": "Oszlop törlése: {{title}}",
   "addCard": "+ Kártya hozzáadása",
   "rename": {

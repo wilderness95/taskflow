@@ -1,5 +1,5 @@
 import type { BoardRole, WorkspaceRole } from '@taskflow/shared'
-import { and, eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
 import type { Db } from '../../db/client.js'
 import {
   boardMembers,
@@ -23,6 +23,19 @@ export function createAccessRepository(db: Db) {
         .from(boards)
         .where(and(eq(boards.id, boardId), isNull(boards.archivedAt)))
         .get(),
+    findArchivedBoard: (boardId: string): BoardRow | undefined =>
+      db
+        .select()
+        .from(boards)
+        .where(and(eq(boards.id, boardId), isNotNull(boards.archivedAt)))
+        .get(),
+    boardIdOfArchivedCard: (cardId: string): string | undefined =>
+      db
+        .select({ id: columns.boardId })
+        .from(cards)
+        .innerJoin(columns, eq(columns.id, cards.columnId))
+        .where(and(eq(cards.id, cardId), isNotNull(cards.archivedAt)))
+        .get()?.id,
     workspaceRole: (workspaceId: string, userId: string): WorkspaceRole | null =>
       db
         .select({ role: workspaceMembers.role })

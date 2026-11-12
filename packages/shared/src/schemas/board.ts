@@ -171,6 +171,21 @@ export type MoveCardInput = z.infer<typeof moveCardSchema>
 export const moveColumnSchema = z.object({ beforeColumnId: idSchema.nullish() })
 export type MoveColumnInput = z.infer<typeof moveColumnSchema>
 
+/** Egy tábla archivált elemei (visszaállításhoz): a kártyák és az oszlopok. */
+export const boardArchiveSchema = z.object({
+  cards: z.array(cardSchema),
+  columns: z.array(columnSchema),
+})
+export type BoardArchiveDto = z.infer<typeof boardArchiveSchema>
+
+/** A táblák listázása: `archived=true` az archivált táblákat adja (visszaállításhoz). */
+export const boardListQuerySchema = z.object({
+  archived: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+})
+
 export const boardListSchema = z.object({ data: z.array(boardSummarySchema) })
 
 /** A kérés törzse, ahogy a kliens küldi (az alapértelmezések még kitöltetlenek). */

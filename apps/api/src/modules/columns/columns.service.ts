@@ -38,6 +38,35 @@ export function createColumnsService(
       return column
     },
 
+    /** Archiválás: az oszlop és a kártyái eltűnnek a tábláról, az adat megmarad. */
+    archive(actor: Actor, id: string): ColumnDto {
+      const { board } = access.requireColumn(actor, id, 'board:write')
+      const column = require(id)
+      if (column.archivedAt) return toColumnDto(column)
+      const archived = toColumnDto(repo.update(id, { archivedAt: new Date() })!)
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'column.archived',
+        entityType: 'column',
+        entityId: id,
+        meta: { title: column.title },
+      })
+      return archived
+    },
+    restore(actor: Actor, id: string): ColumnDto {
+      const { board } = access.requireColumn(actor, id, 'board:write')
+      const column = require(id)
+      if (!column.archivedAt) return toColumnDto(column)
+      const restored = toColumnDto(repo.update(id, { archivedAt: null })!)
+      activity.record(actor, {
+        boardId: board.id,
+        action: 'column.restored',
+        entityType: 'column',
+        entityId: id,
+        meta: { title: column.title },
+      })
+      return restored
+    },
     move(actor: Actor, id: string, input: MoveColumnInput): ColumnDto {
       const { board } = access.requireColumn(actor, id, 'board:write')
       const column = require(id)
