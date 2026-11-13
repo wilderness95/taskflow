@@ -22,6 +22,9 @@ export function createAuditRepository(db: Db) {
     insert: (values: typeof auditLog.$inferInsert): void => {
       db.insert(auditLog).values(values).run()
     },
+    /** A megadott időpontnál régebbi bejegyzések törlése; a törölt sorok számával tér vissza. */
+    deleteOlderThan: (cutoff: Date): number =>
+      db.delete(auditLog).where(lt(auditLog.createdAt, cutoff)).run().changes,
     /** Legújabb elöl; `beforeId`: a kurzor (az ID-k időrendben növekvők). */
     list: (filters: AuditFilters, limit: number, beforeId?: string): AuditRow[] =>
       db

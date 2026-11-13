@@ -195,6 +195,25 @@ export function buildApp(
     app.addHook('onClose', async () => clearInterval(timer))
   }
 
+  // Az auditnapló megőrzése: induláskor és naponta törli a régi bejegyzéseket (tesztben nem fut magától).
+  if (config.NODE_ENV !== 'test' && config.AUDIT_RETENTION_DAYS > 0) {
+    let purgeTimer: ReturnType<typeof setInterval> | undefined
+    const purge = () => {
+      try {
+        const removed = audit.purge(config.AUDIT_RETENTION_DAYS)
+        if (removed > 0) app.log.info({ removed }, 'old audit log entries deleted')
+      } catch (err) {
+        app.log.error({ err }, 'audit log purge failed')
+      }
+    }
+    app.addHook('onReady', async () => {
+      purge()
+      purgeTimer = setInterval(purge, 24 * 60 * 60 * 1000)
+      purgeTimer.unref()
+    })
+    app.addHook('onClose', async () => clearInterval(purgeTimer))
+  }
+
   app.register(openApiPlugin)
   const workspaces = createWorkspacesService({
     repo: createWorkspacesRepository(db),

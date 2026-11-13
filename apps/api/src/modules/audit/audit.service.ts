@@ -71,6 +71,11 @@ export function createAuditService(repo: AuditRepository) {
         nextCursor: rows.length > limit ? page[page.length - 1]!.id : null,
       }
     },
+    /** Törli a megőrzési időnél régebbi bejegyzéseket (`retentionDays = 0`: nem töröl). */
+    purge(retentionDays: number, now = new Date()): number {
+      if (retentionDays <= 0) return 0
+      return repo.deleteOlderThan(new Date(now.getTime() - retentionDays * 24 * 60 * 60 * 1000))
+    },
     recent(limit: number): AuditEventDto[] {
       return repo.list({}, limit).map(toAuditEventDto)
     },

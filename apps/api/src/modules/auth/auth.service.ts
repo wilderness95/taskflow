@@ -16,6 +16,7 @@ import { AppError } from '../../errors.js'
 import type { Mailer } from '../../mail/mailer.js'
 import { createMailSender } from '../../mail/sendMail.js'
 import type { AuthRepository, UserRow } from './auth.repository.js'
+import { createRecentGate } from '../../lib/recentGate.js'
 import type { AuditService } from '../audit/audit.service.js'
 import { LoginThrottle } from './loginThrottle.js'
 import { hashPassword, verifyDummyPassword, verifyPassword } from './passwords.js'
@@ -57,6 +58,8 @@ export function createAuthService(deps: {
     `${config.APP_URL.replace(/\/$/, '')}${path}?token=${encodeURIComponent(token)}`
 
   const sendMail = createMailSender(mailer, logger)
+  // Az ismételt sikertelen belépés (pl. találgatás) egy percen belül csak egyszer kerül az auditnaplóba.
+  const failedLoginGate = createRecentGate(60_000)
 
   const createSession = (userId: string, ctx: RequestContext): NewSession => {
     const token = randomToken()
@@ -176,15 +179,17 @@ export function createAuthService(deps: {
       }
       if (!user?.passwordHash || !(await verifyPassword(user.passwordHash, input.password))) {
         throttle.fail(input.email)
-        audit.record({
-          actorId: user?.id ?? null,
-          action: 'auth.login_failed',
-          targetType: 'user',
-          targetId: user?.id ?? null,
-          targetUserId: user?.id ?? null,
-          ip: ctx.ip,
-          meta: { email: input.email },
-        })
+        if (failedLoginGate.allow(`${ctx.ip ?? ''}|${input.email}`)) {
+          audit.record({
+            actorId: user?.id ?? null,
+            action: 'auth.login_failed',
+            targetType: 'user',
+            targetId: user?.id ?? null,
+            targetUserId: user?.id ?? null,
+            ip: ctx.ip,
+            meta: { email: input.email },
+          })
+        }
         throw new AppError(401, 'invalid_credentials', 'Invalid email or password')
       }
       throttle.reset(input.email)
