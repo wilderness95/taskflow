@@ -369,7 +369,7 @@ Cél: egyszerű, kanban nélküli lista (teendő, bevásárlás), amely munkater
 - Migráció `drizzle-kit generate`-tel; tesztek: tiszta függvények (sorrend, ismétlődő visszaállítás) unit, integrációs és jogosultsági teszt (viewer nem írhat, nem tag nem lát), E2E egy forgatókönyvvel.
 - Becslés: kb. 3–5 nap.
 
-**Nincs az első verzióban:** határidő/emlékeztető, mennyiség/egység mezők, MCP-eszköz a listákhoz (később, a meglévő végpontokra épülve).
+**Nincs az első verzióban:** határidő/emlékeztető, mennyiség/egység mezők. (Az MCP-eszközök a listákhoz utólag készültek el, lásd lent.)
 
 **Megvalósítás (kész):**
 - Adatmodell: `lists` (munkaterület, `archivedAt`), `list_sections`, `list_items` (`done`, `recurring`, `position`, `version`); migráció `0012`. Szakasz törlésekor a tételek szakasz nélkül megmaradnak (a sorrendjük megőrzésével).
@@ -378,7 +378,8 @@ Cél: egyszerű, kanban nélküli lista (teendő, bevásárlás), amely munkater
 - Valós idő: az `ActivityService.record` az opcionális `listId`-vel a lista saját SSE csatornájára is publikál (`EventBus.publishList`), a webhookoktól és a tábla-csatornától függetlenül; az írások a `activity_log`-ba kerülnek (`workspaceId`-val, `boardId` nélkül).
 - Frontend: `features/lists/` (`/w/:id/lists` áttekintés, `/l/:id` lista); tételek felvétele Enterrel, optimista pipálás, szerkesztő (szöveg, szakasz, ismétlődés; érintésre is jó), húzásos és Alt + nyíl (aria-live) sorrendezés, szakaszkezelés, „Ismétlődők visszaállítása” / „Kipipáltak törlése” / archiválás, archivált listák visszaállítása; `lists` i18n névtér.
 - Tesztek: unit (`listItems`, `listMoves`, `listCache`), integrációs és jogosultsági (`lists.integration.test.ts`, SSE-vel), E2E (`apps/e2e/tests/lists.spec.ts`).
-- Nem része az M8-nak: határidő/emlékeztető, mennyiség/egység, MCP-eszköz (lásd fent).
+- MCP és hangasszisztens: `apps/mcp/src/tools/lists.ts` a meglévő listavégpontokra épül (`list_lists`, `get_list`, `create_list`, `add_list_items`, `update_list_item`, `set_list_items_done`, `update_list`, `clear_list_done`, `reset_list_recurring`). A hangasszisztens rendszerutasítása külön tárgyalja a listát és a táblát, hogy „bevásárlólista” kérésre ne táblát hozzon létre.
+- Nem része az M8-nak: határidő/emlékeztető, mennyiség/egység.
 
 **UI-fejlesztés (az M8 mellett, kész):**
 - Világos/sötét/rendszer téma (design tokenek `tokens.css`, `data-theme`, villanásmentes betöltés, `theme-color` meta); váltó a felhasználói menüben és a parancspalettán.

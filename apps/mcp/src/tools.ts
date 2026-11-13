@@ -7,6 +7,7 @@ import { registerColumnTools } from './tools/columns.js'
 import { registerCommentTools } from './tools/comments.js'
 import { createToolContext } from './tools/context.js'
 import { registerLabelTools } from './tools/labels.js'
+import { registerListTools } from './tools/lists.js'
 
 export interface McpServerOptions {
   name?: string
@@ -15,7 +16,7 @@ export interface McpServerOptions {
 
 /**
  * A TaskFlow MCP szervere: beszédbarát eszközök az API fölött (táblák, oszlopok, kártyák,
- * checklisták, címkék, hozzászólások). Az átvitelt (stdio, memória) a hívó köti rá; a
+ * checklisták, címkék, hozzászólások, listák). Az átvitelt (stdio, memória) a hívó köti rá; a
  * jogosultságot az `ApiClient` hitelesítése adja, az eszközök nem kerülik meg az API-t.
  */
 export function createTaskflowMcpServer(api: ApiClient, opts: McpServerOptions = {}): McpServer {
@@ -27,5 +28,6 @@ export function createTaskflowMcpServer(api: ApiClient, opts: McpServerOptions =
   registerChecklistTools(ctx)
   registerCommentTools(ctx)
   registerLabelTools(ctx)
+  registerListTools(ctx)
   return server
 }
