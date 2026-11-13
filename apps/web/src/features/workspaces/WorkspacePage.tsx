@@ -82,7 +82,13 @@ export function WorkspacePage() {
 
               <section aria-label={t('boards.all')}>
                 <h2>{t('boards.all')}</h2>
-                {all.length === 0 && !boards.isPending ? (
+                {boards.isPending ? (
+                  <div className="workspace-board-grid" aria-busy="true">
+                    {[0, 1, 2].map((index) => (
+                      <div key={index} className="skeleton-block workspace-skeleton-card" />
+                    ))}
+                  </div>
+                ) : all.length === 0 ? (
                   <p className="workspace-empty">{t('boards.empty')}</p>
                 ) : (
                   <div className="workspace-board-grid">

@@ -2,7 +2,7 @@ import { listProgress, workspaceRoleCan } from '@taskflow/shared'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
-import { rememberWorkspace } from '../../shared/lib/lastWorkspace'
+import { getLastWorkspace, rememberWorkspace } from '../../shared/lib/lastWorkspace'
 import { WorkspaceTopbar } from '../workspaces/WorkspaceTopbar'
 import { AddItemForm } from './AddItemForm'
 import { ListBody } from './ListBody'
@@ -30,11 +30,23 @@ export function ListPage() {
   }, [list])
 
   if (!list) {
+    const fallbackWorkspaceId = getLastWorkspace() ?? ''
     return (
       <div className="app-shell">
         <div className="trello-surface">
-          <main className="workspace-page">
-            {query.isError ? <p role="alert">{t('page.loadError')}</p> : null}
+          <WorkspaceTopbar workspaceId={fallbackWorkspaceId} />
+          <main className="workspace-page list-page">
+            {query.isError ? (
+              <p role="alert">{t('page.loadError')}</p>
+            ) : (
+              <div className="list-skeleton" role="status" aria-busy="true">
+                <span className="visually-hidden">{t('page.loading')}</span>
+                <div className="skeleton-block list-skeleton-heading" />
+                <div className="skeleton-block list-skeleton-row" />
+                <div className="skeleton-block list-skeleton-row" />
+                <div className="skeleton-block list-skeleton-row" />
+              </div>
+            )}
           </main>
         </div>
       </div>

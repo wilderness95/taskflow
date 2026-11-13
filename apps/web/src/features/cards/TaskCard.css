@@ -63,17 +63,18 @@
 }
 
 .archive-button {
+  display: inline-grid;
+  place-items: center;
   border: none;
   background: transparent;
+  color: rgb(var(--ink) / 0.7);
   cursor: pointer;
-  font-size: 0.95rem;
   line-height: 1;
-  padding: 0;
-  opacity: 0.7;
+  padding: 2px;
 }
 
 .archive-button:hover {
-  opacity: 1;
+  color: var(--text);
 }
 
 .task-tags {
@@ -222,7 +223,10 @@
 }
 
 .task-attachments {
-  margin: 0 12px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 12px 0;
   font-size: 0.85rem;
-  opacity: 0.8;
+  color: rgb(var(--ink) / 0.8);
 }

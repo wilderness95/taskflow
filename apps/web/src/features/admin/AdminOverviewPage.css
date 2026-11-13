@@ -1,0 +1,48 @@
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.admin-stat {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgb(var(--slate) / 0.09);
+  border: 1px solid rgb(var(--slate) / 0.18);
+}
+
+.admin-stat dt {
+  font-size: 0.85rem;
+  color: rgb(var(--ink) / 0.75);
+}
+
+.admin-stat dd {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.admin-health {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-health li {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgb(var(--slate) / 0.08);
+  border: 1px solid rgb(var(--slate) / 0.16);
+}
+
+.admin-health li[data-state='error'] strong {
+  color: var(--danger-text);
+}

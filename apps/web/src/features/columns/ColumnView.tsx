@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
+import { Icon } from '../../shared/ui/Icon'
 import { directionFromKey, type MoveDirection } from '../boards/keyboardMove'
 import type { BoardDrag } from '../boards/useBoardDrag'
 import type { Column, Task } from '../boards/types'
@@ -81,7 +82,7 @@ export function ColumnView({
               aria-label={t('renameAria', { title: column.title })}
               onClick={onRename}
             >
-              ✎
+              <Icon name="edit" size={14} />
             </button>
             <button
               type="button"
@@ -89,7 +90,7 @@ export function ColumnView({
               aria-label={t('archiveAria', { title: column.title })}
               onClick={onArchive}
             >
-              🗄
+              <Icon name="archive" size={14} />
             </button>
             <button
               type="button"
@@ -97,7 +98,7 @@ export function ColumnView({
               aria-label={t('deleteAria', { title: column.title })}
               onClick={onDelete}
             >
-              🗑
+              <Icon name="trash" size={14} />
             </button>
           </div>
         )}

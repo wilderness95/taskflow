@@ -2,6 +2,7 @@ import { getChecklistsProgress, getDueDateState } from '@taskflow/shared'
 import { useTranslation } from 'react-i18next'
 import { formatShortDate } from '../../i18n/format'
 import { classNames } from '../../shared/lib/classNames'
+import { Icon } from '../../shared/ui/Icon'
 import { attachmentFileUrl } from '../../api/attachments'
 import { AssigneeStack } from './AssigneeStack'
 import type { DragProps } from '../boards/useBoardDrag'
@@ -94,7 +95,7 @@ export function TaskCard({
                 onArchive()
               }}
             >
-              🗄
+              <Icon name="archive" size={15} />
             </button>
             <button
               type="button"
@@ -105,7 +106,7 @@ export function TaskCard({
                 onDelete()
               }}
             >
-              ×
+              <Icon name="close" size={16} />
             </button>
           </div>
         )}
@@ -138,7 +139,8 @@ export function TaskCard({
           role="img"
           aria-label={t('attachments.count', { count: task.attachmentCount })}
         >
-          📎 {task.attachmentCount}
+          <Icon name="paperclip" size={14} />
+          <span>{task.attachmentCount}</span>
         </div>
       )}
 
@@ -148,7 +150,9 @@ export function TaskCard({
         <>
           <div className="task-checklist-summary">
             <div className="task-checklist-status">
-              <span className="checklist-toggle">✓</span>
+              <span className="checklist-toggle">
+                <Icon name="check" size={12} />
+              </span>
               <span>
                 {checklistProgress.done}/{checklistProgress.total}
               </span>

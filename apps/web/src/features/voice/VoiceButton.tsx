@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Icon } from '../../shared/ui/Icon'
 import { useVoiceAssistant, type VoiceScope } from './useVoiceAssistant'
 import '../../shared/styles/buttons.css'
 import './VoiceButton.css'
@@ -18,7 +19,7 @@ export function VoiceButton(scope: VoiceScope) {
     <div className="voice-control">
       {status === 'speaking' && (
         <button type="button" className="icon-button voice-interrupt" onClick={interrupt}>
-          <span aria-hidden="true">■</span>
+          <Icon name="stop" size={14} filled />
           <span className="voice-sr">{t('interrupt')}</span>
         </button>
       )}
@@ -30,7 +31,7 @@ export function VoiceButton(scope: VoiceScope) {
         title={active ? t('stop') : t('start')}
         onClick={() => (active ? stop() : void start())}
       >
-        <span aria-hidden="true">●</span>
+        <Icon name="mic" size={16} />
       </button>
       {/* A képernyőolvasó és a látó felhasználó is megkapja az állapotot. */}
       <span className="voice-status" role="status">

@@ -115,6 +115,7 @@ api_keys         (id, owner_user_id, workspace_id, name, prefix, key_hash, scope
 - **Szereplők:** bejelentkezett felhasználó (session cookie) vagy API kulcs. Mindkettő ugyanarra az `Actor` objektumra képződik le, így a service réteg nem tudja (és nem is kell tudnia), honnan jön a kérés.
 - **Szerepkörök:**
   - Munkaterület: `owner` > `admin` > `member` > `viewer`.
+  - Platform-admin (`users.is_admin`) külön, rendszerszintű jogosultság; nem azonos a munkaterületi `admin` szereppel. A platform-admin felülete és API-ja kizárólag ezzel a jogosultsággal érhető el.
   - Tábla: privát táblán `board_members` szerepkör; a `public` tábla anonim módon olvasható.
 - **Policy-mátrix** (`core/authz/policies.ts`) egy helyen, unit tesztekkel lefedve.
 - **API kulcs:**
@@ -368,7 +369,7 @@ Cél: egyszerű, kanban nélküli lista (teendő, bevásárlás), amely munkater
 - Migráció `drizzle-kit generate`-tel; tesztek: tiszta függvények (sorrend, ismétlődő visszaállítás) unit, integrációs és jogosultsági teszt (viewer nem írhat, nem tag nem lát), E2E egy forgatókönyvvel.
 - Becslés: kb. 3–5 nap.
 
-**Nincs az első verzióban:** határidő/emlékeztető, mennyiség/egység mezők, MCP-eszköz a listákhoz (később, a meglévő végpontokra épülve).
+**Nincs az első verzióban:** határidő/emlékeztető, mennyiség/egység mezők. (Az MCP-eszközök a listákhoz utólag készültek el, lásd lent.)
 
 **Megvalósítás (kész):**
 - Adatmodell: `lists` (munkaterület, `archivedAt`), `list_sections`, `list_items` (`done`, `recurring`, `position`, `version`); migráció `0012`. Szakasz törlésekor a tételek szakasz nélkül megmaradnak (a sorrendjük megőrzésével).
@@ -377,7 +378,8 @@ Cél: egyszerű, kanban nélküli lista (teendő, bevásárlás), amely munkater
 - Valós idő: az `ActivityService.record` az opcionális `listId`-vel a lista saját SSE csatornájára is publikál (`EventBus.publishList`), a webhookoktól és a tábla-csatornától függetlenül; az írások a `activity_log`-ba kerülnek (`workspaceId`-val, `boardId` nélkül).
 - Frontend: `features/lists/` (`/w/:id/lists` áttekintés, `/l/:id` lista); tételek felvétele Enterrel, optimista pipálás, szerkesztő (szöveg, szakasz, ismétlődés; érintésre is jó), húzásos és Alt + nyíl (aria-live) sorrendezés, szakaszkezelés, „Ismétlődők visszaállítása” / „Kipipáltak törlése” / archiválás, archivált listák visszaállítása; `lists` i18n névtér.
 - Tesztek: unit (`listItems`, `listMoves`, `listCache`), integrációs és jogosultsági (`lists.integration.test.ts`, SSE-vel), E2E (`apps/e2e/tests/lists.spec.ts`).
-- Nem része az M8-nak: határidő/emlékeztető, mennyiség/egység, MCP-eszköz (lásd fent).
+- MCP és hangasszisztens: `apps/mcp/src/tools/lists.ts` a meglévő listavégpontokra épül (`list_lists`, `get_list`, `create_list`, `add_list_items`, `update_list_item`, `set_list_items_done`, `update_list`, `clear_list_done`, `reset_list_recurring`). A hangasszisztens rendszerutasítása külön tárgyalja a listát és a táblát, hogy „bevásárlólista” kérésre ne táblát hozzon létre.
+- Nem része az M8-nak: határidő/emlékeztető, mennyiség/egység.
 
 **UI-fejlesztés (az M8 mellett, kész):**
 - Világos/sötét/rendszer téma (design tokenek `tokens.css`, `data-theme`, villanásmentes betöltés, `theme-color` meta); váltó a felhasználói menüben és a parancspalettán.
@@ -396,6 +398,42 @@ Cél: a webes kliens mobilon is használható, és telepíthető Android appkén
 - Frissítés: a webes tartalom a szerverről frissül; az APK-frissítéshez ajánlott az Obtainium.
 - Opcionális, később: Web Push (VAPID; új függőség és migráció, egyeztetést igényel), mikrofon/hangasszisztens teszt TWA-ban.
 - Becslés: kb. 2 hét.
+
+### M10 – Platform-adminisztráció
+
+Cél: a rendszerszintű felhasználó- és meghívókezelés, valamint a biztonsági események áttekintése egy kizárólag platform-adminok számára látható felületen. Ez nem munkaterületi beállítás: a munkaterületi `owner` és `admin` szerepkör önmagában nem ad platform-admin jogosultságot.
+
+**Elérés és jogosultság:**
+- A felhasználói avatar menüjében csak `isAdmin` felhasználónak jelenjen meg az „Adminisztráció” menüpont; az oldal külön `/admin` útvonalon legyen.
+- A frontend útvonalvédelme csak kényelmi réteg: minden admin API-végpont sessionnel és szerveroldali platform-admin ellenőrzéssel védett. API-kulcs adminisztrációra nem használható.
+- A platform-admin jogosultság nem kerül a munkaterületi szerepkörök közé, és a munkaterületi policy nem terjeszti ki automatikusan.
+
+**Első verzió:**
+- Áttekintő: felhasználók és függő meghívók száma, legutóbbi fontos admin-/biztonsági események, valamint az API, az adatbázis és az e-mail-küldés alapvető állapota.
+- Felhasználókezelés: név és e-mail szerinti keresés; fiókadatlap a regisztráció idejével, e-mail-megerősítési állapottal és munkaterületi tagságokkal; megerősítő e-mail újraküldése; fiók felfüggesztése és visszaállítása; a felhasználó munkameneteinek visszavonása.
+- Platform-admin szerep kiosztása és visszavonása csak platform-admin által, külön megerősítéssel és auditnapló-bejegyzéssel. A rendszer védje ki, hogy az utolsó platform-admin véletlenül elveszítse a hozzáférését.
+- Meghívókezelés: a meglévő munkaterületi meghívási folyamat felületre emelése; meghívó küldése e-mail-címmel, munkaterülettel és szerepkörrel; függő, elfogadott, lejárt és visszavont meghívók listázása; újraküldés és visszavonás. A meghívó továbbra is munkaterülethez kötött, a kiosztható szerepkörök és a meglévő szabályok érvényesek.
+- Platformszintű auditnapló: adminműveletek és fontos hitelesítési/biztonsági események rögzítése; időszak, eseménytípus, végrehajtó és érintett felhasználó szerinti szűrés. Az esemény legalább a végrehajtót, az időpontot, a műveletet és az érintett erőforrást azonosítsa.
+- A meglévő `activity_log` táblához és listához kötött üzleti tevékenységeket naplóz, nem teljes platform-auditnapló; az adminfelülethez külön, célzott auditálás szükséges. Jelszó, session token, meghívótoken, API-kulcs vagy más titok nem kerülhet a naplóba.
+- Minden új admin API-szerződéshez közös Zod-séma, OpenAPI-leírás, integrációs teszt és engedélyezett/tiltott jogosultsági teszt szükséges. A módosító adminműveletek idempotencia- és naplózási szabályai is érvényesek.
+- Frontend: adminoldal az avatar menüből, felhasználólista/adatlap, meghívólista és auditnapló; minden felirat i18n-kulccsal, a műveletek visszajelzése toasttal, a visszafordíthatatlan vagy érzékeny változtatások külön megerősítéssel.
+
+**Nem része az első verziónak:** részletes analitika, tömeges felhasználókezelés, felhasználóként való belépés (impersonáció), illetve admin által végzett jelszóbeállítás vagy jelszómegtekintés. A felhasználói fiók törlése helyett első körben a felfüggesztés és a munkamenetek visszavonása használandó.
+
+**Kész, ha:** nem-admin felhasználó sem az admin UI-t, sem az admin API-t nem érheti el; a platform-admin kezelni tudja a felhasználók fiókállapotát, munkameneteit és a munkaterületi meghívókat; minden adminmódosítás és fontos biztonsági esemény visszakereshető, érzékeny hitelesítési titok naplózása nélkül.
+
+**Megvalósítás (kész):**
+- Jogosultság: `users.is_admin` marad a platform-admin jele; az `auth/actor.ts` `requirePlatformAdmin(actor)` a service-ek első sora minden admin műveletben (API kulcs sosem platform-admin). A `/api/v1/admin/**` útvonalak az `auth/scopes.ts`-ben session-only-k, így kulccsal `403 session_required`. A frontenden az `AdminLayout` csak kényelmi guard.
+- Adatmodell (migráció `0013`): `users.suspended_at`, `invitations.revoked_at` és az új `audit_log` tábla (`actor_id`, `action`, `target_type`, `target_id`, `target_user_id`, `ip`, `meta`; a hivatkozások `set null`-ra állnak, így a napló a fiók törlése után is megmarad). A munkaterületi meghívó visszavonása (`DELETE /workspaces/{id}/invitations/{id}`) is `revoked_at`-et állít.
+- Auditnapló-megőrzés: `AUDIT_RETENTION_DAYS` (alapérték 90, `0`: örökre megmarad); induláskor és naponta törli a régebbi bejegyzéseket. Az ismételt sikertelen belépés ugyanarra az e-mail-címre és IP-re egy percen belül csak egy bejegyzést ír (memóriabeli `lib/recentGate.ts`), hogy a találgatás ne töltse fel a táblát.
+- Felfüggesztés: a felfüggesztett fiók nem léphet be (`403 account_suspended`, csak helyes jelszó után, hogy a fiók létezése ne derüljön ki), a meglévő munkamenetei megszűnnek, a session és az API kulcsai sem érvényesek. Saját fiók nem függeszthető fel (`409 cannot_suspend_self`), és az utolsó aktív platform-adminnak nem vehető el a joga, és nem is függeszthető fel (`409 last_admin`). Admin jogot csak megerősített, nem felfüggesztett fiók kaphat (a platform-admin mentesül az e-mail-megerősítés alól).
+- Jelszó-újrabekérés (step-up): a felfüggesztés (`POST /admin/users/{id}/suspend`) és az admin jog módosítása (`PUT /admin/users/{id}/admin`) a végrehajtó saját `password` mezőjét is kéri a törzsben. Hibás jelszóra `403 invalid_password`, az állapot nem változik, és `admin.step_up_failed` esemény kerül az auditnaplóba (a jelszó nélkül, csak a művelet nevével). A két route a szigorú auth rate limitet kapja (`AUTH_RATE_LIMIT_MAX`). A nem admin hívó a jelszó-ellenőrzés előtt `403 forbidden`-t kap. A felületen `PasswordConfirmModal`: hibás jelszónál az ablak nyitva marad.
+- Auditnapló (`modules/audit/`): `AuditService.record({ actorId, action, targetType, targetUserId, ip, meta })`; a műveletek listája a `packages/shared/src/schemas/admin.ts`-ben (`AUDIT_ACTIONS`): `auth.registered`, `auth.login_succeeded`, `auth.login_failed`, `auth.login_blocked`, `auth.password_reset`, `admin.step_up_failed`, `admin.user_suspended|restored|sessions_revoked|admin_granted|admin_revoked|verification_resent`, `admin.invitation_created|resent|revoked`. A `meta` nem tartalmazhat titkot; a sikertelen belépés a megpróbált e-mail-címet rögzíti (jelszót nem). Az ismétlődő állapotváltás (pl. egy már felfüggesztett fiók újabb felfüggesztése) nem ír újabb bejegyzést.
+- API (`modules/admin/`, mind session + platform-admin): `GET /admin/overview`; `GET /admin/users` (`q`, `status=all|active|suspended|unverified`, cursor), `GET /admin/users/{id}`, `POST /admin/users/{id}/suspend|restore|revoke-sessions|resend-verification`, `PUT /admin/users/{id}/admin`; `GET /admin/workspaces`; `GET|POST /admin/invitations` (`status=pending|accepted|expired|revoked`), `POST /admin/invitations/{id}/resend`, `DELETE /admin/invitations/{id}`; `GET /admin/audit` (`action`, `actorId`, `targetUserId`, `from`, `to`, cursor). A jelszó nélküli seed felhasználó nem jelenik meg a listán.
+- Meghívók: a meghívó tokenje csak hash-ként él, ezért az „újraküldés” új meghívót ad ki (az új levél új tokennel megy ki), a régi lejár. A meghívó vagy platform-regisztrációs (munkaterület nélkül), vagy `workspaceId` + `role` együtt (munkaterületi; az elfogadás a meglévő folyamaton át megy). Az állapot származtatott: `pending`, `accepted`, `revoked`, `expired`.
+- Frontend (`features/admin/`, `admin` i18n névtér): `/admin` áttekintő, `/admin/users` (kereső, állapotszűrő, adatlap ablak, érzékeny műveletek `ConfirmModal`-lal, toast visszajelzés), `/admin/invitations` (küldés, állapotszűrő, újraküldés, visszavonás), `/admin/audit` (esemény- és időszak-szűrő, lapozás). Menüpont a felhasználói menüben és a parancspalettán csak platform-adminnak.
+- Tesztek: integrációs és jogosultsági (`modules/admin/*.integration.test.ts`, `modules/audit/`: névtelen, sima felhasználó és API kulcs is 401/403), a `scopes.test.ts` bővítve, unit (`adminErrors`, `auditEvents`, `dayRange`), E2E (`apps/e2e/tests/admin.spec.ts`: az első regisztrált felhasználó az admin, ezért a fájl ábécésorban az első).
+- Nem része az M10-nek: az auditnapló szűrése végrehajtó/érintett felhasználó szerint a felületen (az API támogatja), aktív munkamenetek listázása egyenként, az auditnapló exportja.
 
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 

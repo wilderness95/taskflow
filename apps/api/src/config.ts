@@ -32,6 +32,8 @@ const envSchema = z.object({
   API_KEY_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(120),
   /** Határidő-emlékeztetők futtatási gyakorisága percben; 0: kikapcsolva. */
   DUE_REMINDER_INTERVAL_MINUTES: z.coerce.number().int().min(0).default(60),
+  /** Az auditnapló megőrzési ideje napokban; ennél régebbi bejegyzések törlődnek. 0: örökre megmarad. */
+  AUDIT_RETENTION_DAYS: z.coerce.number().int().min(0).default(90),
   /** Ennyi sikertelen belépés után a fiók 15 percre zárolódik. */
   LOGIN_MAX_FAILURES: z.coerce.number().int().min(1).default(10),
   /** Webhook célként a privát/loopback címek engedélyezése (csak fejlesztéshez; élesben tiltva: SSRF). */

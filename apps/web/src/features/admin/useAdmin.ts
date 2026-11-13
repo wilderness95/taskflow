@@ -1,0 +1,138 @@
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type {
+  AdminInvitationsQuery,
+  AdminUserDetailDto,
+  AdminUsersQuery,
+  AuditQuery,
+  CreateAdminInvitationRequest,
+} from '@taskflow/shared'
+import * as api from '../../api/admin'
+
+export const adminKeys = {
+  overview: ['admin', 'overview'] as const,
+  users: ['admin', 'users'] as const,
+  invitations: ['admin', 'invitations'] as const,
+  workspaces: ['admin', 'workspaces'] as const,
+  audit: ['admin', 'audit'] as const,
+  user: (id: string) => ['admin', 'users', 'detail', id] as const,
+}
+
+/** Az adminfelület áttekintője; a hibát az oldal jeleníti meg. */
+export function useAdminOverview() {
+  return useQuery({
+    queryKey: adminKeys.overview,
+    queryFn: api.fetchAdminOverview,
+    meta: { handlesErrors: true },
+  })
+}
+
+type UserFilters = Pick<AdminUsersQuery, 'q' | 'status'>
+
+/** A felhasználók lapozott listája (kurzorral), szűrőkkel. */
+export function useAdminUsers(filters: UserFilters) {
+  return useInfiniteQuery({
+    queryKey: [...adminKeys.users, 'list', filters] as const,
+    queryFn: ({ pageParam }) => api.listAdminUsers({ ...filters, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    meta: { handlesErrors: true },
+  })
+}
+
+export function useAdminUser(id: string) {
+  return useQuery({
+    queryKey: adminKeys.user(id),
+    queryFn: () => api.getAdminUser(id),
+    meta: { handlesErrors: true },
+  })
+}
+
+export type UserAction = 'restore' | 'revokeSessions' | 'resendVerification'
+
+const ACTIONS: Record<UserAction, (id: string) => Promise<AdminUserDetailDto>> = {
+  restore: api.restoreUser,
+  revokeSessions: api.revokeUserSessions,
+  resendVerification: api.resendUserVerification,
+}
+
+/** Egy felhasználón végezhető adminműveletek; a hibát a hívó jeleníti meg. */
+export function useUserActions(id: string) {
+  const queryClient = useQueryClient()
+  const onSuccess = (user: AdminUserDetailDto) => {
+    queryClient.setQueryData(adminKeys.user(id), user)
+    // A lista és az áttekintő számai (felfüggesztett, adminok) is változhattak.
+    queryClient.invalidateQueries({ queryKey: [...adminKeys.users, 'list'] })
+    queryClient.invalidateQueries({ queryKey: adminKeys.overview })
+  }
+  const local = { meta: { handlesErrors: true }, onSuccess } as const
+
+  const run = useMutation({ ...local, mutationFn: (action: UserAction) => ACTIONS[action](id) })
+  // A felfüggesztés és az admin jog módosítása a végrehajtó jelszavát is kéri (step-up).
+  const suspend = useMutation({
+    ...local,
+    mutationFn: (password: string) => api.suspendUser(id, password),
+  })
+  const setAdminRole = useMutation({
+    ...local,
+    mutationFn: (input: { isAdmin: boolean; password: string }) =>
+      api.setUserAdminRole(id, input.isAdmin, input.password),
+  })
+  return { run, suspend, setAdminRole }
+}
+
+/** Az összes munkaterület a meghívó célpontjának kiválasztásához. */
+export function useAdminWorkspaces() {
+  return useQuery({
+    queryKey: adminKeys.workspaces,
+    queryFn: api.listAdminWorkspaces,
+    meta: { handlesErrors: true },
+  })
+}
+
+type InvitationFilters = Pick<AdminInvitationsQuery, 'status'>
+
+export function useAdminInvitations(filters: InvitationFilters) {
+  return useInfiniteQuery({
+    queryKey: [...adminKeys.invitations, 'list', filters] as const,
+    queryFn: ({ pageParam }) => api.listAdminInvitations({ ...filters, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    meta: { handlesErrors: true },
+  })
+}
+
+/** Meghívó létrehozása, újraküldése és visszavonása; a hibát a hívó jeleníti meg. */
+export function useInvitationActions() {
+  const queryClient = useQueryClient()
+  const onSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: adminKeys.invitations })
+    queryClient.invalidateQueries({ queryKey: adminKeys.overview })
+  }
+  const local = { meta: { handlesErrors: true }, onSuccess } as const
+
+  const create = useMutation({
+    ...local,
+    mutationFn: (input: CreateAdminInvitationRequest) => api.createAdminInvitation(input),
+  })
+  const resend = useMutation({
+    ...local,
+    mutationFn: (id: string) => api.resendAdminInvitation(id),
+  })
+  const revoke = useMutation({
+    ...local,
+    mutationFn: (id: string) => api.revokeAdminInvitation(id),
+  })
+  return { create, resend, revoke }
+}
+
+type AuditFilters = Pick<AuditQuery, 'action' | 'from' | 'to'>
+
+export function useAuditEvents(filters: AuditFilters) {
+  return useInfiniteQuery({
+    queryKey: [...adminKeys.audit, filters] as const,
+    queryFn: ({ pageParam }) => api.listAuditEvents({ ...filters, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    meta: { handlesErrors: true },
+  })
+}

@@ -16,6 +16,8 @@ import { AppError } from '../../errors.js'
 import type { Mailer } from '../../mail/mailer.js'
 import { createMailSender } from '../../mail/sendMail.js'
 import type { AuthRepository, UserRow } from './auth.repository.js'
+import { createRecentGate } from '../../lib/recentGate.js'
+import type { AuditService } from '../audit/audit.service.js'
 import { LoginThrottle } from './loginThrottle.js'
 import { hashPassword, verifyDummyPassword, verifyPassword } from './passwords.js'
 import { randomToken, sha256 } from './tokens.js'
@@ -46,15 +48,18 @@ export function createAuthService(deps: {
   mailer: Mailer
   config: Config
   logger: Logger
+  audit: AuditService
   throttle?: LoginThrottle
 }) {
-  const { repo, mailer, config, logger } = deps
+  const { repo, mailer, config, logger, audit } = deps
   const throttle = deps.throttle ?? new LoginThrottle(config.LOGIN_MAX_FAILURES)
 
   const link = (path: string, token: string) =>
     `${config.APP_URL.replace(/\/$/, '')}${path}?token=${encodeURIComponent(token)}`
 
   const sendMail = createMailSender(mailer, logger)
+  // Az ismételt sikertelen belépés (pl. találgatás) egy percen belül csak egyszer kerül az auditnaplóba.
+  const failedLoginGate = createRecentGate(60_000)
 
   const createSession = (userId: string, ctx: RequestContext): NewSession => {
     const token = randomToken()
@@ -154,6 +159,15 @@ export function createAuthService(deps: {
       })
 
       if (!invitation) sendVerification(user)
+      audit.record({
+        actorId: user.id,
+        action: 'auth.registered',
+        targetType: 'user',
+        targetId: user.id,
+        targetUserId: user.id,
+        ip: ctx.ip,
+        meta: { invited: invitation !== undefined },
+      })
       return { user: toUserDto(user), session: createSession(user.id, ctx) }
     },
 
@@ -165,9 +179,40 @@ export function createAuthService(deps: {
       }
       if (!user?.passwordHash || !(await verifyPassword(user.passwordHash, input.password))) {
         throttle.fail(input.email)
+        if (failedLoginGate.allow(`${ctx.ip ?? ''}|${input.email}`)) {
+          audit.record({
+            actorId: user?.id ?? null,
+            action: 'auth.login_failed',
+            targetType: 'user',
+            targetId: user?.id ?? null,
+            targetUserId: user?.id ?? null,
+            ip: ctx.ip,
+            meta: { email: input.email },
+          })
+        }
         throw new AppError(401, 'invalid_credentials', 'Invalid email or password')
       }
       throttle.reset(input.email)
+      // A felfüggesztést csak helyes jelszó után áruljuk el, hogy ne derüljön ki, kinek van fiókja.
+      if (user.suspendedAt) {
+        audit.record({
+          actorId: user.id,
+          action: 'auth.login_blocked',
+          targetType: 'user',
+          targetId: user.id,
+          targetUserId: user.id,
+          ip: ctx.ip,
+        })
+        throw new AppError(403, 'account_suspended', 'This account is suspended')
+      }
+      audit.record({
+        actorId: user.id,
+        action: 'auth.login_succeeded',
+        targetType: 'user',
+        targetId: user.id,
+        targetUserId: user.id,
+        ip: ctx.ip,
+      })
       return { user: toUserDto(user), session: createSession(user.id, ctx) }
     },
 
@@ -184,7 +229,7 @@ export function createAuthService(deps: {
         return null
       }
       const user = repo.findUserById(session.userId)
-      return user
+      return user && !user.suspendedAt
         ? {
             type: 'user',
             id: user.id,
@@ -231,7 +276,7 @@ export function createAuthService(deps: {
       })
     },
 
-    async resetPassword(input: ResetPasswordInput): Promise<void> {
+    async resetPassword(input: ResetPasswordInput, ctx?: { ip: string | null }): Promise<void> {
       const row = requireUsableEmailToken(input.token, 'password_reset')
       const passwordHash = await hashPassword(input.password)
       const now = new Date()
@@ -241,6 +286,22 @@ export function createAuthService(deps: {
         repo.updateUser(row.userId, { passwordHash, emailVerifiedAt: now })
         repo.deleteUserSessions(row.userId)
       })
+      audit.record({
+        actorId: row.userId,
+        action: 'auth.password_reset',
+        targetType: 'user',
+        targetId: row.userId,
+        targetUserId: row.userId,
+        ip: ctx?.ip ?? null,
+      })
+    },
+
+    /** Megerősítő levél (újra)küldése egy megerősítetlen felhasználónak; `false`: nincs mit küldeni. */
+    sendVerificationTo(userId: string): boolean {
+      const user = repo.findUserById(userId)
+      if (!user || user.emailVerifiedAt || !user.passwordHash) return false
+      sendVerification(user)
+      return true
     },
 
     async createInvitation(actor: Actor, input: CreateInvitationInput): Promise<InvitationDto> {

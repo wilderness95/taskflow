@@ -2,6 +2,11 @@ import rateLimit from '@fastify/rate-limit'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { clientIp, registerAuth } from './auth/auth.plugin.js'
 import { createActivityRepository } from './modules/activity/activity.repository.js'
+import { createAdminRepository } from './modules/admin/admin.repository.js'
+import { adminRoutes } from './modules/admin/admin.routes.js'
+import { createAdminService } from './modules/admin/admin.service.js'
+import { createAuditRepository } from './modules/audit/audit.repository.js'
+import { createAuditService } from './modules/audit/audit.service.js'
 import { createActivityService } from './modules/activity/activity.service.js'
 import { apiKeysRoutes } from './modules/apikeys/apikeys.routes.js'
 import { createApiKeysRepository } from './modules/apikeys/apikeys.repository.js'
@@ -110,11 +115,13 @@ export function buildApp(
   })
   const mailer = deps.mailer ?? createMailer(config)
   const authRepo = createAuthRepository(db)
+  const audit = createAuditService(createAuditRepository(db))
   const auth = createAuthService({
     repo: authRepo,
     mailer,
     config,
     logger: app.log,
+    audit,
   })
   const bus = createEventBus()
   const activity = createActivityService(createActivityRepository(db), bus)
@@ -188,6 +195,25 @@ export function buildApp(
     app.addHook('onClose', async () => clearInterval(timer))
   }
 
+  // Az auditnapló megőrzése: induláskor és naponta törli a régi bejegyzéseket (tesztben nem fut magától).
+  if (config.NODE_ENV !== 'test' && config.AUDIT_RETENTION_DAYS > 0) {
+    let purgeTimer: ReturnType<typeof setInterval> | undefined
+    const purge = () => {
+      try {
+        const removed = audit.purge(config.AUDIT_RETENTION_DAYS)
+        if (removed > 0) app.log.info({ removed }, 'old audit log entries deleted')
+      } catch (err) {
+        app.log.error({ err }, 'audit log purge failed')
+      }
+    }
+    app.addHook('onReady', async () => {
+      purge()
+      purgeTimer = setInterval(purge, 24 * 60 * 60 * 1000)
+      purgeTimer.unref()
+    })
+    app.addHook('onClose', async () => clearInterval(purgeTimer))
+  }
+
   app.register(openApiPlugin)
   const workspaces = createWorkspacesService({
     repo: createWorkspacesRepository(db),
@@ -198,6 +224,19 @@ export function buildApp(
     logger: app.log,
   })
   app.register(authRoutes(auth, config))
+  app.register(
+    adminRoutes(
+      createAdminService({
+        repo: createAdminRepository(db),
+        audit,
+        auth,
+        mailer,
+        config,
+        logger: app.log,
+      }),
+      config,
+    ),
+  )
   app.register(apiKeysRoutes(apiKeys))
   app.register(workspacesRoutes(workspaces, config))
   app.register(boardsRoutes(boards))

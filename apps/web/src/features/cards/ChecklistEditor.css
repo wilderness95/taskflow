@@ -17,6 +17,8 @@
 .checklist-toggle-button {
   width: 22px;
   height: 22px;
+  display: inline-grid;
+  place-items: center;
   border-radius: 6px;
   border: 1px solid rgb(var(--slate) / 0.25);
   background: rgb(var(--hl) / 0.04);

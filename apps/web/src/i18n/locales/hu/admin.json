@@ -1,0 +1,200 @@
+{
+  "eyebrow": "Adminisztráció",
+  "title": "Platform-adminisztráció",
+  "intro": "Felhasználók, meghívók és biztonsági események kezelése. Csak platform-adminoknak látható.",
+  "back": "Vissza a táblákhoz",
+  "navAria": "Adminisztrációs szakaszok",
+  "loading": "Betöltés…",
+  "loadError": "Az adatok nem tölthetők be.",
+  "nav": {
+    "overview": "Áttekintés",
+    "users": "Felhasználók",
+    "invitations": "Meghívók",
+    "audit": "Auditnapló"
+  },
+  "overview": {
+    "stats": "Számok",
+    "total": "Felhasználók",
+    "admins": "Platform-adminok",
+    "suspended": "Felfüggesztett fiókok",
+    "unverified": "Megerősítetlen e-mail-címek",
+    "pendingInvitations": "Függő meghívók",
+    "health": "Rendszerállapot",
+    "database": "Adatbázis",
+    "mail": "E-mail-küldés",
+    "state": {
+      "ok": "Működik",
+      "error": "Hiba"
+    },
+    "mailTransport": {
+      "console": "Csak naplózás (nem küld levelet)",
+      "smtp": "SMTP"
+    },
+    "recent": "Legutóbbi események"
+  },
+  "audit": {
+    "empty": "Még nincs esemény.",
+    "unknownActor": "Ismeretlen",
+    "unknownTarget": "ismeretlen",
+    "actions": {
+      "auth.registered": "{{actor}} regisztrált",
+      "auth.login_succeeded": "{{actor}} bejelentkezett",
+      "auth.login_failed": "Sikertelen bejelentkezés: {{target}}",
+      "auth.login_blocked": "Felfüggesztett fiók bejelentkezési kísérlete: {{target}}",
+      "auth.password_reset": "{{actor}} új jelszót állított be",
+      "admin.user_suspended": "{{actor}} felfüggesztette {{target}} fiókját",
+      "admin.user_restored": "{{actor}} visszaállította {{target}} fiókját",
+      "admin.user_sessions_revoked": "{{actor}} kijelentkeztette {{target}} minden munkamenetét",
+      "admin.user_admin_granted": "{{actor}} platform-admin jogot adott neki: {{target}}",
+      "admin.user_admin_revoked": "{{actor}} elvette a platform-admin jogot tőle: {{target}}",
+      "admin.user_verification_resent": "{{actor}} újraküldte {{target}} megerősítő levelét",
+      "admin.invitation_created": "{{actor}} meghívót küldött: {{target}}",
+      "admin.invitation_resent": "{{actor}} újraküldte a meghívót: {{target}}",
+      "admin.invitation_revoked": "{{actor}} visszavonta a meghívót: {{target}}",
+      "unknown": "{{actor}}: ismeretlen esemény",
+      "admin.step_up_failed": "{{actor}} hibás jelszót adott meg egy érzékeny művelethez"
+    },
+    "title": "Auditnapló",
+    "action": "Esemény",
+    "allActions": "Minden esemény",
+    "from": "Ettől",
+    "to": "Eddig",
+    "types": {
+      "auth.registered": "Regisztráció",
+      "auth.login_succeeded": "Sikeres bejelentkezés",
+      "auth.login_failed": "Sikertelen bejelentkezés",
+      "auth.login_blocked": "Letiltott bejelentkezés",
+      "auth.password_reset": "Jelszó-visszaállítás",
+      "admin.user_suspended": "Fiók felfüggesztése",
+      "admin.user_restored": "Fiók visszaállítása",
+      "admin.user_sessions_revoked": "Munkamenetek lezárása",
+      "admin.user_admin_granted": "Platform-admin jog adása",
+      "admin.user_admin_revoked": "Platform-admin jog elvétele",
+      "admin.user_verification_resent": "Megerősítő levél újraküldése",
+      "admin.invitation_created": "Meghívó küldése",
+      "admin.invitation_resent": "Meghívó újraküldése",
+      "admin.invitation_revoked": "Meghívó visszavonása",
+      "admin.step_up_failed": "Hibás jelszó érzékeny műveletnél"
+    }
+  },
+  "errors": {
+    "forbidden": "Ehhez nincs jogosultságod.",
+    "unauthenticated": "Be kell jelentkezned.",
+    "not_found": "Az elem nem található.",
+    "validation_error": "Ellenőrizd a megadott adatokat.",
+    "rate_limited": "Túl sok kérés. Várj egy kicsit, és próbáld újra.",
+    "cannot_suspend_self": "A saját fiókodat nem függesztheted fel.",
+    "last_admin": "Az utolsó aktív platform-admint nem lehet felfüggeszteni vagy megfosztani a jogától.",
+    "already_verified": "Az e-mail-cím már meg van erősítve.",
+    "email_not_verified": "Előbb meg kell erősíteni az e-mail-címet.",
+    "user_suspended": "A fiók fel van függesztve.",
+    "email_taken": "Ezzel az e-mail-címmel már regisztráltak.",
+    "already_member": "Ez a felhasználó már tagja a munkaterületnek.",
+    "invitation_not_resendable": "Ez a meghívó már nem küldhető újra.",
+    "invitation_not_pending": "Csak függő meghívó vonható vissza.",
+    "unknown": "Valami hiba történt. Próbáld újra.",
+    "invalid_password": "Hibás jelszó."
+  },
+  "loadMore": "Továbbiak betöltése",
+  "users": {
+    "title": "Felhasználók",
+    "search": "Keresés",
+    "searchPlaceholder": "Név vagy e-mail-cím",
+    "status": "Állapot",
+    "statuses": {
+      "all": "Mind",
+      "active": "Aktív",
+      "suspended": "Felfüggesztett",
+      "unverified": "Megerősítetlen"
+    },
+    "empty": "Nincs a feltételeknek megfelelő felhasználó.",
+    "open": "{{name}} adatlapja",
+    "badge": {
+      "admin": "Platform-admin",
+      "suspended": "Felfüggesztve",
+      "unverified": "Megerősítetlen e-mail"
+    },
+    "detail": {
+      "eyebrow": "Felhasználó",
+      "registered": "Regisztrált: {{date}}",
+      "suspendedAt": "Felfüggesztve: {{date}}",
+      "workspaces": "Munkaterületek",
+      "noWorkspaces": "Nem tagja munkaterületnek.",
+      "sessions_one": "{{count}} aktív munkamenet",
+      "sessions_other": "{{count}} aktív munkamenet"
+    },
+    "actions": {
+      "suspend": "Felfüggesztés",
+      "restore": "Visszaállítás",
+      "revokeSessions": "Kijelentkeztetés mindenhonnan",
+      "resendVerification": "Megerősítő levél újraküldése",
+      "grantAdmin": "Platform-admin jog adása",
+      "revokeAdmin": "Platform-admin jog elvétele"
+    },
+    "done": {
+      "suspend": "A fiók felfüggesztve.",
+      "restore": "A fiók visszaállítva.",
+      "revokeSessions": "A munkamenetek lezárva.",
+      "resendVerification": "A megerősítő levelet elküldtük.",
+      "grantAdmin": "A platform-admin jog megadva.",
+      "revokeAdmin": "A platform-admin jog elvéve."
+    },
+    "confirm": {
+      "eyebrow": "Megerősítés",
+      "suspend": {
+        "title": "Fiók felfüggesztése",
+        "message": "{{name}} azonnal kijelentkezik, és a fiókja meg az API kulcsai nem használhatók, amíg vissza nem állítod.",
+        "confirm": "Felfüggesztés"
+      },
+      "revokeSessions": {
+        "title": "Kijelentkeztetés mindenhonnan",
+        "message": "{{name}} minden eszközön kijelentkezik.",
+        "confirm": "Kijelentkeztetés"
+      },
+      "grantAdmin": {
+        "title": "Platform-admin jog adása",
+        "message": "{{name}} hozzáfér majd az összes felhasználóhoz, meghívóhoz és az auditnaplóhoz.",
+        "confirm": "Jog megadása"
+      },
+      "revokeAdmin": {
+        "title": "Platform-admin jog elvétele",
+        "message": "{{name}} elveszíti az adminisztrációs felületet.",
+        "confirm": "Jog elvétele"
+      }
+    }
+  },
+  "invitations": {
+    "title": "Meghívók",
+    "new": "Új meghívó",
+    "email": "E-mail-cím",
+    "target": "Cél",
+    "platform": "Platform-regisztráció (munkaterület nélkül)",
+    "role": "Szerepkör",
+    "send": "Meghívó küldése",
+    "sent": "A meghívót elküldtük.",
+    "resent": "Az új meghívót elküldtük.",
+    "status": "Állapot",
+    "allStatuses": "Mind",
+    "statuses": {
+      "pending": "Függő",
+      "accepted": "Elfogadva",
+      "expired": "Lejárt",
+      "revoked": "Visszavonva"
+    },
+    "empty": "Nincs a feltételeknek megfelelő meghívó.",
+    "workspaceRole": "{{workspace}} ({{role}})",
+    "sentAt": "Elküldve: {{date}}",
+    "expiresAt": "Lejár: {{date}}",
+    "resend": "Újraküldés",
+    "revoke": "Visszavonás",
+    "confirm": {
+      "eyebrow": "Megerősítés",
+      "title": "Meghívó visszavonása",
+      "message": "A(z) {{email}} címre küldött meghívó nem lesz használható."
+    }
+  },
+  "stepUp": {
+    "password": "A te jelszavad",
+    "hint": "Az érzékeny művelethez add meg a saját jelszavadat."
+  }
+}

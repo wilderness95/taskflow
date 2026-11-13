@@ -154,6 +154,11 @@ Korlátok: munkaterületenként 100 aktív lista, listánként 50 szakasz és 50
 `too_many_sections` / `too_many_items`). Szakasz törlésekor a tételei megmaradnak, szakasz nélkül. Valós idő:
 `GET /lists/{id}/events` (SSE, `list` esemény); az esemény csak jelzés, a listát újra kell olvasni.
 
+## 6/d. Adminisztráció (nem agenteknek)
+
+A `/api/v1/admin/...` végpontok (felhasználók, meghívók, auditnapló) csak böngészős session-nel és platform-adminnal
+érhetők el. API kulccsal mindig `403 session_required`, ezért AI agent nem végezhet adminisztrációt.
+
 ## 7. Tevékenységnapló
 
 Minden írás naplózódik; `GET /boards/{id}/activity` megmutatja, ki végezte (`actorType`: `user` vagy `api_key`,
@@ -221,7 +226,10 @@ Eszközök (munkaterület: `create_workspace`, `delete_workspace`; táblák: `li
 `archive_column`, `restore_column`, `delete_column`; kártyák: `get_card`, `create_card`, `search_cards`, `update_card`
 (minden mező), `move_card`, `archive_card`, `restore_card`, `delete_card`; checklist: `add_checklist_items`,
 `update_checklist_item`, `update_checklist`; címkék: `create_label`, `update_label`, `delete_label`; hozzászólások:
-`add_comment`, `list_comments`, `update_comment`, `delete_comment`). A kártya azonosítóval vagy címmel, az oszlopok,
+`add_comment`, `list_comments`, `update_comment`, `delete_comment`; listák (teendő-, bevásárlólista, nem táblák): `list_lists`,
+`get_list`, `create_list` (tételekkel és szakaszokkal együtt), `add_list_items`, `update_list_item`, `set_list_items_done`,
+`update_list` (átnevezés, archiválás, visszaállítás), `clear_list_done`, `reset_list_recurring`). A lista névvel vagy
+azonosítóval, a szakasz és a tétel névvel (részlettel) adható meg; új szakasz tétel hozzáadásakor automatikusan létrejön. A kártya azonosítóval vagy címmel, az oszlopok,
 címkék és személyek névvel is megadhatók (kis- és nagybetű, ékezet nem számít). Minden író hívás automatikus
 `Idempotency-Key`-t kap, hálózati hibánál ugyanazzal a kulccsal újrapróbál.
 

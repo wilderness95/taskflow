@@ -1,3 +1,4 @@
+import admin from './locales/hu/admin.json'
 import activity from './locales/hu/activity.json'
 import archive from './locales/hu/archive.json'
 import apikeys from './locales/hu/apikeys.json'
@@ -25,6 +26,7 @@ export const resources = {
   hu: {
     common,
     activity,
+    admin,
     archive,
     auth,
     apikeys,

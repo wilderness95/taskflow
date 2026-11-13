@@ -57,8 +57,16 @@
 }
 
 .workspace-board-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.8rem;
   color: rgb(var(--ink) / 0.72);
+}
+
+.workspace-skeleton-card {
+  height: 76px;
+  border-radius: 14px;
 }
 
 /* Üres állapot: a lista, a tábla és a szakasz üres üzenete egységesen. */

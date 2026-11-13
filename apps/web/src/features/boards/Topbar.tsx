@@ -1,6 +1,7 @@
 import type { RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
+import { Icon } from '../../shared/ui/Icon'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { UserMenu } from '../auth/UserMenu'
 import { SettingsMenu } from './SettingsMenu'
@@ -42,7 +43,9 @@ export function Topbar({
       <WorkspaceSwitcher currentWorkspaceId={workspaceId} />
 
       <div className="search-box">
-        <span className="search-icon">⌕</span>
+        <span className="search-icon">
+          <Icon name="search" size={16} />
+        </span>
         <input
           ref={searchInputRef}
           aria-keyshortcuts="/"

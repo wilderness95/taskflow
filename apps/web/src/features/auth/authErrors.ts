@@ -2,6 +2,7 @@ import { ApiError } from '../../api/client'
 
 const KNOWN_CODES = [
   'invalid_credentials',
+  'account_suspended',
   'too_many_attempts',
   'rate_limited',
   'email_taken',

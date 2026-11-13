@@ -6,6 +6,7 @@ import * as listsApi from '../../api/lists'
 import { getLastWorkspace } from '../../shared/lib/lastWorkspace'
 import { THEME_PREFERENCES } from '../../shared/theme/theme'
 import { setThemePreference } from '../../shared/theme/useTheme'
+import { useCurrentUser } from '../auth/useSession'
 import { useWorkspaces } from '../workspaces/useWorkspaces'
 import type { PaletteItem } from './paletteItems'
 
@@ -13,6 +14,7 @@ import type { PaletteItem } from './paletteItems'
 export function usePaletteItems(onDone: () => void): { items: PaletteItem[]; isLoading: boolean } {
   const { t } = useTranslation('palette')
   const navigate = useNavigate()
+  const user = useCurrentUser()
   const workspaces = useWorkspaces()
   const all = workspaces.data ?? []
   const current = all.find((w) => w.id === getLastWorkspace()) ?? all[0]
@@ -57,6 +59,9 @@ export function usePaletteItems(onDone: () => void): { items: PaletteItem[]; isL
     label: t('nav.apiKeys'),
     run: go('/settings/api-keys'),
   })
+  if (user?.isAdmin) {
+    items.push({ id: 'nav-admin', group: 'navigate', label: t('nav.admin'), run: go('/admin') })
+  }
   for (const board of boards.data ?? []) {
     items.push({
       id: `board-${board.id}`,

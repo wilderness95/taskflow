@@ -16,6 +16,8 @@
 .board-star-button {
   width: 36px;
   height: 36px;
+  display: inline-grid;
+  place-items: center;
   border-radius: 10px;
   border: 1px solid rgb(var(--slate) / 0.2);
   background: rgb(var(--slate) / 0.08);

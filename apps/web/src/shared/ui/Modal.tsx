@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Icon } from './Icon'
 import '../styles/base.css'
 import '../styles/buttons.css'
 import './Modal.css'
@@ -81,7 +82,7 @@ export function Modal({
             <h2 id={titleId}>{title}</h2>
           </div>
           <button type="button" className="close-button" onClick={onClose} aria-label={t('close')}>
-            ×
+            <Icon name="close" size={18} />
           </button>
         </div>
 

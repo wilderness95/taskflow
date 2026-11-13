@@ -15,7 +15,8 @@
     "boards": "Táblák",
     "lists": "Listák",
     "members": "Tagok és meghívók",
-    "apiKeys": "API kulcsok"
+    "apiKeys": "API kulcsok",
+    "admin": "Adminisztráció"
   },
   "groups": {
     "navigate": "Oldal",

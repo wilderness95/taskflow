@@ -2,6 +2,7 @@ import { getChecklistProgress, type ChecklistItem } from '@taskflow/shared'
 import { useTranslation } from 'react-i18next'
 import { createId } from '../../shared/lib/ids'
 import { classNames } from '../../shared/lib/classNames'
+import { Icon } from '../../shared/ui/Icon'
 import './ChecklistEditor.css'
 
 type ChecklistEditorProps = {
@@ -36,7 +37,7 @@ export function ChecklistEditor({
     <div className="checklist-panel">
       <div className="checklist-title-row">
         <span className="checklist-toggle-button" aria-hidden="true">
-          ✓
+          <Icon name="check" size={14} />
         </span>
         <input
           type="text"
@@ -68,7 +69,7 @@ export function ChecklistEditor({
               onClick={() => updateItem(index, { done: !item.done })}
               aria-label={item.done ? t('checklist.uncheck') : t('checklist.check')}
             >
-              {item.done ? '✓' : ''}
+              {item.done ? <Icon name="check" size={12} /> : null}
             </button>
             <input
               type="text"
@@ -82,7 +83,7 @@ export function ChecklistEditor({
               aria-label={t('checklist.deleteItemAria')}
               onClick={() => removeItem(index)}
             >
-              ×
+              <Icon name="close" size={15} />
             </button>
           </div>
         ))}

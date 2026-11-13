@@ -2,6 +2,7 @@ import type { ListGroup } from '@taskflow/shared'
 import { useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ConfirmModal } from '../../shared/ui/ConfirmModal'
+import { Icon } from '../../shared/ui/Icon'
 import type { ListMutations } from './useListMutations'
 
 type Props = {
@@ -71,7 +72,7 @@ export function ListSection({ group, canWrite, mutations, hasDrag, onDropEnd, ch
                   setIsRenaming(true)
                 }}
               >
-                <span aria-hidden="true">✎</span>
+                <Icon name="edit" size={15} />
               </button>
               <button
                 type="button"
@@ -80,7 +81,7 @@ export function ListSection({ group, canWrite, mutations, hasDrag, onDropEnd, ch
                 aria-label={t('section.deleteAria', { title: section.title })}
                 onClick={() => setIsDeleting(true)}
               >
-                <span aria-hidden="true">✕</span>
+                <Icon name="close" size={16} />
               </button>
             </div>
           )}

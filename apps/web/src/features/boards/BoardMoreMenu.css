@@ -2,6 +2,12 @@
   position: relative;
 }
 
+.more-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .menu-panel.more-menu-panel {
   min-width: 200px;
 }

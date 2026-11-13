@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { useDismiss } from '../../shared/hooks/useDismiss'
 import { classNames } from '../../shared/lib/classNames'
+import { Icon } from '../../shared/ui/Icon'
 import { CreateWorkspaceModal } from './CreateWorkspaceModal'
 import { useWorkspaces } from './useWorkspaces'
 import '../../shared/styles/menu.css'
@@ -34,7 +35,7 @@ export function WorkspaceSwitcher({ currentWorkspaceId }: WorkspaceSwitcherProps
         onClick={() => setIsOpen((open) => !open)}
       >
         <span>{current?.name ?? t('switcher.choose')}</span>
-        <span className="caret">⌄</span>
+        <Icon name="chevron-down" size={14} className="caret" />
       </button>
       {isOpen && (
         <div className="menu-panel workspace-panel">

@@ -59,7 +59,13 @@ export function ListsPage() {
                 </div>
               </section>
 
-              {all.length === 0 && !lists.isPending ? (
+              {lists.isPending ? (
+                <ul className="lists-grid" aria-busy="true">
+                  {[0, 1, 2].map((index) => (
+                    <li key={index} className="skeleton-block workspace-skeleton-card" />
+                  ))}
+                </ul>
+              ) : all.length === 0 ? (
                 <p className="workspace-empty">{t('lists:overview.empty')}</p>
               ) : (
                 <ul className="lists-grid">

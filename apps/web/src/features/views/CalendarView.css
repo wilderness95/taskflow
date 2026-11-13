@@ -57,9 +57,22 @@
   background: rgb(var(--accent) / 0.14);
 }
 
+.calendar-day-head {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .calendar-day {
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+.calendar-day-weekday {
+  display: none;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: rgb(var(--ink) / 0.65);
 }
 
 .calendar-cell ul,
@@ -92,5 +105,29 @@
 @media (max-width: 700px) {
   .calendar-cell {
     min-height: 64px;
+  }
+}
+
+@media (max-width: 560px) {
+  .calendar-header-row {
+    display: none;
+  }
+
+  .calendar-row {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-cell {
+    min-height: 0;
+    padding: 8px 10px;
+    border-left: none;
+  }
+
+  .calendar-cell.is-outside:not(.has-cards) {
+    display: none;
+  }
+
+  .calendar-day-weekday {
+    display: inline;
   }
 }

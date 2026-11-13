@@ -63,7 +63,7 @@
     "columnMoved": "„{{title}}” oszlop áthelyezve: {{position}}. hely a(z) {{total}} közül."
   },
   "more": {
-    "open": "Több ▾"
+    "open": "Több"
   },
   "addColumn": "+ Új oszlop",
   "loading": "Tábla betöltése...",
