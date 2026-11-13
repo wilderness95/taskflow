@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { BoardFilter } from '@taskflow/shared'
 import { ApiError } from '../../api/client'
+import { Icon } from '../../shared/ui/Icon'
 import { useSavedFilters } from './useSavedFilters'
 import '../../shared/styles/buttons.css'
 
@@ -44,7 +45,7 @@ export function SavedFilters({ boardId, current, canSave, onApply }: SavedFilter
               disabled={remove.isPending}
               onClick={() => remove.mutate(item.id)}
             >
-              ×
+              <Icon name="close" size={14} />
             </button>
           </li>
         ))}

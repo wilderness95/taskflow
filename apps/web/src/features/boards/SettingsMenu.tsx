@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { useDismiss } from '../../shared/hooks/useDismiss'
+import { Icon } from '../../shared/ui/Icon'
 import { ProfileModal } from '../auth/ProfileModal'
 import { ShortcutsModal } from './ShortcutsModal'
 import '../../shared/styles/menu.css'
@@ -34,7 +35,7 @@ export function SettingsMenu({ workspaceId }: SettingsMenuProps) {
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
       >
-        ⚙
+        <Icon name="settings" size={18} />
       </button>
       {isOpen && (
         <div className="menu-panel" role="menu">

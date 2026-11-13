@@ -21,7 +21,8 @@
 }
 
 .visibility-icon {
-  font-size: 0.88rem;
+  display: inline-grid;
+  place-items: center;
 }
 
 /* Magasabb specificitás: a menu.css sorrendjétől függetlenül felülírja a .menu-panel-t. */

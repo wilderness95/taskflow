@@ -22,6 +22,7 @@
   },
   "page": {
     "eyebrow": "Lista",
+    "loading": "Lista betöltése...",
     "loadError": "A lista nem tölthető be, vagy nincs hozzáférésed.",
     "back": "Vissza a listákhoz",
     "editTitleAria": "Lista nevének szerkesztése",

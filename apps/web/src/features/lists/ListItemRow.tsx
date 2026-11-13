@@ -2,6 +2,7 @@ import type { ListItemDto, ListSectionDto } from '@taskflow/shared'
 import { useState, type DragEvent, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
+import { Icon } from '../../shared/ui/Icon'
 import { ListItemEditor } from './ListItemEditor'
 import type { MoveDirection } from './listMoves'
 import type { ListMutations } from './useListMutations'
@@ -85,7 +86,7 @@ export function ListItemRow({
             <span className="list-item-text">{item.text}</span>
             {item.recurring && (
               <span className="list-item-badge" title={t('item.recurringBadge')}>
-                <span aria-hidden="true">↻</span>
+                <Icon name="repeat" size={14} />
                 <span className="visually-hidden">{t('item.recurringBadge')}</span>
               </span>
             )}
@@ -99,7 +100,7 @@ export function ListItemRow({
                 title={t('item.edit')}
                 onClick={() => setIsEditing(true)}
               >
-                <span aria-hidden="true">✎</span>
+                <Icon name="edit" size={15} />
               </button>
               <button
                 type="button"
@@ -108,7 +109,7 @@ export function ListItemRow({
                 title={t('item.delete')}
                 onClick={() => mutations.deleteItemUndoable(item)}
               >
-                <span aria-hidden="true">✕</span>
+                <Icon name="close" size={16} />
               </button>
             </div>
           )}

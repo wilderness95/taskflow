@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { formatMonthYear, formatDayOfMonth, formatWeekday } from '../../i18n/format'
 import { classNames } from '../../shared/lib/classNames'
+import { Icon } from '../../shared/ui/Icon'
 import { buildMonthGrid, parseIsoDate, shiftMonth, toIsoDate } from './dates'
 import { flattenColumns, groupByDueDate } from './viewItems'
 import { ViewTaskButton } from './ViewTaskButton'
@@ -32,7 +33,7 @@ export function CalendarView({ columns, onOpenTask }: ViewProps) {
           aria-label={t('calendar.previous')}
           onClick={() => goTo(-1)}
         >
-          ‹
+          <Icon name="chevron-left" size={16} />
         </button>
         <h2 aria-live="polite">{formatMonthYear(month.year, month.monthIndex)}</h2>
         <button
@@ -41,7 +42,7 @@ export function CalendarView({ columns, onOpenTask }: ViewProps) {
           aria-label={t('calendar.next')}
           onClick={() => goTo(1)}
         >
-          ›
+          <Icon name="chevron-right" size={16} />
         </button>
         <button
           type="button"
@@ -53,7 +54,7 @@ export function CalendarView({ columns, onOpenTask }: ViewProps) {
       </div>
 
       <div className="calendar-grid" role="grid" aria-label={t('calendar.aria')}>
-        <div className="calendar-row" role="row">
+        <div className="calendar-row calendar-header-row" role="row">
           {weeks[0]?.map((day) => (
             <div key={day} className="calendar-weekday" role="columnheader">
               {formatWeekday(day)}
@@ -74,9 +75,15 @@ export function CalendarView({ columns, onOpenTask }: ViewProps) {
                     'calendar-cell',
                     !inMonth && 'is-outside',
                     day === today && 'is-today',
+                    cards.length > 0 && 'has-cards',
                   )}
                 >
-                  <span className="calendar-day">{formatDayOfMonth(day)}</span>
+                  <div className="calendar-day-head">
+                    <span className="calendar-day">{formatDayOfMonth(day)}</span>
+                    <span className="calendar-day-weekday" aria-hidden="true">
+                      {formatWeekday(day)}
+                    </span>
+                  </div>
                   <ul>
                     {cards.map(({ task, columnId, done }) => (
                       <li key={task.id}>

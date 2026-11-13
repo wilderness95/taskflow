@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useDismiss } from '../../shared/hooks/useDismiss'
+import { Icon } from '../../shared/ui/Icon'
 import '../../shared/styles/buttons.css'
 import '../../shared/styles/menu.css'
 import './BoardMoreMenu.css'
@@ -20,12 +21,13 @@ export function BoardMoreMenu({ items }: BoardMoreMenuProps) {
     <div className="more-menu-wrap" ref={ref}>
       <button
         type="button"
-        className="secondary-button"
+        className="secondary-button more-menu-trigger"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
       >
-        {t('more.open')}
+        <span>{t('more.open')}</span>
+        <Icon name="chevron-down" size={14} />
       </button>
       {isOpen && (
         <div className="menu-panel more-menu-panel" role="menu">

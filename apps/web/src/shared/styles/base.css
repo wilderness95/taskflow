@@ -8,8 +8,9 @@
 }
 
 .search-icon {
+  display: inline-grid;
+  place-items: center;
   opacity: 0.75;
-  font-size: 1.1rem;
 }
 
 /* Billentyűzetes használat: a fókusz mindig látszik. */
@@ -43,6 +44,23 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Betöltési váz (skeleton) elemekhez. */
+.skeleton-block {
+  border-radius: var(--radius-md);
+  background: rgb(var(--slate) / 0.14);
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* Akinek a rendszerében csökkentett mozgás van beállítva, nem kap animációt. */

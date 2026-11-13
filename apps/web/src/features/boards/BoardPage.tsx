@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { showToast } from '../../shared/ui/toast'
-import { rememberWorkspace } from '../../shared/lib/lastWorkspace'
+import { getLastWorkspace, rememberWorkspace } from '../../shared/lib/lastWorkspace'
 import { VerifyEmailBanner } from '../auth/VerifyEmailBanner'
 import { Board } from './Board'
 import { BoardDialogs } from './BoardDialogs'
@@ -34,6 +34,7 @@ export function BoardPage() {
   const [filter, setFilter] = useState<BoardFilter>(EMPTY_BOARD_FILTER)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [dialog, setDialog] = useState<Dialog | null>(null)
+  const fallbackWorkspaceId = workspaceId ?? getLastWorkspace() ?? undefined
 
   useEffect(() => {
     if (workspaceId) rememberWorkspace(workspaceId)
@@ -102,26 +103,6 @@ export function BoardPage() {
     setDialog({ type: 'column-delete', columnId })
   }
 
-  if (status !== 'ready') {
-    return (
-      <div className="app-shell">
-        <p className="board-status" role={status === 'error' ? 'alert' : 'status'}>
-          {t(STATUS_KEYS[status])}
-        </p>
-        {status === 'error' && (
-          <button type="button" className="secondary-button" onClick={retry}>
-            {t('board:retry')}
-          </button>
-        )}
-        {status === 'notFound' && (
-          <Link to="/" className="secondary-button">
-            {t('board:backToWorkspace')}
-          </Link>
-        )}
-      </div>
-    )
-  }
-
   return (
     <div className="app-shell">
       <div className="trello-surface">
@@ -130,66 +111,104 @@ export function BoardPage() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           totalTasks={totalTasks}
-          workspaceId={workspaceId}
+          workspaceId={fallbackWorkspaceId}
           searchInputRef={keyboard.searchInputRef}
-          boardId={boardId}
+          boardId={status === 'ready' ? boardId : undefined}
         />
 
         <div className="workspace-layout">
           <main className="board-page">
-            <BoardHeader
-              meta={meta}
-              onMembers={() => setDialog({ type: 'members' })}
-              onActivity={() => setDialog({ type: 'activity' })}
-              onLabels={() => setDialog({ type: 'labels' })}
-              onArchive={() => setDialog({ type: 'archive' })}
-              onArchiveBoard={() => setDialog({ type: 'board-archive' })}
-              onAddColumn={handleAddColumn}
-            />
-            {!meta.permissions.write && (
-              <p className="board-readonly-note" role="note">
-                {t('board:readOnly')}
-              </p>
-            )}
-            <BoardToolbar
-              activeFilterCount={countActiveFilters(filter)}
-              filtersOpen={filtersOpen}
-              onToggleFilters={() => setFiltersOpen((open) => !open)}
-            />
-            {filtersOpen && (
-              <BoardFilterPanel
-                boardId={boardId}
-                filter={filter}
-                onChange={setFilter}
-                labels={labels}
-                participants={participants}
-              />
-            )}
-            {meta.activeView === 'kanban' ? (
-              <Board
-                columns={visibleColumns}
-                drag={drag}
-                onRenameColumn={(columnId) => setDialog({ type: 'column-rename', columnId })}
-                onDeleteColumn={handleDeleteColumn}
-                onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
-                onEditTask={(columnId, task) => setDialog({ type: 'card-edit', columnId, task })}
-                onDeleteTask={actions.deleteTask}
-                onArchiveColumn={actions.archiveColumn}
-                onArchiveTask={actions.archiveTask}
-                onKeyboardMoveTask={keyboard.moveTaskByKey}
-                onKeyboardMoveColumn={keyboard.moveColumnByKey}
-                readOnly={!meta.permissions.write}
-              />
+            {status !== 'ready' ? (
+              status === 'loading' ? (
+                <div className="board-skeleton" role="status" aria-busy="true">
+                  <span className="visually-hidden">{t(STATUS_KEYS.loading)}</span>
+                  <div className="skeleton-block board-skeleton-header" />
+                  <div className="board-skeleton-columns" aria-hidden="true">
+                    {[0, 1, 2, 3].map((col) => (
+                      <div key={col} className="board-skeleton-column">
+                        <div className="skeleton-block board-skeleton-col-title" />
+                        <div className="skeleton-block board-skeleton-card" />
+                        <div className="skeleton-block board-skeleton-card is-short" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="board-status-panel">
+                  <p className="board-status" role={status === 'error' ? 'alert' : 'status'}>
+                    {t(STATUS_KEYS[status])}
+                  </p>
+                  {status === 'error' && (
+                    <button type="button" className="secondary-button" onClick={retry}>
+                      {t('board:retry')}
+                    </button>
+                  )}
+                  {status === 'notFound' && (
+                    <Link to="/" className="secondary-button">
+                      {t('board:backToWorkspace')}
+                    </Link>
+                  )}
+                </div>
+              )
             ) : (
-              <BoardAltView
-                view={meta.activeView}
-                columns={visibleColumns}
-                onOpenTask={
-                  meta.permissions.write
-                    ? (columnId, task) => setDialog({ type: 'card-edit', columnId, task })
-                    : undefined
-                }
-              />
+              <>
+                <BoardHeader
+                  meta={meta}
+                  onMembers={() => setDialog({ type: 'members' })}
+                  onActivity={() => setDialog({ type: 'activity' })}
+                  onLabels={() => setDialog({ type: 'labels' })}
+                  onArchive={() => setDialog({ type: 'archive' })}
+                  onArchiveBoard={() => setDialog({ type: 'board-archive' })}
+                  onAddColumn={handleAddColumn}
+                />
+                {!meta.permissions.write && (
+                  <p className="board-readonly-note" role="note">
+                    {t('board:readOnly')}
+                  </p>
+                )}
+                <BoardToolbar
+                  activeFilterCount={countActiveFilters(filter)}
+                  filtersOpen={filtersOpen}
+                  onToggleFilters={() => setFiltersOpen((open) => !open)}
+                />
+                {filtersOpen && (
+                  <BoardFilterPanel
+                    boardId={boardId}
+                    filter={filter}
+                    onChange={setFilter}
+                    labels={labels}
+                    participants={participants}
+                  />
+                )}
+                {meta.activeView === 'kanban' ? (
+                  <Board
+                    columns={visibleColumns}
+                    drag={drag}
+                    onRenameColumn={(columnId) => setDialog({ type: 'column-rename', columnId })}
+                    onDeleteColumn={handleDeleteColumn}
+                    onAddTask={(columnId) => setDialog({ type: 'card-create', columnId })}
+                    onEditTask={(columnId, task) =>
+                      setDialog({ type: 'card-edit', columnId, task })
+                    }
+                    onDeleteTask={actions.deleteTask}
+                    onArchiveColumn={actions.archiveColumn}
+                    onArchiveTask={actions.archiveTask}
+                    onKeyboardMoveTask={keyboard.moveTaskByKey}
+                    onKeyboardMoveColumn={keyboard.moveColumnByKey}
+                    readOnly={!meta.permissions.write}
+                  />
+                ) : (
+                  <BoardAltView
+                    view={meta.activeView}
+                    columns={visibleColumns}
+                    onOpenTask={
+                      meta.permissions.write
+                        ? (columnId, task) => setDialog({ type: 'card-edit', columnId, task })
+                        : undefined
+                    }
+                  />
+                )}
+              </>
             )}
           </main>
           <div className="visually-hidden" role="status" aria-live="polite">
@@ -198,21 +217,23 @@ export function BoardPage() {
         </div>
       </div>
 
-      <BoardDialogs
-        dialog={dialog}
-        columns={columns}
-        participants={participants}
-        onClose={() => setDialog(null)}
-        onSaveTask={actions.saveTask}
-        onUpdateColumn={actions.updateColumn}
-        onDeleteColumn={actions.deleteColumn}
-        onArchiveBoard={handleArchiveBoard}
-        boardId={boardId}
-        workspaceId={workspaceId ?? ''}
-        canManageMembers={meta.permissions.manageMembers}
-        canWrite={meta.permissions.write}
-        isBoardAdmin={meta.permissions.update}
-      />
+      {status === 'ready' && (
+        <BoardDialogs
+          dialog={dialog}
+          columns={columns}
+          participants={participants}
+          onClose={() => setDialog(null)}
+          onSaveTask={actions.saveTask}
+          onUpdateColumn={actions.updateColumn}
+          onDeleteColumn={actions.deleteColumn}
+          onArchiveBoard={handleArchiveBoard}
+          boardId={boardId}
+          workspaceId={workspaceId ?? ''}
+          canManageMembers={meta.permissions.manageMembers}
+          canWrite={meta.permissions.write}
+          isBoardAdmin={meta.permissions.update}
+        />
+      )}
     </div>
   )
 }

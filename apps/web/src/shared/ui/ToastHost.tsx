@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Icon } from './Icon'
 import { dismissToast, useToasts } from './toast'
 import './ToastHost.css'
 
@@ -35,7 +36,7 @@ export function ToastHost() {
             aria-label={t('close')}
             onClick={() => dismissToast(toast.id)}
           >
-            ×
+            <Icon name="close" size={16} />
           </button>
         </div>
       ))}

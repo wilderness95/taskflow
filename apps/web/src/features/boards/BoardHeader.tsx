@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { classNames } from '../../shared/lib/classNames'
+import { Icon } from '../../shared/ui/Icon'
 import { BoardMoreMenu } from './BoardMoreMenu'
 import { BoardTitle } from './BoardTitle'
 import type { BoardMeta } from './useBoardData'
@@ -48,7 +49,7 @@ export function BoardHeader({
           onClick={meta.toggleStar}
           aria-label={meta.isStarred ? t('star.remove') : t('star.add')}
         >
-          ★
+          <Icon name="star" size={16} filled={meta.isStarred} />
         </button>
 
         <VisibilityMenu
