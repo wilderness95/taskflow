@@ -38,16 +38,29 @@ export const listAdminUsers = async (query: Partial<AdminUsersQuery>) =>
 export const getAdminUser = async (id: string): Promise<AdminUserDetailDto> =>
   adminUserDetailSchema.parse(await apiFetch('GET', `/admin/users/${id}`))
 
-const userAction = async (id: string, action: string): Promise<AdminUserDetailDto> =>
-  adminUserDetailSchema.parse(await apiFetch('POST', `/admin/users/${id}/${action}`))
+const userAction = async (
+  id: string,
+  action: string,
+  body?: Record<string, unknown>,
+): Promise<AdminUserDetailDto> =>
+  adminUserDetailSchema.parse(await apiFetch('POST', `/admin/users/${id}/${action}`, body))
 
-export const suspendUser = (id: string) => userAction(id, 'suspend')
+/** Felfüggesztés: a végrehajtó saját jelszavát is kéri a szerver (step-up). */
+export const suspendUser = (id: string, password: string) => userAction(id, 'suspend', { password })
+
 export const restoreUser = (id: string) => userAction(id, 'restore')
 export const revokeUserSessions = (id: string) => userAction(id, 'revoke-sessions')
 export const resendUserVerification = (id: string) => userAction(id, 'resend-verification')
 
-export const setUserAdminRole = async (id: string, isAdmin: boolean): Promise<AdminUserDetailDto> =>
-  adminUserDetailSchema.parse(await apiFetch('PUT', `/admin/users/${id}/admin`, { isAdmin }))
+/** Admin jog adása/elvétele: a végrehajtó saját jelszavát is kéri a szerver (step-up). */
+export const setUserAdminRole = async (
+  id: string,
+  isAdmin: boolean,
+  password: string,
+): Promise<AdminUserDetailDto> =>
+  adminUserDetailSchema.parse(
+    await apiFetch('PUT', `/admin/users/${id}/admin`, { isAdmin, password }),
+  )
 
 export const listAdminWorkspaces = async () =>
   adminWorkspaceListSchema.parse(await apiFetch('GET', '/admin/workspaces?limit=200')).data

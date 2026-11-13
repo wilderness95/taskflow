@@ -8,6 +8,7 @@ import type {
   AdminUsersQuery,
   CreateAdminInvitationInput,
   SetAdminRoleInput,
+  SuspendUserInput,
 } from '@taskflow/shared'
 import { type Actor, requirePlatformAdmin } from '../../auth/actor.js'
 import type { Config } from '../../config.js'
@@ -17,6 +18,7 @@ import type { Mailer } from '../../mail/mailer.js'
 import { createMailSender } from '../../mail/sendMail.js'
 import type { AuditEntry, AuditService } from '../audit/audit.service.js'
 import type { AuthService } from '../auth/auth.service.js'
+import { verifyPassword } from '../auth/passwords.js'
 import { randomToken, sha256 } from '../auth/tokens.js'
 import type { AdminInvitationRow, AdminRepository, AdminUserRow } from './admin.repository.js'
 
@@ -89,6 +91,28 @@ export function createAdminService(deps: {
   const log = (actor: Actor, ctx: AdminContext, entry: Omit<AuditEntry, 'actorId' | 'ip'>) =>
     audit.record({ ...entry, actorId: actor.id, ip: ctx.ip })
 
+  /**
+   * Jelszó-újrabekérés: az érzékeny műveletet csak a végrehajtó helyes jelszavával lehet elvégezni.
+   * A sikertelen próbát naplózzuk (jelszó nélkül); a route szigorú rate limitet is kap.
+   */
+  const confirmPassword = async (
+    actor: Actor,
+    password: string,
+    ctx: AdminContext,
+    operation: string,
+  ): Promise<void> => {
+    const me = repo.findAnyUser(actor.id)
+    if (!me?.passwordHash || !(await verifyPassword(me.passwordHash, password))) {
+      log(actor, ctx, {
+        action: 'admin.step_up_failed',
+        targetType: 'user',
+        targetId: actor.id,
+        meta: { operation },
+      })
+      throw new AppError(403, 'invalid_password', 'The password is incorrect')
+    }
+  }
+
   /** Az utolsó aktív platform-admin nem veszítheti el a jogosultságát vagy a hozzáférését. */
   const assertNotLastAdmin = (user: AdminUserRow) => {
     if (user.isAdmin && !user.suspendedAt && repo.countActiveAdmins() <= 1) {
@@ -158,9 +182,15 @@ export function createAdminService(deps: {
       return detail(requireUser(id))
     },
 
-    suspendUser(actor: Actor, id: string, ctx: AdminContext): AdminUserDetailDto {
+    async suspendUser(
+      actor: Actor,
+      id: string,
+      input: SuspendUserInput,
+      ctx: AdminContext,
+    ): Promise<AdminUserDetailDto> {
       requirePlatformAdmin(actor)
       const user = requireUser(id)
+      await confirmPassword(actor, input.password, ctx, 'suspend')
       if (user.suspendedAt) return detail(user)
       if (user.id === actor.id) {
         throw new AppError(409, 'cannot_suspend_self', 'You cannot suspend your own account')
@@ -224,14 +254,20 @@ export function createAdminService(deps: {
       return detail(user)
     },
 
-    setAdminRole(
+    async setAdminRole(
       actor: Actor,
       id: string,
       input: SetAdminRoleInput,
       ctx: AdminContext,
-    ): AdminUserDetailDto {
+    ): Promise<AdminUserDetailDto> {
       requirePlatformAdmin(actor)
       const user = requireUser(id)
+      await confirmPassword(
+        actor,
+        input.password,
+        ctx,
+        input.isAdmin ? 'grant_admin' : 'revoke_admin',
+      )
       if (user.isAdmin === input.isAdmin) return detail(user)
       if (input.isAdmin) {
         // A platform-admin mentesül az e-mail-megerősítés alól, ezért csak megerősített cím kaphatja.

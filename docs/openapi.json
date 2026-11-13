@@ -14817,7 +14817,7 @@
         "tags": [
           "Admin"
         ],
-        "summary": "Suspend an account: sign-in, sessions and API keys stop working; 409 `cannot_suspend_self` / `last_admin` (platform admin, session only)",
+        "summary": "Suspend an account: sign-in, sessions and API keys stop working. Needs the caller's own `password`: 403 `invalid_password`; 409 `cannot_suspend_self` / `last_admin` (platform admin, session only)",
         "operationId": "post_admin_users_id_suspend",
         "parameters": [
           {
@@ -14842,6 +14842,26 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "password"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Success",
@@ -15521,7 +15541,7 @@
         "tags": [
           "Admin"
         ],
-        "summary": "Grant or revoke the platform admin role; only confirmed, active accounts can be granted; 409 `last_admin` (platform admin, session only)",
+        "summary": "Grant or revoke the platform admin role. Needs the caller's own `password`: 403 `invalid_password`; only confirmed, active accounts can be granted; 409 `last_admin` (platform admin, session only)",
         "operationId": "put_admin_users_id_admin",
         "parameters": [
           {
@@ -15553,11 +15573,17 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
                   "isAdmin": {
                     "type": "boolean"
                   }
                 },
                 "required": [
+                  "password",
                   "isAdmin"
                 ]
               }

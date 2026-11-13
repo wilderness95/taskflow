@@ -7,11 +7,17 @@ import {
   idParamsSchema,
   pageQuerySchema,
   setAdminRoleSchema,
+  suspendUserSchema,
 } from '@taskflow/shared'
 import { clientIp, requireActor } from '../../auth/auth.plugin.js'
+import type { Config } from '../../config.js'
 import type { AdminContext, AdminService } from './admin.service.js'
 
-export function adminRoutes(service: AdminService) {
+export function adminRoutes(service: AdminService, config: Config) {
+  // A jelszót kérő műveletekre szigorúbb limit: a jelszó-találgatást lassítja.
+  const strict = {
+    config: { rateLimit: { max: config.AUTH_RATE_LIMIT_MAX, timeWindow: '1 minute' } },
+  }
   const ctx = (req: Parameters<typeof clientIp>[0]): AdminContext => ({ ip: clientIp(req) })
   const userId = (req: { params: unknown }) => idParamsSchema.parse(req.params).id
 
@@ -30,8 +36,13 @@ export function adminRoutes(service: AdminService) {
       service.getUser(requireActor(req), userId(req)),
     )
 
-    app.post('/api/v1/admin/users/:id/suspend', async (req) =>
-      service.suspendUser(requireActor(req), userId(req), ctx(req)),
+    app.post('/api/v1/admin/users/:id/suspend', strict, async (req) =>
+      service.suspendUser(
+        requireActor(req),
+        userId(req),
+        suspendUserSchema.parse(req.body),
+        ctx(req),
+      ),
     )
 
     app.post('/api/v1/admin/users/:id/restore', async (req) =>
@@ -46,7 +57,7 @@ export function adminRoutes(service: AdminService) {
       service.resendVerification(requireActor(req), userId(req), ctx(req)),
     )
 
-    app.put('/api/v1/admin/users/:id/admin', async (req) =>
+    app.put('/api/v1/admin/users/:id/admin', strict, async (req) =>
       service.setAdminRole(
         requireActor(req),
         userId(req),

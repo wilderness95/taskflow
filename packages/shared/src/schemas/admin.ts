@@ -46,7 +46,17 @@ export const adminUserListSchema = z.object({
   nextCursor: z.string().nullable(),
 })
 
-export const setAdminRoleSchema = z.object({ isAdmin: z.boolean() })
+/**
+ * Jelszó-újrabekérés (step-up) az érzékeny adminműveleteknél: a művelet végrehajtójának saját
+ * jelszava, hogy egy ellopott admin munkamenet önmagában ne elég a fiók kizárásához vagy a jog átadásához.
+ */
+export const stepUpSchema = z.object({ password: z.string().min(1).max(128) })
+export type StepUpInput = z.infer<typeof stepUpSchema>
+
+export const suspendUserSchema = stepUpSchema
+export type SuspendUserInput = z.infer<typeof suspendUserSchema>
+
+export const setAdminRoleSchema = stepUpSchema.extend({ isAdmin: z.boolean() })
 export type SetAdminRoleInput = z.infer<typeof setAdminRoleSchema>
 
 export const adminWorkspaceSchema = z.object({
@@ -153,6 +163,7 @@ export const AUDIT_ACTIONS = [
   'auth.login_failed',
   'auth.login_blocked',
   'auth.password_reset',
+  'admin.step_up_failed',
   'admin.user_suspended',
   'admin.user_restored',
   'admin.user_sessions_revoked',

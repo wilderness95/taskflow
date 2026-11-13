@@ -6,6 +6,7 @@ const KNOWN_CODES = [
   'not_found',
   'validation_error',
   'rate_limited',
+  'invalid_password',
   'cannot_suspend_self',
   'last_admin',
   'already_verified',

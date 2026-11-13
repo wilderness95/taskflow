@@ -6,6 +6,7 @@ import {
   client,
   createTestApp,
   login,
+  PASSWORD,
   signUp,
   tokenFromLastMail,
 } from '../../testing/helpers.js'
@@ -51,7 +52,7 @@ describe('admin access control', () => {
       const send = (api: ReturnType<typeof client>) =>
         (api as unknown as Record<string, (u: string, b?: object) => Promise<{ status: number }>>)[
           method
-        ]!(url, { isAdmin: true })
+        ]!(url, { isAdmin: true, password: PASSWORD })
       expect((await send(client(t.app))).status).toBe(401)
       expect((await send(alice.api)).status).toBe(403)
       // Még platform-admin tulajdonos kulcsa sem érheti el: csak böngészős session.
@@ -72,7 +73,7 @@ describe('admin access control', () => {
 describe('admin users', () => {
   it('lists, searches, filters and paginates users', async () => {
     const { admin, alice } = await setup()
-    await admin.api.post(`/admin/users/${alice.user.id}/suspend`)
+    await admin.api.post(`/admin/users/${alice.user.id}/suspend`, { password: PASSWORD })
 
     const all = await admin.api.get('/admin/users')
     expect(all.status).toBe(200)
@@ -119,7 +120,9 @@ describe('admin users', () => {
 
   it('suspends and restores an account, signing the user out immediately', async () => {
     const { admin, alice } = await setup()
-    const suspended = await admin.api.post(`/admin/users/${alice.user.id}/suspend`)
+    const suspended = await admin.api.post(`/admin/users/${alice.user.id}/suspend`, {
+      password: PASSWORD,
+    })
     expect(suspended.status).toBe(200)
     expect(suspended.body.suspended).toBe(true)
     expect(suspended.body.sessionCount).toBe(0)
@@ -137,18 +140,23 @@ describe('admin users', () => {
 
   it('repeating a state change does not write duplicate audit events', async () => {
     const { admin, alice } = await setup()
-    await admin.api.post(`/admin/users/${alice.user.id}/suspend`)
-    await admin.api.post(`/admin/users/${alice.user.id}/suspend`)
+    await admin.api.post(`/admin/users/${alice.user.id}/suspend`, { password: PASSWORD })
+    await admin.api.post(`/admin/users/${alice.user.id}/suspend`, { password: PASSWORD })
     expect(actions().filter((a) => a === 'admin.user_suspended')).toHaveLength(1)
   })
 
   it('does not let an admin suspend themselves or the last active admin', async () => {
     const { admin } = await setup()
-    const self = await admin.api.post(`/admin/users/${admin.user.id}/suspend`)
+    const self = await admin.api.post(`/admin/users/${admin.user.id}/suspend`, {
+      password: PASSWORD,
+    })
     expect(self.status).toBe(409)
     expect(self.body.error.code).toBe('cannot_suspend_self')
 
-    const revoke = await admin.api.put(`/admin/users/${admin.user.id}/admin`, { isAdmin: false })
+    const revoke = await admin.api.put(`/admin/users/${admin.user.id}/admin`, {
+      password: PASSWORD,
+      isAdmin: false,
+    })
     expect(revoke.status).toBe(409)
     expect(revoke.body.error.code).toBe('last_admin')
   })
@@ -187,19 +195,26 @@ describe('admin users', () => {
   it('grants the admin role only to confirmed accounts and revokes it again', async () => {
     const { admin, alice } = await setup()
     const unconfirmed = await admin.api.put(`/admin/users/${alice.user.id}/admin`, {
+      password: PASSWORD,
       isAdmin: true,
     })
     expect(unconfirmed.status).toBe(409)
     expect(unconfirmed.body.error.code).toBe('email_not_verified')
 
     t.db.update(users).set({ emailVerifiedAt: new Date() }).where(eq(users.id, alice.user.id)).run()
-    const granted = await admin.api.put(`/admin/users/${alice.user.id}/admin`, { isAdmin: true })
+    const granted = await admin.api.put(`/admin/users/${alice.user.id}/admin`, {
+      password: PASSWORD,
+      isAdmin: true,
+    })
     expect(granted.body.isAdmin).toBe(true)
     // Az új admin már eléri az adminfelületet.
     expect((await alice.api.get('/admin/users')).status).toBe(200)
 
     // Most két admin van, ezért az eredeti lemondhat.
-    const revoked = await admin.api.put(`/admin/users/${admin.user.id}/admin`, { isAdmin: false })
+    const revoked = await admin.api.put(`/admin/users/${admin.user.id}/admin`, {
+      password: PASSWORD,
+      isAdmin: false,
+    })
     expect(revoked.status).toBe(200)
     expect((await admin.api.get('/admin/users')).status).toBe(403)
     expect(actions()).toEqual(
@@ -209,7 +224,83 @@ describe('admin users', () => {
 
   it('validates the admin role body', async () => {
     const { admin, alice } = await setup()
-    const res = await admin.api.put(`/admin/users/${alice.user.id}/admin`, { isAdmin: 'yes' })
+    const res = await admin.api.put(`/admin/users/${alice.user.id}/admin`, {
+      password: PASSWORD,
+      isAdmin: 'yes',
+    })
     expect(res.status).toBe(400)
+  })
+})
+
+describe('step-up password confirmation', () => {
+  const stepUpFailures = () =>
+    t.db
+      .select()
+      .from(auditLog)
+      .all()
+      .filter((r) => r.action === 'admin.step_up_failed')
+
+  it('requires the password to suspend, and changes nothing without the right one', async () => {
+    const { admin, alice } = await setup()
+    const url = `/admin/users/${alice.user.id}/suspend`
+
+    const missing = await admin.api.post(url)
+    expect(missing.status).toBe(400)
+    const wrong = await admin.api.post(url, { password: 'wrong-password-123' })
+    expect(wrong.status).toBe(403)
+    expect(wrong.body.error.code).toBe('invalid_password')
+
+    expect((await admin.api.get(`/admin/users/${alice.user.id}`)).body.suspended).toBe(false)
+    expect((await alice.api.get('/workspaces')).status).toBe(200)
+
+    const ok = await admin.api.post(url, { password: PASSWORD })
+    expect(ok.status).toBe(200)
+    expect(ok.body.suspended).toBe(true)
+  })
+
+  it('requires the password to grant and to revoke the admin role', async () => {
+    const { admin, alice } = await setup()
+    t.db.update(users).set({ emailVerifiedAt: new Date() }).where(eq(users.id, alice.user.id)).run()
+    const url = `/admin/users/${alice.user.id}/admin`
+
+    const wrong = await admin.api.put(url, { isAdmin: true, password: 'wrong-password-123' })
+    expect(wrong.status).toBe(403)
+    expect(wrong.body.error.code).toBe('invalid_password')
+    expect((await alice.api.get('/admin/users')).status).toBe(403)
+
+    expect((await admin.api.put(url, { isAdmin: true, password: PASSWORD })).status).toBe(200)
+    expect((await admin.api.put(url, { isAdmin: false })).status).toBe(400)
+    expect(
+      (await admin.api.put(url, { isAdmin: false, password: 'wrong-password-123' })).status,
+    ).toBe(403)
+    expect((await alice.api.get('/admin/users')).status).toBe(200)
+    expect((await admin.api.put(url, { isAdmin: false, password: PASSWORD })).status).toBe(200)
+  })
+
+  it("checks the caller's password, not the target's, and audits failures without the password", async () => {
+    const { admin, alice } = await setup()
+    // Alice jelszava megegyezik a tesztben, ezért egy külön jelszavú adminnal próbáljuk.
+    t.db.update(users).set({ emailVerifiedAt: new Date() }).where(eq(users.id, alice.user.id)).run()
+    await admin.api.put(`/admin/users/${alice.user.id}/admin`, {
+      isAdmin: true,
+      password: PASSWORD,
+    })
+
+    await admin.api.post(`/admin/users/${alice.user.id}/suspend`, {
+      password: 'wrong-password-123',
+    })
+    const failures = stepUpFailures()
+    expect(failures).toHaveLength(1)
+    expect(failures[0]!.actorId).toBe(admin.user.id)
+    expect(JSON.parse(failures[0]!.meta)).toEqual({ operation: 'suspend' })
+    expect(JSON.stringify(failures)).not.toContain('wrong-password-123')
+  })
+
+  it('does not run the step-up check for non-admins (403 before any password check)', async () => {
+    const { alice, bob } = await setup()
+    const res = await alice.api.post(`/admin/users/${bob.user.id}/suspend`, { password: PASSWORD })
+    expect(res.status).toBe(403)
+    expect(res.body.error.code).toBe('forbidden')
+    expect(stepUpFailures()).toHaveLength(0)
   })
 })

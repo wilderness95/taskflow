@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import {
+  suspendUserSchema,
   adminWorkspaceListSchema,
   adminOverviewSchema,
   auditListSchema,
@@ -1000,7 +1001,8 @@ export const operations: Operation[] = [
     method: 'post',
     path: '/admin/users/{id}/suspend',
     summary:
-      'Suspend an account: sign-in, sessions and API keys stop working; 409 `cannot_suspend_self` / `last_admin` (platform admin, session only)',
+      "Suspend an account: sign-in, sessions and API keys stop working. Needs the caller's own `password`: 403 `invalid_password`; 409 `cannot_suspend_self` / `last_admin` (platform admin, session only)",
+    body: suspendUserSchema,
     success: { status: 200, schema: adminUserDetailSchema },
     errors: [403, 409],
   },
@@ -1035,7 +1037,7 @@ export const operations: Operation[] = [
     method: 'put',
     path: '/admin/users/{id}/admin',
     summary:
-      'Grant or revoke the platform admin role; only confirmed, active accounts can be granted; 409 `last_admin` (platform admin, session only)',
+      "Grant or revoke the platform admin role. Needs the caller's own `password`: 403 `invalid_password`; only confirmed, active accounts can be granted; 409 `last_admin` (platform admin, session only)",
     body: setAdminRoleSchema,
     success: { status: 200, schema: adminUserDetailSchema },
     errors: [403, 409],

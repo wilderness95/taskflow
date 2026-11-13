@@ -47,10 +47,9 @@ export function useAdminUser(id: string) {
   })
 }
 
-export type UserAction = 'suspend' | 'restore' | 'revokeSessions' | 'resendVerification'
+export type UserAction = 'restore' | 'revokeSessions' | 'resendVerification'
 
 const ACTIONS: Record<UserAction, (id: string) => Promise<AdminUserDetailDto>> = {
-  suspend: api.suspendUser,
   restore: api.restoreUser,
   revokeSessions: api.revokeUserSessions,
   resendVerification: api.resendUserVerification,
@@ -68,11 +67,17 @@ export function useUserActions(id: string) {
   const local = { meta: { handlesErrors: true }, onSuccess } as const
 
   const run = useMutation({ ...local, mutationFn: (action: UserAction) => ACTIONS[action](id) })
+  // A felfüggesztés és az admin jog módosítása a végrehajtó jelszavát is kéri (step-up).
+  const suspend = useMutation({
+    ...local,
+    mutationFn: (password: string) => api.suspendUser(id, password),
+  })
   const setAdminRole = useMutation({
     ...local,
-    mutationFn: (isAdmin: boolean) => api.setUserAdminRole(id, isAdmin),
+    mutationFn: (input: { isAdmin: boolean; password: string }) =>
+      api.setUserAdminRole(id, input.isAdmin, input.password),
   })
-  return { run, setAdminRole }
+  return { run, suspend, setAdminRole }
 }
 
 /** Az összes munkaterület a meghívó célpontjának kiválasztásához. */

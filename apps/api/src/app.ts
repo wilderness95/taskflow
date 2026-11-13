@@ -234,6 +234,7 @@ export function buildApp(
         config,
         logger: app.log,
       }),
+      config,
     ),
   )
   app.register(apiKeysRoutes(apiKeys))

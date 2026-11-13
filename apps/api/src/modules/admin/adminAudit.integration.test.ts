@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { auditLog } from '../../db/schema.js'
-import { bearer, client, createTestApp, login, signUp } from '../../testing/helpers.js'
+import { bearer, client, createTestApp, login, PASSWORD, signUp } from '../../testing/helpers.js'
 
 let t: ReturnType<typeof createTestApp>
 
@@ -31,7 +31,7 @@ describe('admin overview and audit: access control', () => {
 describe('admin overview', () => {
   it('counts users and invitations and reports basic health', async () => {
     const { admin, alice } = await setup()
-    await admin.api.post(`/admin/users/${alice.user.id}/suspend`)
+    await admin.api.post(`/admin/users/${alice.user.id}/suspend`, { password: PASSWORD })
     await admin.api.post('/admin/invitations', { email: 'p@example.com' })
 
     const res = await admin.api.get('/admin/overview')
@@ -49,7 +49,7 @@ describe('admin overview', () => {
 describe('admin audit log', () => {
   it('lists events newest first with actor and target names', async () => {
     const { admin, alice } = await setup()
-    await admin.api.post(`/admin/users/${alice.user.id}/suspend`)
+    await admin.api.post(`/admin/users/${alice.user.id}/suspend`, { password: PASSWORD })
 
     const res = await admin.api.get('/admin/audit')
     expect(res.status).toBe(200)
@@ -66,7 +66,7 @@ describe('admin audit log', () => {
 
   it('filters by action, actor, target user and time range', async () => {
     const { admin, alice } = await setup()
-    await admin.api.post(`/admin/users/${alice.user.id}/suspend`)
+    await admin.api.post(`/admin/users/${alice.user.id}/suspend`, { password: PASSWORD })
     await admin.api.post(`/admin/users/${alice.user.id}/restore`)
     await login(t.app, 'alice@example.com', 'wrong-password-123')
 

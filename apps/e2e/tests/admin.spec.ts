@@ -33,7 +33,13 @@ test.describe('platform-adminisztráció', () => {
 
     // Felfüggesztés megerősítéssel: Béla azonnal kijelentkezik, és nem tud belépni.
     await dialog.getByRole('button', { name: 'Felfüggesztés' }).click()
-    await page.getByRole('dialog').last().getByRole('button', { name: 'Felfüggesztés' }).click()
+    // Az érzékeny művelet a saját jelszót is kéri: hibás jelszóval nem fut le.
+    const confirm = page.getByRole('dialog').last()
+    await confirm.getByLabel('A te jelszavad').fill('rossz-jelszo-123456')
+    await confirm.getByRole('button', { name: 'Felfüggesztés' }).click()
+    await expect(confirm.getByRole('alert')).toContainText('Hibás jelszó')
+    await confirm.getByLabel('A te jelszavad').fill(PASSWORD)
+    await confirm.getByRole('button', { name: 'Felfüggesztés' }).click()
     await expect(page.getByText('A fiók felfüggesztve.')).toBeVisible()
     await expect(dialog.getByRole('button', { name: 'Visszaállítás' })).toBeVisible()
 

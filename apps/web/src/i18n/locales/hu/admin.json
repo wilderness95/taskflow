@@ -51,7 +51,8 @@
       "admin.invitation_created": "{{actor}} meghívót küldött: {{target}}",
       "admin.invitation_resent": "{{actor}} újraküldte a meghívót: {{target}}",
       "admin.invitation_revoked": "{{actor}} visszavonta a meghívót: {{target}}",
-      "unknown": "{{actor}}: ismeretlen esemény"
+      "unknown": "{{actor}}: ismeretlen esemény",
+      "admin.step_up_failed": "{{actor}} hibás jelszót adott meg egy érzékeny művelethez"
     },
     "title": "Auditnapló",
     "action": "Esemény",
@@ -72,7 +73,8 @@
       "admin.user_verification_resent": "Megerősítő levél újraküldése",
       "admin.invitation_created": "Meghívó küldése",
       "admin.invitation_resent": "Meghívó újraküldése",
-      "admin.invitation_revoked": "Meghívó visszavonása"
+      "admin.invitation_revoked": "Meghívó visszavonása",
+      "admin.step_up_failed": "Hibás jelszó érzékeny műveletnél"
     }
   },
   "errors": {
@@ -90,7 +92,8 @@
     "already_member": "Ez a felhasználó már tagja a munkaterületnek.",
     "invitation_not_resendable": "Ez a meghívó már nem küldhető újra.",
     "invitation_not_pending": "Csak függő meghívó vonható vissza.",
-    "unknown": "Valami hiba történt. Próbáld újra."
+    "unknown": "Valami hiba történt. Próbáld újra.",
+    "invalid_password": "Hibás jelszó."
   },
   "loadMore": "Továbbiak betöltése",
   "users": {
@@ -189,5 +192,9 @@
       "title": "Meghívó visszavonása",
       "message": "A(z) {{email}} címre küldött meghívó nem lesz használható."
     }
+  },
+  "stepUp": {
+    "password": "A te jelszavad",
+    "hint": "Az érzékeny művelethez add meg a saját jelszavadat."
   }
 }
