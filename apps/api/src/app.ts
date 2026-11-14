@@ -18,6 +18,7 @@ import { createAuthService } from './modules/auth/auth.service.js'
 import type { Config } from './config.js'
 import type { Db } from './db/client.js'
 import { healthRoutes } from './health.routes.js'
+import { readinessChecks } from './readiness.js'
 import { createAccessRepository } from './modules/access/access.repository.js'
 import { createAccessService } from './modules/access/access.service.js'
 import { boardsRoutes } from './modules/boards/boards.routes.js'
@@ -284,6 +285,7 @@ export function buildApp(
   })
   app.register(
     healthRoutes({
+      readiness: readinessChecks(db, config.UPLOAD_DIR, deps.fileStore === undefined),
       voice: voice.available,
       emailVerificationRequired: config.REQUIRE_EMAIL_VERIFICATION,
       registrationOpen: () =>

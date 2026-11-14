@@ -24,6 +24,47 @@ describe('app', () => {
     })
   })
 
+  it('healthz is anonymous, minimal and exempt from rate limiting', async () => {
+    const { db } = createDb(':memory:')
+    runMigrations(db)
+    const app = buildApp(loadConfig({ NODE_ENV: 'test', RATE_LIMIT_MAX: '2' }), db)
+    for (let i = 0; i < 6; i++) {
+      const res = await app.inject('/healthz')
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toEqual({ status: 'ok' })
+    }
+  })
+
+  it('readyz reports ok when the database, migrations and storage are fine', async () => {
+    const res = await makeApp().inject('/readyz')
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({
+      status: 'ok',
+      checks: { database: 'ok', migrations: 'ok', storage: 'ok' },
+    })
+  })
+
+  it('readyz returns 503 on a database failure while healthz stays 200', async () => {
+    const { db, sqlite } = createDb(':memory:')
+    runMigrations(db)
+    const app = buildApp(config, db)
+    sqlite.close()
+    const ready = await app.inject('/readyz')
+    expect(ready.statusCode).toBe(503)
+    expect(ready.json().status).toBe('unavailable')
+    expect(ready.json().checks.database).toBe('error')
+    expect((await app.inject('/healthz')).statusCode).toBe(200)
+  })
+
+  it('readyz fails when the upload directory is not writable', async () => {
+    const { db } = createDb(':memory:')
+    runMigrations(db)
+    const app = buildApp(loadConfig({ NODE_ENV: 'test', UPLOAD_DIR: '/proc/nope/uploads' }), db)
+    const res = await app.inject('/readyz')
+    expect(res.statusCode).toBe(503)
+    expect(res.json().checks.storage).toBe('error')
+  })
+
   it('unknown route uses the unified error format', async () => {
     const app = makeApp()
     const res = await app.inject('/nope')
