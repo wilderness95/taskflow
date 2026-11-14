@@ -196,7 +196,7 @@ Internet ──► Cloudflare (saját domain, TLS) ──► cloudflared kontén
   - SSE: ~25 mp-es heartbeat és `X-Accel-Buffering: no`, hogy a proxy ne zárja le és ne pufferelje a kapcsolatot.
 - **Opcionális:** Cloudflare Access (Zero Trust) a `/api/docs` elé, illetve igény esetén a teljes app elé.
 - **Mentés:** napi `sqlite3 .backup` cron/sidecar konténerrel, rotációval; opcionálisan Litestream külső tárolóra.
-- **Frissítés:** `git pull && docker compose up -d --build`; a migrációk az api indulásakor automatikusan lefutnak.
+- **Frissítés:** `git pull && ops/deploy.sh` (mentés, ellenőrzés, visszaállás; régebben: `docker compose up -d --build`); a migrációk az api indulásakor automatikusan lefutnak.
 - **E-mail (Gmail):**
   - Nodemailer SMTP-n keresztül, `Mailer` interfész mögött: fejlesztéskor `ConsoleMailer`, élesben `SmtpMailer`;
   - Gmail limit: kb. 500 levél/nap. Kis felhasználói bázisnál elég; ha kinőjük, csak az implementáció cserélődik.
@@ -462,6 +462,8 @@ Cél: üzemeltetőként időben értesülni arról, ha valami elromlik, és a hi
 - Admin áttekintő: `health.lastBackupAt` (az `api` a `./backups` mappát csak olvasásra csatolja, `BACKUP_DIR`).
 - Dokumentáció: `docs/OPERATIONS.md` (health végpontok, naplók, külső uptime-monitor).
 - Eltérés a tervtől: az `autoheal` nem került a compose-ba (Docker socket kell hozzá); a `docs/OPERATIONS.md` leírja a lehetőséget. A `/admin/overview` a hibafigyelő állapotát a hibafigyelő bevezetésekor kapja meg.
+- Hangasszisztens-statisztika (`voice_sessions`, migráció `0014`): a lezárt munkamenetek összesítése (hossz, lezárás oka, megszakítások, eszközhívások és hibák, hang hossza); `GET /admin/voice-stats` és az admin áttekintő „Hangasszisztens” blokkja. Tartalmat (hang, átirat) nem tárol.
+- Telepítő szkript (`ops/deploy.sh`): telepítés előtti mentés, build, readiness-ellenőrzés, hibánál visszaállás az előző image-ekre (migráció esetén az adatbázis is a mentésből). Lásd `docs/OPERATIONS.md`.
 - **Hátra van:** hibafigyelés (`SENTRY_DSN`, `@sentry/node`, `@sentry/react`), a fenti döntési pont lezárása után.
 
 ## 4. Keresztmetszeti szabályok (minden sprintben)

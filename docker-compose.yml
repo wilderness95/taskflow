@@ -1,4 +1,4 @@
-# Indítás: `cp .env.example .env`, töltsd ki, majd `docker compose up -d --build`.
+# Indítás: `cp .env.example .env`, töltsd ki, majd `ops/deploy.sh` (mentés, ellenőrzés, visszaállás).
 # Nincs host-portkiengedés: kívülről csak a Cloudflare Tunnelen át érhető el.
 # A tunnel ingress-ben egyetlen szabály kell: a saját domain -> http://web:80
 # (a web konténer nginx-e az /api/* kéréseket az api-nak adja tovább).
