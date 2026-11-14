@@ -18,6 +18,7 @@ import { createAuthService } from './modules/auth/auth.service.js'
 import type { Config } from './config.js'
 import type { Db } from './db/client.js'
 import { healthRoutes } from './health.routes.js'
+import { LOG_REDACT_PATHS, registerRequestLogging } from './plugins/requestLogging.js'
 import { readinessChecks } from './readiness.js'
 import { createAccessRepository } from './modules/access/access.repository.js'
 import { createAccessService } from './modules/access/access.service.js'
@@ -88,21 +89,25 @@ export function buildApp(
     fileStore?: FileStore
     liveConnector?: LiveConnector | null
     webhookRetryDelaysMs?: number[]
+    /** Tesztekhez: a napló ide ír (és tesztben is bekapcsol). */
+    logStream?: { write(line: string): void }
   } = {},
 ): FastifyInstance {
   const app = Fastify({
     logger:
-      config.NODE_ENV === 'test'
+      config.NODE_ENV === 'test' && !deps.logStream
         ? false
         : {
             level: config.LOG_LEVEL,
-            redact: ['req.headers.authorization', 'req.headers.cookie'],
+            redact: LOG_REDACT_PATHS,
+            ...(deps.logStream ? { stream: deps.logStream } : {}),
           },
     // Cloudflare mögött: a kliens IP-je a CF-Connecting-IP fejlécből jön.
     trustProxy: true,
     requestIdHeader: 'x-request-id',
   })
   registerErrorHandler(app)
+  registerRequestLogging(app, config.SLOW_REQUEST_MS)
   // Kliens IP szerint korlátoz (Cloudflare mögött a CF-Connecting-IP fejléc); az érzékeny
   // auth végpontokra szigorúbb, route-szintű limit van (lásd auth.routes.ts).
   app.register(rateLimit, {

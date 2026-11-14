@@ -88,7 +88,7 @@ describe('app', () => {
     expect(b.json().error).toEqual({
       code: 'internal_error',
       message: 'Internal server error',
-      details: null,
+      details: { requestId: expect.any(String) },
     })
   })
 
