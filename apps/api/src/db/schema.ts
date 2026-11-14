@@ -151,6 +151,32 @@ export const auditLog = sqliteTable(
   ],
 )
 
+/**
+ * Egy lezárt hangasszisztens-munkamenet összesítése (költségkontrollhoz és hibakereséshez). Nem
+ * tartalmaz hangot, átiratot vagy bármilyen felhasználói tartalmat. A hivatkozások `set null`-ra állnak.
+ */
+export const voiceSessions = sqliteTable(
+  'voice_sessions',
+  {
+    id: id(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+    boardId: text('board_id').references(() => boards.id, { onDelete: 'set null' }),
+    startedAt: integer('started_at', { mode: 'timestamp_ms' }).notNull(),
+    durationMs: integer('duration_ms').notNull(),
+    /** `VOICE_END_REASONS` egyike. */
+    endReason: text('end_reason').notNull(),
+    interruptions: integer('interruptions').notNull().default(0),
+    toolCalls: integer('tool_calls').notNull().default(0),
+    toolErrors: integer('tool_errors').notNull().default(0),
+    audioInMs: integer('audio_in_ms').notNull().default(0),
+    audioOutMs: integer('audio_out_ms').notNull().default(0),
+  },
+  (t) => [
+    index('voice_sessions_started_idx').on(t.startedAt),
+    index('voice_sessions_user_idx').on(t.userId),
+  ],
+)
+
 /** `Idempotency-Key` fejléc: a korábbi válasz újrajátszásához. */
 export const idempotencyKeys = sqliteTable(
   'idempotency_keys',

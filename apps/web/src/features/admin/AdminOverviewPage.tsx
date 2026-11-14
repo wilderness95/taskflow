@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { formatDateTime, formatNumber } from '../../i18n/format'
+import { VoiceStatsSection } from './VoiceStatsSection'
 import { AuditEventList } from './AuditEventList'
 import { useAdminOverview } from './useAdmin'
 import './AdminOverviewPage.css'
@@ -61,6 +62,8 @@ export function AdminOverviewPage() {
           </li>
         </ul>
       </section>
+
+      <VoiceStatsSection />
 
       <section className="admin-section" aria-label={t('overview.recent')}>
         <h2>{t('overview.recent')}</h2>

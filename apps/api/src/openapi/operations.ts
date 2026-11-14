@@ -3,6 +3,8 @@ import {
   suspendUserSchema,
   adminWorkspaceListSchema,
   adminOverviewSchema,
+  voiceStatsQuerySchema,
+  voiceStatsSchema,
   auditListSchema,
   auditQuerySchema,
   adminInvitationListSchema,
@@ -1088,6 +1090,16 @@ export const operations: Operation[] = [
       'User and invitation counts, basic health (database, mail transport) and the latest audit events (platform admin, session only)',
     success: { status: 200, schema: adminOverviewSchema },
     errors: [403],
+  },
+  {
+    ...admin,
+    method: 'get',
+    path: '/admin/voice-stats',
+    summary:
+      'Voice assistant usage over the last `days` days: session count and length, interruptions, tool calls and errors, audio minutes (cost control), end reasons, daily series and top users (platform admin, session only)',
+    query: voiceStatsQuerySchema,
+    success: { status: 200, schema: voiceStatsSchema },
+    errors: [400, 403],
   },
   {
     ...admin,

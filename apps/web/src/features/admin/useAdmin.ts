@@ -10,6 +10,7 @@ import * as api from '../../api/admin'
 
 export const adminKeys = {
   overview: ['admin', 'overview'] as const,
+  voiceStats: (days: number) => ['admin', 'voice-stats', days] as const,
   users: ['admin', 'users'] as const,
   invitations: ['admin', 'invitations'] as const,
   workspaces: ['admin', 'workspaces'] as const,
@@ -22,6 +23,15 @@ export function useAdminOverview() {
   return useQuery({
     queryKey: adminKeys.overview,
     queryFn: api.fetchAdminOverview,
+    meta: { handlesErrors: true },
+  })
+}
+
+/** A hangasszisztens használati statisztikája az utolsó `days` napra. */
+export function useVoiceStats(days: number) {
+  return useQuery({
+    queryKey: adminKeys.voiceStats(days),
+    queryFn: () => api.fetchVoiceStats(days),
     meta: { handlesErrors: true },
   })
 }

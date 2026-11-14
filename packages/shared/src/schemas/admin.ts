@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { emailSchema } from './auth'
 import { pageQuerySchema } from './activity'
 import { idSchema } from './common'
+import { voiceEndReasonSchema } from './voice'
 import { invitableRoleSchema, workspaceRoleSchema } from './workspace'
 
 /** Platform-adminisztráció (csak platform-admin, csak böngészős session): felhasználók, meghívók, audit. */
@@ -157,6 +158,48 @@ export const adminOverviewSchema = z.object({
   recentEvents: z.array(auditEventSchema),
 })
 export type AdminOverviewDto = z.infer<typeof adminOverviewSchema>
+
+/** A hangasszisztens használati statisztikája a megadott időszakra (költségkontroll). */
+export const voiceStatsQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(365).default(30),
+})
+export type VoiceStatsQuery = z.infer<typeof voiceStatsQuerySchema>
+
+export const voiceStatsSchema = z.object({
+  days: z.number().int(),
+  since: z.iso.datetime(),
+  totals: z.object({
+    sessions: z.number().int(),
+    /** A munkamenetek összes hossza (ms). */
+    durationMs: z.number().int(),
+    avgDurationMs: z.number().int(),
+    maxDurationMs: z.number().int(),
+    /** A felhasználó által félbeszakított válaszok száma. */
+    interruptions: z.number().int(),
+    toolCalls: z.number().int(),
+    toolErrors: z.number().int(),
+    /** A modellnek küldött és a tőle kapott hang hossza (ms; a nyers PCM méretéből). */
+    audioInMs: z.number().int(),
+    audioOutMs: z.number().int(),
+  }),
+  byReason: z.array(z.object({ reason: voiceEndReasonSchema, count: z.number().int() })),
+  byDay: z.array(
+    z.object({
+      day: z.string(),
+      sessions: z.number().int(),
+      durationMs: z.number().int(),
+    }),
+  ),
+  topUsers: z.array(
+    z.object({
+      userId: z.string().nullable(),
+      name: z.string().nullable(),
+      sessions: z.number().int(),
+      durationMs: z.number().int(),
+    }),
+  ),
+})
+export type VoiceStatsDto = z.infer<typeof voiceStatsSchema>
 
 /** Az auditnaplóba kerülő események (nyelvfüggetlen kulcsok; a fordítás a frontenden). */
 export const AUDIT_ACTIONS = [

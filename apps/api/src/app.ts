@@ -50,6 +50,7 @@ import websocket from '@fastify/websocket'
 import { createGeminiLiveConnector } from './modules/voice/liveConnector.js'
 import { createToolHost } from './modules/voice/toolHost.js'
 import { MAX_FRAME_BYTES, voiceRoutes } from './modules/voice/voice.routes.js'
+import { createVoiceStatsRepository } from './modules/voice/voiceStats.repository.js'
 import { createVoiceService } from './modules/voice/voice.service.js'
 import type { LiveConnector } from './modules/voice/liveConnector.js'
 import { createSecretBox } from './lib/secretBox.js'
@@ -122,6 +123,7 @@ export function buildApp(
   const mailer = deps.mailer ?? createMailer(config)
   const authRepo = createAuthRepository(db)
   const audit = createAuditService(createAuditRepository(db))
+  const voiceStats = createVoiceStatsRepository(db)
   const auth = createAuthService({
     repo: authRepo,
     mailer,
@@ -234,6 +236,7 @@ export function buildApp(
     adminRoutes(
       createAdminService({
         repo: createAdminRepository(db),
+        voiceStats,
         audit,
         auth,
         mailer,
@@ -268,6 +271,7 @@ export function buildApp(
   app.register(eventsRoutes(createEventsService(bus, access)))
   const voice = createVoiceService({
     access,
+    stats: voiceStats,
     connector:
       deps.liveConnector !== undefined
         ? deps.liveConnector

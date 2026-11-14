@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { formatDateTime, formatFileSize, formatNumber, formatShortDate } from './format'
+import {
+  formatDateTime,
+  formatFileSize,
+  formatMinutes,
+  formatNumber,
+  formatShortDate,
+} from './format'
 
 describe('formatShortDate', () => {
   it('magyar rövid dátumot ad', () => {
@@ -26,5 +32,12 @@ describe('formatFileSize', () => {
     expect(formatFileSize(512)).toBe('512 B')
     expect(formatFileSize(1536)).toBe('1,5 KB')
     expect(formatFileSize(5 * 1024 * 1024)).toBe('5 MB')
+  })
+})
+
+describe('formatMinutes', () => {
+  it('ezredmásodpercet percre alakít egy tizedessel', () => {
+    expect(formatMinutes(90_000)).toMatch(/^1,5\s?p/u)
+    expect(formatMinutes(0)).toMatch(/^0\s?p/u)
   })
 })

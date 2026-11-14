@@ -8,6 +8,7 @@ import {
   pageQuerySchema,
   setAdminRoleSchema,
   suspendUserSchema,
+  voiceStatsQuerySchema,
 } from '@taskflow/shared'
 import { clientIp, requireActor } from '../../auth/auth.plugin.js'
 import type { Config } from '../../config.js'
@@ -23,6 +24,10 @@ export function adminRoutes(service: AdminService, config: Config) {
 
   return async (app: FastifyInstance): Promise<void> => {
     app.get('/api/v1/admin/overview', async (req) => service.overview(requireActor(req)))
+
+    app.get('/api/v1/admin/voice-stats', async (req) =>
+      service.voiceStats(requireActor(req), voiceStatsQuerySchema.parse(req.query)),
+    )
 
     app.get('/api/v1/admin/audit', async (req) =>
       service.listAudit(requireActor(req), auditQuerySchema.parse(req.query)),

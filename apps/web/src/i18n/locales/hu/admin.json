@@ -34,6 +34,31 @@
     },
     "recent": "Legutóbbi események"
   },
+  "voice": {
+    "title": "Hangasszisztens",
+    "period": "Időszak",
+    "days": "Utolsó {{count}} nap",
+    "empty": "Ebben az időszakban nem volt hangmunkamenet.",
+    "sessions": "Munkamenetek",
+    "totalTime": "Összes hossz",
+    "avgTime": "Átlagos hossz",
+    "maxTime": "Leghosszabb",
+    "interruptions": "Megszakítások",
+    "toolCalls": "Eszközhívások",
+    "toolErrors": "Hibás eszközhívások",
+    "audioIn": "Küldött hang",
+    "audioOut": "Kapott hang",
+    "endReasons": "A munkamenetek vége",
+    "reasons": {
+      "client_closed": "Felhasználó zárta le",
+      "session_expired": "Lejárt az időkeret",
+      "upstream_error": "Hiba a Gemini oldalán",
+      "upstream_closed": "A Gemini lezárta"
+    },
+    "topUsers": "Legaktívabb felhasználók",
+    "unknownUser": "Törölt felhasználó",
+    "userLine": "{{name}}: {{sessions}} munkamenet, {{time}}"
+  },
   "audit": {
     "empty": "Még nincs esemény.",
     "unknownActor": "Ismeretlen",
