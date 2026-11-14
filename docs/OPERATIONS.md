@@ -39,6 +39,58 @@ A szkript a jelenlegi adatbázist `taskflow.db.before-restore.<időbélyeg>` né
 <mentés>`, majd nyisd meg az eredmény adatbázist (`sqlite3 ... 'select count(*) from cards'`). A mentés és a
 visszaállítás kézi lefutása Alpine alatt az M7-ben ellenőrizve lett.
 
+## Állapot, naplók és monitorozás
+
+### Health végpontok
+
+| Végpont | Mit jelent | Hibánál |
+|---|---|---|
+| `GET /healthz` | liveness: a folyamat válaszol (`{"status":"ok"}`), függőséget nem ellenőriz | nincs válasz: a folyamat áll |
+| `GET /readyz` | readiness: `database`, `migrations`, `storage` (a feltöltési könyvtár írható) | `503`, a hibás ellenőrzés neve a törzsben |
+| `GET /api/v1/health` | a frontend állapotlekérdezése (`voice`, `registrationOpen`...), nem monitorozásra való | |
+
+A három végpont névtelen. A `/healthz` és `/readyz` nem esik a rate limit alá, és nem naplózódik; titkot nem ad ki. Az nginx
+(`apps/web/nginx.conf`) csak ezt a kettőt adja tovább a nyilvános domainről. A Docker healthcheck a `/healthz`-t használja,
+hogy egy átmeneti adatbázishiba ne indítsa újra a konténert; a `/readyz` a külső monitornak és a hibakereséshez való.
+
+A `docker compose ps` mutatja az egészségi állapotot mind a négy szolgáltatásra: `api`, `web`, `cloudflared` (`tunnel ready`)
+és `backup` (van-e 26 óránál frissebb mentés). Az admin áttekintő (`/admin`) is mutatja az adatbázis állapotát és a
+legutóbbi mentés idejét (az `api` a `./backups` mappát csak olvasásra látja, `BACKUP_DIR`).
+
+A `restart: unless-stopped` csak a leállt konténert indítja újra, az `unhealthy` állapotút nem. Ha ez is kell, egy
+`autoheal` konténer (Docker socket kell hozzá, ezért biztonsági mérlegelés tárgya) vagy külső riasztás és kézi `docker compose restart <szolgáltatás>`.
+
+### Naplók
+
+A napló soronként JSON (`docker compose logs api`). Minden kéréshez tartozó sor tartalmazza a `reqId`-t, a bejelentkezett
+szereplő esetén az `actorId`-t és `actorType`-ot (`user` vagy `api_key`). A válasz `x-request-id` fejléce ugyanez az érték, a `500`-as
+hiba törzse (`error.details.requestId`) is ezt hordozza: a felhasználó által jelzett hiba így megkereshető:
+
+```sh
+docker compose logs api | grep '"reqId":"<azonosító>"'
+```
+
+- A `LOG_LEVEL` szabályozza a szintet (alap: `info`).
+- Az ennél lassabb kérés (`SLOW_REQUEST_MS`, alap 1000 ms) `warn` szinten, `slow request` üzenettel és `route`-tal naplózódik.
+- Redakció: az `Authorization`, `Cookie`, `Set-Cookie`, `Idempotency-Key` fejléc és a `password`, `token`, `secret` stb. mezők
+  sosem kerülnek a naplóba. Új titkot hordozó mezőnél bővítsd a `LOG_REDACT_PATHS`-t (`plugins/requestLogging.ts`).
+
+### Külső uptime-monitor
+
+A monitornak **nem a házi szerveren** kell futnia (különben a szerverrel együtt áll le), és a nyilvános domainen át kell
+ellenőriznie, így a Cloudflare Tunnelt és az nginxet is lefedi. Ajánlott: egy másik gépen futó Uptime Kuma, vagy egy
+hosztolt szolgáltatás ingyenes csomagja (UptimeRobot, Better Stack, Healthchecks.io).
+
+| Ellenőrzés | URL | Elvárás | Gyakoriság |
+|---|---|---|---|
+| Elérhetőség | `https://<domain>/healthz` | HTTP 200 és a törzsben `"status":"ok"` | 1 perc |
+| Készenlét | `https://<domain>/readyz` | HTTP 200 | 5 perc |
+| Tanúsítvány | `https://<domain>` | lejárat > 14 nap | napi |
+
+Riasztás: két egymás utáni hibás ellenőrzés után e-mailben vagy Telegramon. Ha `/healthz` hibás, de a szerver él, a
+`cloudflared` konténert vizsgáld (`docker compose ps`, `docker compose logs cloudflared`); ha csak a `/readyz` hibás, a
+válasz törzse megmondja, melyik ellenőrzés bukott.
+
 ## WebSocket és SSE a Cloudflare Tunnelen és az nginx-en
 
 - Az nginx (`apps/web/nginx.conf`) az `Upgrade` fejlécet továbbadja (`map $http_upgrade $connection_upgrade`), a

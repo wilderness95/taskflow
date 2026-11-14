@@ -455,6 +455,15 @@ Cél: üzemeltetőként időben értesülni arról, ha valami elromlik, és a hi
 
 **Kész, ha:** a `/healthz` és a `/readyz` a leírtak szerint viselkedik (teszttel: DB-hiba esetén `readyz` 503, `healthz` 200; nem hitelesített hívás is megy), a konténerek healthchecke ezekre épül, egy szándékosan kiváltott 500-as hiba a `reqId`-vel megjelenik a naplóban és (DSN megadásakor) a hibafigyelőben, a naplóban és a jelentésben nem szerepel titok (teszt a redakcióra), az uptime-monitor riaszt, ha a domain nem érhető el, és mindez dokumentált a `docs/OPERATIONS.md`-ben; az új környezeti változók (`SENTRY_DSN`, `SLOW_REQUEST_MS`) a `.env.example`-ben és a `docker-compose.yml`-ben is szerepelnek.
 
+**Megvalósítás (kész):**
+- `GET /healthz` és `GET /readyz` (`health.routes.ts`, `readiness.ts`): névtelen, rate limit alól kivéve, a kérésnaplóból kihagyva; a readiness `database`, `migrations` és `storage` ellenőrzést futtat (`503` hibánál). A Docker healthcheck a `/healthz`-re épül, az nginx a két útvonalat a nyilvános domainről is továbbadja.
+- Naplózás (`plugins/requestLogging.ts`): `x-request-id` a válaszban, `actorId`/`actorType` a kérés sorain, kibővített redakció (`LOG_REDACT_PATHS`), lassú kérés `warn` szinten (`SLOW_REQUEST_MS`), a `500` törzse `details.requestId`-t ad.
+- Konténerek: `cloudflared` (`tunnel ready`) és `backup` (26 óránál frissebb mentés) healthchecket kaptak.
+- Admin áttekintő: `health.lastBackupAt` (az `api` a `./backups` mappát csak olvasásra csatolja, `BACKUP_DIR`).
+- Dokumentáció: `docs/OPERATIONS.md` (health végpontok, naplók, külső uptime-monitor).
+- Eltérés a tervtől: az `autoheal` nem került a compose-ba (Docker socket kell hozzá); a `docs/OPERATIONS.md` leírja a lehetőséget. A `/admin/overview` a hibafigyelő állapotát a hibafigyelő bevezetésekor kapja meg.
+- **Hátra van:** hibafigyelés (`SENTRY_DSN`, `@sentry/node`, `@sentry/react`), a fenti döntési pont lezárása után.
+
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 
 - Minden új végpont: Zod séma a `shared`-ben, integrációs teszt, jogosultsági teszt és OpenAPI-leírás.
