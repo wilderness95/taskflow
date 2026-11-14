@@ -18,6 +18,8 @@ import { createAuthService } from './modules/auth/auth.service.js'
 import type { Config } from './config.js'
 import type { Db } from './db/client.js'
 import { healthRoutes } from './health.routes.js'
+import { LOG_REDACT_PATHS, registerRequestLogging } from './plugins/requestLogging.js'
+import { readinessChecks } from './readiness.js'
 import { createAccessRepository } from './modules/access/access.repository.js'
 import { createAccessService } from './modules/access/access.service.js'
 import { boardsRoutes } from './modules/boards/boards.routes.js'
@@ -48,6 +50,7 @@ import websocket from '@fastify/websocket'
 import { createGeminiLiveConnector } from './modules/voice/liveConnector.js'
 import { createToolHost } from './modules/voice/toolHost.js'
 import { MAX_FRAME_BYTES, voiceRoutes } from './modules/voice/voice.routes.js'
+import { createVoiceStatsRepository } from './modules/voice/voiceStats.repository.js'
 import { createVoiceService } from './modules/voice/voice.service.js'
 import type { LiveConnector } from './modules/voice/liveConnector.js'
 import { createSecretBox } from './lib/secretBox.js'
@@ -87,21 +90,25 @@ export function buildApp(
     fileStore?: FileStore
     liveConnector?: LiveConnector | null
     webhookRetryDelaysMs?: number[]
+    /** Tesztekhez: a napló ide ír (és tesztben is bekapcsol). */
+    logStream?: { write(line: string): void }
   } = {},
 ): FastifyInstance {
   const app = Fastify({
     logger:
-      config.NODE_ENV === 'test'
+      config.NODE_ENV === 'test' && !deps.logStream
         ? false
         : {
             level: config.LOG_LEVEL,
-            redact: ['req.headers.authorization', 'req.headers.cookie'],
+            redact: LOG_REDACT_PATHS,
+            ...(deps.logStream ? { stream: deps.logStream } : {}),
           },
     // Cloudflare mögött: a kliens IP-je a CF-Connecting-IP fejlécből jön.
     trustProxy: true,
     requestIdHeader: 'x-request-id',
   })
   registerErrorHandler(app)
+  registerRequestLogging(app, config.SLOW_REQUEST_MS)
   // Kliens IP szerint korlátoz (Cloudflare mögött a CF-Connecting-IP fejléc); az érzékeny
   // auth végpontokra szigorúbb, route-szintű limit van (lásd auth.routes.ts).
   app.register(rateLimit, {
@@ -116,6 +123,7 @@ export function buildApp(
   const mailer = deps.mailer ?? createMailer(config)
   const authRepo = createAuthRepository(db)
   const audit = createAuditService(createAuditRepository(db))
+  const voiceStats = createVoiceStatsRepository(db)
   const auth = createAuthService({
     repo: authRepo,
     mailer,
@@ -228,6 +236,7 @@ export function buildApp(
     adminRoutes(
       createAdminService({
         repo: createAdminRepository(db),
+        voiceStats,
         audit,
         auth,
         mailer,
@@ -262,6 +271,7 @@ export function buildApp(
   app.register(eventsRoutes(createEventsService(bus, access)))
   const voice = createVoiceService({
     access,
+    stats: voiceStats,
     connector:
       deps.liveConnector !== undefined
         ? deps.liveConnector
@@ -284,6 +294,7 @@ export function buildApp(
   })
   app.register(
     healthRoutes({
+      readiness: readinessChecks(db, config.UPLOAD_DIR, deps.fileStore === undefined),
       voice: voice.available,
       emailVerificationRequired: config.REQUIRE_EMAIL_VERIFICATION,
       registrationOpen: () =>

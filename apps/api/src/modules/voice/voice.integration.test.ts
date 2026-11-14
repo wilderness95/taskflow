@@ -238,3 +238,81 @@ describe('voice live', () => {
     expect(res.statusCode).toBe(404)
   })
 })
+
+describe('voice session statistics', () => {
+  const stats = async (api: { get: (u: string) => Promise<{ status: number; body: any }> }) =>
+    // eslint-disable-line @typescript-eslint/no-explicit-any
+    api.get('/admin/voice-stats?days=7')
+
+  it('records one summary row per closed session and exposes it to platform admins', async () => {
+    const { connector, state } = fakeConnector()
+    const { app, owner, board } = await setup({ connector })
+    const { socket, got } = await connect(app, owner.cookie, board.id)
+    await got.until(() => got.messages.some((m) => m.type === 'ready'))
+
+    socket.send(Buffer.alloc(32_000)) // 1 s mikrofon
+    await got.until(() => state.audio.length === 1)
+    state.events!.onAudio(Buffer.alloc(4_800).toString('base64')) // 100 ms válasz
+    state.events!.onInterrupted()
+    state.events!.onToolCalls([
+      { id: 'c1', name: 'create_card', args: { column: 'teendo', title: 'a' } },
+    ])
+    state.events!.onToolCalls([
+      { id: 'c2', name: 'create_card', args: { column: 'nincs', title: 'b' } },
+    ])
+    await got.until(() => state.toolResponses.length === 2)
+    socket.terminate()
+    await new Promise((r) => setTimeout(r, 50))
+
+    const res = await stats(owner.api)
+    expect(res.status).toBe(200)
+    expect(res.body.totals).toMatchObject({
+      sessions: 1,
+      interruptions: 1,
+      toolCalls: 2,
+      toolErrors: 1,
+      audioInMs: 1000,
+      audioOutMs: 100,
+    })
+    expect(res.body.byReason).toEqual([{ reason: 'client_closed', count: 1 }])
+    expect(res.body.byDay).toHaveLength(1)
+    expect(res.body.topUsers[0]).toMatchObject({ name: 'Olga', sessions: 1 })
+    // Hang, átirat és bármilyen tartalom nem kerül a statisztikába.
+    expect(JSON.stringify(res.body)).not.toContain('Tejet')
+  })
+
+  it('counts upstream errors and upstream closes by end reason', async () => {
+    const { connector, state } = fakeConnector()
+    const { app, owner, board } = await setup({ connector })
+    const a = await connect(app, owner.cookie, board.id)
+    await a.got.until(() => a.got.messages.some((m) => m.type === 'ready'))
+    state.events!.onError(new Error('boom'))
+    await new Promise((r) => setTimeout(r, 50))
+    const b = await connect(app, owner.cookie, board.id)
+    await b.got.until(() => b.got.messages.some((m) => m.type === 'ready'))
+    state.events!.onClose()
+    await new Promise((r) => setTimeout(r, 50))
+
+    const reasons = (await stats(owner.api)).body.byReason as { reason: string; count: number }[]
+    expect(Object.fromEntries(reasons.map((r) => [r.reason, r.count]))).toEqual({
+      upstream_error: 1,
+      upstream_closed: 1,
+    })
+  })
+
+  it('is only available to platform admins with a session', async () => {
+    const { connector } = fakeConnector()
+    const { app, owner } = await setup({ connector })
+    const other = await signUp(app, 'plain@example.com', 'Plain')
+    const key = (await owner.api.post('/api-keys', { name: 'k', scopes: ['boards:read'] })).body
+      .key as string
+    expect((await app.inject('/api/v1/admin/voice-stats')).statusCode).toBe(401)
+    expect((await stats(other.api)).status).toBe(403)
+    const viaKey = await app.inject({
+      url: '/api/v1/admin/voice-stats',
+      headers: { authorization: `Bearer ${key}` },
+    })
+    expect(viaKey.statusCode).toBe(403)
+    expect((await stats(owner.api)).status).toBe(200)
+  })
+})

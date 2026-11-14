@@ -6,6 +6,7 @@ import {
   adminInvitationSchema,
   adminWorkspaceListSchema,
   auditListSchema,
+  voiceStatsSchema,
   type AdminInvitationDto,
   type AdminInvitationsQuery,
   type CreateAdminInvitationRequest,
@@ -13,6 +14,7 @@ import {
   type AdminUserDetailDto,
   type AdminUsersQuery,
   type AuditQuery,
+  type VoiceStatsDto,
 } from '@taskflow/shared'
 import { apiFetch } from './client'
 
@@ -28,6 +30,9 @@ export const toQueryString = (params: Record<string, string | number | undefined
 
 export const fetchAdminOverview = async (): Promise<AdminOverviewDto> =>
   adminOverviewSchema.parse(await apiFetch('GET', '/admin/overview'))
+
+export const fetchVoiceStats = async (days: number): Promise<VoiceStatsDto> =>
+  voiceStatsSchema.parse(await apiFetch('GET', `/admin/voice-stats${toQueryString({ days })}`))
 
 export const listAuditEvents = async (query: Partial<AuditQuery>) =>
   auditListSchema.parse(await apiFetch('GET', `/admin/audit${toQueryString(query)}`))

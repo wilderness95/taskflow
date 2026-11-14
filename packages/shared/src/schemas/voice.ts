@@ -46,6 +46,16 @@ export const voiceClientMessageSchema = z.discriminatedUnion('type', [
 ])
 export type VoiceClientMessage = z.infer<typeof voiceClientMessageSchema>
 
+/** Egy hangmunkamenet vége (statisztikához; nyelvfüggetlen kulcsok). */
+export const VOICE_END_REASONS = [
+  'client_closed',
+  'session_expired',
+  'upstream_error',
+  'upstream_closed',
+] as const
+export const voiceEndReasonSchema = z.enum(VOICE_END_REASONS)
+export type VoiceEndReason = z.infer<typeof voiceEndReasonSchema>
+
 /** A szerver hibakódjai a hangvégponton (a WebSocket close kód mellett `error` üzenetben is). */
 export const VOICE_ERROR_CODES = [
   'voice_unavailable',

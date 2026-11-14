@@ -23,6 +23,15 @@ export const formatDateTime = (isoTimestamp: string): string =>
 export const formatNumber = (value: number, options?: Intl.NumberFormatOptions): string =>
   new Intl.NumberFormat(locale(), options).format(value)
 
+/** Időtartam ezredmásodpercben -> perc a mértékegységgel (pl. "12,5 perc"). */
+export const formatMinutes = (ms: number): string =>
+  formatNumber(ms / 60_000, {
+    style: 'unit',
+    unit: 'minute',
+    unitDisplay: 'short',
+    maximumFractionDigits: 1,
+  })
+
 /** Bájtok olvasható mérete (B / KB / MB); a mértékegység-jelek nyelvfüggetlenek. */
 export const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${formatNumber(bytes)} B`

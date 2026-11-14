@@ -1,11 +1,15 @@
 import {
+  VOICE_INPUT_SAMPLE_RATE,
+  VOICE_OUTPUT_SAMPLE_RATE,
   voiceClientMessageSchema,
+  type VoiceEndReason,
   type VoiceServerMessage,
   type VoiceState,
 } from '@taskflow/shared'
 import type { Actor } from '../../auth/actor.js'
 import { AppError } from '../../errors.js'
 import type { AccessService } from '../access/access.service.js'
+import type { VoiceSessionRecord } from './voiceStats.repository.js'
 import type { LiveConnector, LiveSession, ToolCall } from './liveConnector.js'
 import { buildSystemInstruction } from './systemInstruction.js'
 import type { ToolHost } from './toolHost.js'
@@ -47,6 +51,8 @@ export interface VoiceServiceDeps {
   maxSessionsPerUser: number
   maxMinutes: number
   now?: () => Date
+  /** A lezárt munkamenet összesítésének mentése (költségkontroll); hibája nem akasztja a lezárást. */
+  stats?: { record: (row: VoiceSessionRecord) => void }
   logger?: { warn: (obj: object, msg: string) => void }
 }
 
@@ -91,16 +97,46 @@ export function createVoiceService(deps: VoiceServiceDeps) {
     let host: ToolHost | undefined
     let timer: ReturnType<typeof setTimeout> | undefined
     let state: VoiceState | null = null
+    // Statisztika: a munkamenet lezárásakor egyetlen összesítő sor készül (hang vagy tartalom nélkül).
+    const now = deps.now ?? (() => new Date())
+    const startedAt = now()
+    const counters = {
+      interruptions: 0,
+      toolCalls: 0,
+      toolErrors: 0,
+      audioInBytes: 0,
+      audioOutBytes: 0,
+    }
+    const bytesToMs = (bytes: number, rate: number) => Math.round((bytes / 2 / rate) * 1000)
 
     const setState = (next: VoiceState) => {
       if (state === next) return
       state = next
       io.sendMessage({ type: 'state', state: next })
     }
-    const close = () => {
+    const close = (reason: VoiceEndReason = 'client_closed') => {
       if (closed) return
       closed = true
       clearTimeout(timer)
+      try {
+        deps.stats?.record({
+          userId: actor.id,
+          boardId: board?.id ?? null,
+          startedAt,
+          durationMs: Math.max(0, now().getTime() - startedAt.getTime()),
+          endReason: reason,
+          interruptions: counters.interruptions,
+          toolCalls: counters.toolCalls,
+          toolErrors: counters.toolErrors,
+          audioInMs: bytesToMs(counters.audioInBytes, VOICE_INPUT_SAMPLE_RATE),
+          audioOutMs: bytesToMs(counters.audioOutBytes, VOICE_OUTPUT_SAMPLE_RATE),
+        })
+      } catch (err) {
+        deps.logger?.warn(
+          { reason: err instanceof Error ? err.message : 'unknown' },
+          'voice session stats not saved',
+        )
+      }
       const left = (open.get(actor.id) ?? 1) - 1
       if (left <= 0) open.delete(actor.id)
       else open.set(actor.id, left)
@@ -120,7 +156,7 @@ export function createVoiceService(deps: VoiceServiceDeps) {
           'voice session error',
         )
       if (!closed) io.sendMessage({ type: 'error', code })
-      close()
+      close(code === 'session_expired' ? 'session_expired' : 'upstream_error')
     }
 
     const handleToolCalls = async (calls: ToolCall[]) => {
@@ -133,6 +169,8 @@ export function createVoiceService(deps: VoiceServiceDeps) {
           } catch (err) {
             result = { ok: false, text: err instanceof Error ? err.message : String(err) }
           }
+          counters.toolCalls++
+          if (!result.ok) counters.toolErrors++
           if (!closed) io.sendMessage({ type: 'tool', name: c.name, ok: result.ok })
           return {
             id: c.id,
@@ -162,10 +200,13 @@ export function createVoiceService(deps: VoiceServiceDeps) {
           onAudio: (b64) => {
             if (closed) return
             setState('speaking')
-            io.sendAudio(Buffer.from(b64, 'base64'))
+            const pcm = Buffer.from(b64, 'base64')
+            counters.audioOutBytes += pcm.length
+            io.sendAudio(pcm)
           },
           onInterrupted: () => {
             if (closed) return
+            counters.interruptions++
             io.sendMessage({ type: 'interrupted' })
             setState('listening')
           },
@@ -177,7 +218,7 @@ export function createVoiceService(deps: VoiceServiceDeps) {
             if (role === 'user') setState('thinking')
           },
           onError: (err) => fail('upstream_error', err),
-          onClose: () => close(),
+          onClose: () => close('upstream_closed'),
         },
       )
     } catch (err) {
@@ -189,7 +230,7 @@ export function createVoiceService(deps: VoiceServiceDeps) {
     if (closed) {
       // A kapcsolat az összekötés közben bomlott meg.
       live.close()
-      return { audio() {}, message() {}, close }
+      return { audio() {}, message() {}, close: () => close() }
     }
 
     timer = setTimeout(() => fail('session_expired'), deps.maxMinutes * 60_000)
@@ -199,7 +240,9 @@ export function createVoiceService(deps: VoiceServiceDeps) {
 
     return {
       audio: (pcm) => {
-        if (!closed) live!.sendAudio(pcm)
+        if (closed) return
+        counters.audioInBytes += pcm.length
+        live!.sendAudio(pcm)
       },
       message: (raw) => {
         let parsed: unknown
@@ -211,7 +254,7 @@ export function createVoiceService(deps: VoiceServiceDeps) {
         const msg = voiceClientMessageSchema.safeParse(parsed)
         if (msg.success && !closed) live!.sendAudioEnd()
       },
-      close,
+      close: () => close(),
     }
   }
 

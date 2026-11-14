@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { auditLog } from '../../db/schema.js'
 import { bearer, client, createTestApp, login, PASSWORD, signUp } from '../../testing/helpers.js'
@@ -38,11 +41,26 @@ describe('admin overview', () => {
     expect(res.status).toBe(200)
     expect(res.body.users).toEqual({ total: 2, admins: 1, suspended: 1, unverified: 2 })
     expect(res.body.pendingInvitations).toBe(1)
-    expect(res.body.health).toEqual({ database: 'ok', mailTransport: 'console' })
+    expect(res.body.health).toEqual({
+      database: 'ok',
+      mailTransport: 'console',
+      lastBackupAt: null,
+    })
     expect(res.body.recentEvents.length).toBeGreaterThan(0)
     expect(res.body.recentEvents.length).toBeLessThanOrEqual(10)
     // A legújabb esemény elöl áll.
     expect(res.body.recentEvents[0].action).toBe('admin.invitation_created')
+  })
+})
+
+describe('admin overview backup status', () => {
+  it('reports the time of the latest database backup from BACKUP_DIR', async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'bk-'))
+    writeFileSync(path.join(dir, 'taskflow-20260101-030000.db.gz'), 'x')
+    t = createTestApp({ REGISTRATION_MODE: 'open', BACKUP_DIR: dir })
+    const { admin } = await setup()
+    const res = await admin.api.get('/admin/overview')
+    expect(res.body.health.lastBackupAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
   })
 })
 

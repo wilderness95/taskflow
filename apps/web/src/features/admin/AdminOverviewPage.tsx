@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { formatNumber } from '../../i18n/format'
+import { formatDateTime, formatNumber } from '../../i18n/format'
+import { VoiceStatsSection } from './VoiceStatsSection'
 import { AuditEventList } from './AuditEventList'
 import { useAdminOverview } from './useAdmin'
 import './AdminOverviewPage.css'
@@ -51,8 +52,18 @@ export function AdminOverviewPage() {
             <span>{t('overview.mail')}</span>
             <strong>{t(`overview.mailTransport.${data.health.mailTransport}`)}</strong>
           </li>
+          <li>
+            <span>{t('overview.backup')}</span>
+            <strong>
+              {data.health.lastBackupAt
+                ? formatDateTime(data.health.lastBackupAt)
+                : t('overview.backupUnknown')}
+            </strong>
+          </li>
         </ul>
       </section>
+
+      <VoiceStatsSection />
 
       <section className="admin-section" aria-label={t('overview.recent')}>
         <h2>{t('overview.recent')}</h2>

@@ -196,7 +196,7 @@ Internet ──► Cloudflare (saját domain, TLS) ──► cloudflared kontén
   - SSE: ~25 mp-es heartbeat és `X-Accel-Buffering: no`, hogy a proxy ne zárja le és ne pufferelje a kapcsolatot.
 - **Opcionális:** Cloudflare Access (Zero Trust) a `/api/docs` elé, illetve igény esetén a teljes app elé.
 - **Mentés:** napi `sqlite3 .backup` cron/sidecar konténerrel, rotációval; opcionálisan Litestream külső tárolóra.
-- **Frissítés:** `git pull && docker compose up -d --build`; a migrációk az api indulásakor automatikusan lefutnak.
+- **Frissítés:** `git pull && ops/deploy.sh` (mentés, ellenőrzés, visszaállás; régebben: `docker compose up -d --build`); a migrációk az api indulásakor automatikusan lefutnak.
 - **E-mail (Gmail):**
   - Nodemailer SMTP-n keresztül, `Mailer` interfész mögött: fejlesztéskor `ConsoleMailer`, élesben `SmtpMailer`;
   - Gmail limit: kb. 500 levél/nap. Kis felhasználói bázisnál elég; ha kinőjük, csak az implementáció cserélődik.
@@ -434,6 +434,37 @@ Cél: a rendszerszintű felhasználó- és meghívókezelés, valamint a biztons
 - Frontend (`features/admin/`, `admin` i18n névtér): `/admin` áttekintő, `/admin/users` (kereső, állapotszűrő, adatlap ablak, érzékeny műveletek `ConfirmModal`-lal, toast visszajelzés), `/admin/invitations` (küldés, állapotszűrő, újraküldés, visszavonás), `/admin/audit` (esemény- és időszak-szűrő, lapozás). Menüpont a felhasználói menüben és a parancspalettán csak platform-adminnak.
 - Tesztek: integrációs és jogosultsági (`modules/admin/*.integration.test.ts`, `modules/audit/`: névtelen, sima felhasználó és API kulcs is 401/403), a `scopes.test.ts` bővítve, unit (`adminErrors`, `auditEvents`, `dayRange`), E2E (`apps/e2e/tests/admin.spec.ts`: az első regisztrált felhasználó az admin, ezért a fájl ábécésorban az első).
 - Nem része az M10-nek: az auditnapló szűrése végrehajtó/érintett felhasználó szerint a felületen (az API támogatja), aktív munkamenetek listázása egyenként, az auditnapló exportja.
+
+### M11 – Üzemeltetési láthatóság
+
+Cél: üzemeltetőként időben értesülni arról, ha valami elromlik, és a hibát a logokból és a hibafigyelőből gyorsan visszakeresni. Ez az első ops-jellegű mérföldkő; a mentés és a skálázás külön, későbbi mérföldkő.
+
+**Kiinduló állapot (már megvan, nem része a munkának):** `GET /api/v1/health` (állapot + `voice`, `registrationOpen`), Docker healthcheck az `api` és `web` szolgáltatáson, `restart: unless-stopped`, `json-file` log-rotáció (3 x 10 MB), Fastify/pino JSON-napló `LOG_LEVEL`-lel és `authorization`/`cookie` redakcióval, `x-request-id` fogadása, napi SQLite-mentés sidecar.
+
+**Hiányok és feladatok:**
+- **Liveness és readiness szétválasztása:** `GET /healthz` (liveness: a folyamat válaszol, függőséget nem ellenőriz, titkot és konfigurációt nem ad ki) és `GET /readyz` (readiness: adatbázis `select 1`, migrációk lefutottak, feltöltési könyvtár írható; hibánál `503`). Mindkettő névtelen, session és API kulcs nélkül elérhető, a rate limit alól kivéve, és nem része az `/api/v1` OpenAPI-nak (az `openapi.test.ts` már kihagyja a `/health`-et). A Docker healthcheck a `/healthz`-re kerül, hogy egy átmeneti DB-hiba ne indítsa újra a konténert. A meglévő `/api/v1/health` marad a frontendnek, változatlan szerződéssel.
+- **Strukturált naplózás:** egységes mezők minden sorban (`reqId`, `actorId`, `actorType`, `route`, `statusCode`, `responseTime`); a `reqId` visszajön az `x-request-id` válaszfejlécben és a hibaválaszban is, hogy a felhasználói hiba a naplóban megtalálható legyen. A redakció kiterjed a `set-cookie` fejlécre és a titkot hordozó törzsmezőkre (`password`, `confirmPassword`, `token`, `secret`). A health-végpontok kérésnaplója kikapcsolva (zaj), a lassú kérés (küszöb: `SLOW_REQUEST_MS`, alap 1000) `warn` szinten. Nem kerül be jelszó, token, kulcs, `Idempotency-Key` érték.
+- **Hibafigyelés:** a kezeletlen hibák (`500`, `unhandledRejection`, `uncaughtException`) és a háttérfeladatok hibái (webhook, e-mail, mentés) egy hibafigyelőbe is menjenek, a `reqId`-vel és a felhasználó azonosítójával (e-mail és egyéb személyes adat nélkül). A küldés `SENTRY_DSN` megadásához kötött; DSN nélkül kikapcsol, a fejlesztés és a tesztek nem küldenek semmit. A frontenden a kezeletlen React-hibák (`ErrorBoundary`) és a `window.onerror` jelentése ugyanígy, forrástérkép nélkül az első körben. A felhasználói tartalom (kártyaszöveg, komment) és a kérés törzse nem kerül a jelentésbe (`beforeSend` szűrő).
+- **Uptime-monitor:** külső, a szerverfüggetlen ellenőrzés a nyilvános domainen (a `/healthz` Cloudflare Tunnelen át), pl. Uptime Kuma egy másik gépen vagy egy ingyenes hosztolt szolgáltatás; értesítés e-mailben vagy Telegramon. A beállítás és a riasztási szabályok a `docs/OPERATIONS.md`-be kerülnek (nincs kódja a repóban, kivéve ha az Uptime Kuma a compose-ba kerül).
+- **Konténer-üzemeltetés:** a `cloudflared` szolgáltatás healthchecket kap (`tunnel ready`/metrics végpont), a `backup` sidecar is (a legutóbbi sikeres mentés kora, pl. > 26 óra esetén `unhealthy`); az `autoheal` vagy az `on-failure` újraindítási szabály kiértékelése, mert a `restart: unless-stopped` az `unhealthy` állapotot nem indítja újra. A `docker compose ps` és a `docs/OPERATIONS.md` ellenőrzőlistája frissül.
+- **Platform-admin áttekintő:** az `/admin/overview` health-blokkja (`database`, `mailTransport`) a `readyz` ellenőrzéseivel egészül ki (utolsó sikeres mentés ideje, hibafigyelő be van-e kapcsolva); ez nem hoz új végpontot, a meglévő admin-szerződés bővül.
+
+**Döntési pont (egyeztetni kell, mielőtt függőség kerül be):** hibafigyelő. A jelölt a **GlitchTip** (Sentry-kompatibilis, önhosztolt, de saját Postgres/Redis kell a házi szerveren, ami erőforrás- és mentéskockázat) vagy a hosztolt **Sentry** ingyenes csomagja (nincs saját üzemeltetés, de adat megy ki harmadik félhez). Mindkettőhöz ugyanaz a `@sentry/node` és `@sentry/react` SDK jó, ezért a kód a választástól független (`SENTRY_DSN`). Az SDK-k a `docs/ROADMAP.md` jóváhagyott stackjén kívül esnek: jóváhagyás után vehetők fel.
+
+**Nem része:** metrikák és dashboardok (Prometheus, Grafana), elosztott nyomkövetés (tracing), naplóaggregáció (Loki), PagerDuty-jellegű ügyeleti rotáció, a mentés külső helyre vitele (külön ops-mérföldkő).
+
+**Kész, ha:** a `/healthz` és a `/readyz` a leírtak szerint viselkedik (teszttel: DB-hiba esetén `readyz` 503, `healthz` 200; nem hitelesített hívás is megy), a konténerek healthchecke ezekre épül, egy szándékosan kiváltott 500-as hiba a `reqId`-vel megjelenik a naplóban és (DSN megadásakor) a hibafigyelőben, a naplóban és a jelentésben nem szerepel titok (teszt a redakcióra), az uptime-monitor riaszt, ha a domain nem érhető el, és mindez dokumentált a `docs/OPERATIONS.md`-ben; az új környezeti változók (`SENTRY_DSN`, `SLOW_REQUEST_MS`) a `.env.example`-ben és a `docker-compose.yml`-ben is szerepelnek.
+
+**Megvalósítás (kész):**
+- `GET /healthz` és `GET /readyz` (`health.routes.ts`, `readiness.ts`): névtelen, rate limit alól kivéve, a kérésnaplóból kihagyva; a readiness `database`, `migrations` és `storage` ellenőrzést futtat (`503` hibánál). A Docker healthcheck a `/healthz`-re épül, az nginx a két útvonalat a nyilvános domainről is továbbadja.
+- Naplózás (`plugins/requestLogging.ts`): `x-request-id` a válaszban, `actorId`/`actorType` a kérés sorain, kibővített redakció (`LOG_REDACT_PATHS`), lassú kérés `warn` szinten (`SLOW_REQUEST_MS`), a `500` törzse `details.requestId`-t ad.
+- Konténerek: `cloudflared` (`tunnel ready`) és `backup` (26 óránál frissebb mentés) healthchecket kaptak.
+- Admin áttekintő: `health.lastBackupAt` (az `api` a `./backups` mappát csak olvasásra csatolja, `BACKUP_DIR`).
+- Dokumentáció: `docs/OPERATIONS.md` (health végpontok, naplók, külső uptime-monitor).
+- Eltérés a tervtől: az `autoheal` nem került a compose-ba (Docker socket kell hozzá); a `docs/OPERATIONS.md` leírja a lehetőséget. A `/admin/overview` a hibafigyelő állapotát a hibafigyelő bevezetésekor kapja meg.
+- Hangasszisztens-statisztika (`voice_sessions`, migráció `0014`): a lezárt munkamenetek összesítése (hossz, lezárás oka, megszakítások, eszközhívások és hibák, hang hossza); `GET /admin/voice-stats` és az admin áttekintő „Hangasszisztens” blokkja. Tartalmat (hang, átirat) nem tárol.
+- Telepítő szkript (`ops/deploy.sh`): telepítés előtti mentés, build, readiness-ellenőrzés, hibánál visszaállás az előző image-ekre (migráció esetén az adatbázis is a mentésből). Lásd `docs/OPERATIONS.md`.
+- **Hátra van:** hibafigyelés (`SENTRY_DSN`, `@sentry/node`, `@sentry/react`), a fenti döntési pont lezárása után.
 
 ## 4. Keresztmetszeti szabályok (minden sprintben)
 

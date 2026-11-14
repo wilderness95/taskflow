@@ -1,3 +1,5 @@
+import type { VoiceStatsRepository } from '../voice/voiceStats.repository.js'
+import { lastBackupAt } from '../../lib/lastBackup.js'
 import type {
   AdminInvitationDto,
   AdminOverviewDto,
@@ -6,6 +8,8 @@ import type {
   AdminUserDetailDto,
   AdminUserDto,
   AdminUsersQuery,
+  VoiceStatsDto,
+  VoiceStatsQuery,
   CreateAdminInvitationInput,
   SetAdminRoleInput,
   SuspendUserInput,
@@ -67,6 +71,7 @@ export const toAdminInvitationDto = (
 /** Platform-adminisztráció: felhasználók kezelése. Minden művelet platform-admint kér és naplózódik. */
 export function createAdminService(deps: {
   repo: AdminRepository
+  voiceStats: VoiceStatsRepository
   audit: AuditService
   auth: AuthService
   mailer: Mailer
@@ -298,8 +303,19 @@ export function createAdminService(deps: {
         health: {
           database: repo.ping() ? 'ok' : 'error',
           mailTransport: config.MAIL_TRANSPORT,
+          lastBackupAt: lastBackupAt(config.BACKUP_DIR)?.toISOString() ?? null,
         },
         recentEvents: audit.recent(10),
+      }
+    },
+
+    voiceStats(actor: Actor, query: VoiceStatsQuery): VoiceStatsDto {
+      requirePlatformAdmin(actor)
+      const since = new Date(Date.now() - query.days * 86_400_000)
+      return {
+        days: query.days,
+        since: since.toISOString(),
+        ...deps.voiceStats.summary(since),
       }
     },
 

@@ -32,8 +32,12 @@ export function registerErrorHandler(app: FastifyInstance): void {
       })
     }
     req.log.error({ err }, 'unhandled error')
-    return reply
-      .status(500)
-      .send({ error: { code: 'internal_error', message: 'Internal server error', details: null } })
+    return reply.status(500).send({
+      error: {
+        code: 'internal_error',
+        message: 'Internal server error',
+        details: { requestId: req.id },
+      },
+    })
   })
 }
