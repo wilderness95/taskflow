@@ -22,6 +22,8 @@
     "health": "Rendszerállapot",
     "database": "Adatbázis",
     "mail": "E-mail-küldés",
+    "backup": "Utolsó adatbázis-mentés",
+    "backupUnknown": "Nincs adat",
     "state": {
       "ok": "Működik",
       "error": "Hiba"

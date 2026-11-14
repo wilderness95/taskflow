@@ -151,6 +151,8 @@ export const adminOverviewSchema = z.object({
   health: z.object({
     database: z.enum(['ok', 'error']),
     mailTransport: z.enum(['console', 'smtp']),
+    /** A legutóbbi adatbázis-mentés ideje (ISO); `null`: nincs beállítva vagy még nem volt mentés. */
+    lastBackupAt: z.iso.datetime().nullable(),
   }),
   recentEvents: z.array(auditEventSchema),
 })

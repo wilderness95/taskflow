@@ -7,6 +7,8 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   /** Az ennél lassabb kérés `warn` szinten naplózódik (ms); 0: kikapcsolva. */
   SLOW_REQUEST_MS: z.coerce.number().int().min(0).default(1000),
+  /** A `backup` sidecar mentés-könyvtára (csak olvasásra csatolva); az admin áttekintő az utolsó mentés idejét mutatja. */
+  BACKUP_DIR: z.string().optional(),
   APP_URL: z.url().default('http://localhost:5173'),
   DATABASE_URL: z.string().default('./data/taskflow.db'),
   /** A csatolmányok könyvtára (lokális fájltár); Dockerben a compose a `/data/uploads`-ra állítja. */

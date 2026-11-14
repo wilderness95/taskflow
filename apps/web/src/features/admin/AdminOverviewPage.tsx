@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { formatNumber } from '../../i18n/format'
+import { formatDateTime, formatNumber } from '../../i18n/format'
 import { AuditEventList } from './AuditEventList'
 import { useAdminOverview } from './useAdmin'
 import './AdminOverviewPage.css'
@@ -50,6 +50,14 @@ export function AdminOverviewPage() {
           <li>
             <span>{t('overview.mail')}</span>
             <strong>{t(`overview.mailTransport.${data.health.mailTransport}`)}</strong>
+          </li>
+          <li>
+            <span>{t('overview.backup')}</span>
+            <strong>
+              {data.health.lastBackupAt
+                ? formatDateTime(data.health.lastBackupAt)
+                : t('overview.backupUnknown')}
+            </strong>
           </li>
         </ul>
       </section>

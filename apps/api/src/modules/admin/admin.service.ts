@@ -1,3 +1,4 @@
+import { lastBackupAt } from '../../lib/lastBackup.js'
 import type {
   AdminInvitationDto,
   AdminOverviewDto,
@@ -298,6 +299,7 @@ export function createAdminService(deps: {
         health: {
           database: repo.ping() ? 'ok' : 'error',
           mailTransport: config.MAIL_TRANSPORT,
+          lastBackupAt: lastBackupAt(config.BACKUP_DIR)?.toISOString() ?? null,
         },
         recentEvents: audit.recent(10),
       }
